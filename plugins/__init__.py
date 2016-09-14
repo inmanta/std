@@ -205,6 +205,7 @@ def template(ctx: Context, path: "string"):
     out = template.render({"{{resolver": resolver})
     return out
 
+
 @dependency_manager
 def dir_before_file(model, resources):
     """
