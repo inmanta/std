@@ -455,14 +455,6 @@ def isset(value: "any") -> "bool":
 
 
 @plugin
-def bootstrap(context: Context) -> "bool":
-    if "bootstrap" not in context.compiler.config["config"]:
-        return False
-    value = context.compiler.config["config"].getboolean("bootstrap")
-    return value
-
-
-@plugin
 def objid(value: "any") -> "string":
     return str((value._get_instance(), str(id(value._get_instance())), value._get_instance().__class__))
 
