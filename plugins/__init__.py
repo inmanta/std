@@ -26,6 +26,7 @@ import logging
 from operator import attrgetter
 from itertools import chain
 
+
 from inmanta.ast import OptionalValueException, RuntimeException
 from inmanta.ast.statements import ExpressionStatement
 from inmanta.ast.variables import Reference
@@ -48,6 +49,7 @@ from jinja2.runtime import Undefined
 from inmanta.ast import NotFoundException
 from inmanta.execute.runtime import ExecutionContext
 import jinja2
+from jinja2.exceptions import UndefinedError
 
 
 @plugin
@@ -92,8 +94,8 @@ class JinjaDynamicProxy(DynamicProxy):
         try:
             value = instance.get_attribute(attribute).get_value()
             return JinjaDynamicProxy.return_value(value)
-        except OptionalValueException as e:
-            return Undefined("variable %s not set on %s" % (instance, attribute), instance, attribute, e)
+        except (OptionalValueException, NotFoundException) as e:
+            return Undefined("variable %s not set on %s" % (attribute, instance), instance, attribute)
 
 
 class SequenceProxy(JinjaDynamicProxy):
@@ -155,7 +157,7 @@ class ResolverContext(jinja2.runtime.Context):
             raw = resolver.lookup(key)
             return JinjaDynamicProxy.return_value(raw.get_value())
         except NotFoundException:
-            return self.environment.undefined(name=key)
+            return super(ResolverContext, self).resolve(key)
         except OptionalValueException as e:
             return self.environment.undefined("variable %s not set on %s" % (resolver, key), resolver, key, e)
 
@@ -169,13 +171,14 @@ def _get_template_engine(ctx):
         return engine_cache
 
     loader_map = {}
+    loader_map[""] = FileSystemLoader(os.path.join(Project.get().project_path, "templates"))
     for name, module in Project.get().modules.items():
         template_dir = os.path.join(module._path, "templates")
         if os.path.isdir(template_dir):
             loader_map[name] = FileSystemLoader(template_dir)
 
     # init the environment
-    env = Environment(loader=PrefixLoader(loader_map))
+    env = Environment(loader=PrefixLoader(loader_map), undefined=jinja2.StrictUndefined)
     env.context_class = ResolverContext
 
     # register all plugins as filters
@@ -202,8 +205,12 @@ def template(ctx: Context, path: "string"):
 
     resolver = ctx.get_resolver()
 
-    out = template.render({"{{resolver": resolver})
-    return out
+    try:
+        out = template.render({"{{resolver": resolver})
+        return out
+    except UndefinedError as e:
+        raise NotFoundException(ctx.owner, None, e.message)
+
 
 
 @dependency_manager
@@ -214,7 +221,7 @@ def dir_before_file(model, resources):
     # loop over all resources to find files
     for _id, resource in resources.items():
 
-        if resource.is_type("std::File"):
+        if resource.is_type("std::File") or resource.is_type("std::Directory"):
             model = resource.model
             host = model.host
 
@@ -311,6 +318,11 @@ def printf(message: "any"):
         Print the given message to stdout
     """
     print(message)
+
+
+@plugin
+def replace(string: "string", old: "string", new: "string") -> "string":
+    return string.replace(old, new)
 
 
 @plugin
@@ -724,11 +736,13 @@ def determine_path(ctx, module_dir, path):
 
     modules = Project.get().modules
 
-    if parts[0] not in modules:
+    if parts[0] == "":
+        module_path = Project.get().project_path
+    elif parts[0] not in modules:
         raise Exception("Module %s does not exist for path %s" %
                         (parts[0], path))
-
-    module_path = modules[parts[0]]._path
+    else:
+        module_path = modules[parts[0]]._path
 
     return os.path.join(module_path, module_dir, os.path.sep.join(parts[1:]))
 
@@ -788,11 +802,14 @@ def familyof(member: "std::OS", family: "string") -> "bool":
         return True
 
     parent = member
-    while parent.family is not None:
-        if parent.name == family:
-            return True
+    try:
+        while parent.family is not None:
+            if parent.name == family:
+                return True
 
-        parent = parent.family
+            parent = parent.family
+    except OptionalValueException:
+        pass
 
     return False
 
@@ -839,17 +856,12 @@ def environment() -> "string":
     """
         Return the environment id
     """
-    env = Config.get("config", "environment", None)
+    env = str(Config.get("config", "environment", None))
 
     if env is None:
         raise Exception("The environment of this model should be configured in config>environment")
 
-    try:
-        uuid.UUID(env)
-    except ValueError:
-        raise Exception("The environment id should be a valid UUID.")
-
-    return env
+    return str(env)
 
 
 @plugin
@@ -858,6 +870,7 @@ def environment_name(ctx: Context) -> "string":
         Return the name of the environment (as defined on the server)
     """
     env_id = environment()
+
     def call():
         return ctx.get_client().get_environment(id=env_id)
     result = ctx.run_sync(call)
@@ -873,7 +886,7 @@ def environment_server(ctx: Context) -> "string":
     """
     client = ctx.get_client()
     server_url = client._transport_instance._get_client_config()
-    match = re.search("^http://([^:]+):", server_url)
+    match = re.search("^http[s]?://([^:]+):", server_url)
     if match is not None:
         return match.group(1)
     return Unknown(source=server_url)
@@ -888,3 +901,66 @@ def is_set(obj: "any", attribute: "string") -> "bool":
     return True
 
 
+@plugin
+def server_ca():
+    filename = Config.get("compiler_rest_transport", "ssl_ca_cert_file", "")
+    if filename == "":
+        return ""
+    if filename is None:
+        raise Exception("%s does not exist" % filename)
+
+    if not os.path.isfile(filename):
+        raise Exception("%s isn't a valid file" % filename)
+
+    file_fd = open(filename, 'r')
+    if file_fd is None:
+        raise Exception("Unable to open file %s" % filename)
+
+    content = file_fd.read()
+    return content
+
+
+@plugin
+def server_password():
+    return Config.get("compiler_rest_transport", "password", "")
+
+
+@plugin
+def server_username():
+    return Config.get("compiler_rest_transport", "username", "")
+
+
+@plugin
+def server_port():
+    return Config.get("compiler_rest_transport", "port", 8888)
+
+
+@plugin
+def get_env(name: "string", default_value: "string" = None) -> "string":
+    env = os.environ
+    if name in env:
+        return env[name]
+    elif default_value is not None:
+        return default_value
+    else:
+        return Unknown(source=name)
+    
+@plugin
+def get_env_int(name: "string", default_value: "number" = None) -> "number":
+    env = os.environ
+    if name in env:
+        return int(env[name])
+    elif default_value is not None:
+        return default_value
+    else:
+        return Unknown(source=name)
+
+
+@plugin
+def is_instance(ctx: Context, obj: "any", cls: "string") -> "bool":
+    t = ctx.get_type(cls)
+    try:
+        t.validate(obj._get_instance())
+    except RuntimeException:
+        return False
+    return True
