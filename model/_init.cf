@@ -25,15 +25,24 @@ entity Resource:
     """
         A base entity for resources that can be exported. This type add specific attributes
         that are common for most handlers.
+    """
+end
 
+entity PurgeableResource extends Resource:
+    """
         :param purged Set whether this resource should exist or not.
         :param purge_on_delete Purge the resource when it is deleted from the configuration model.
             When this attribute is true, the server will include a resource with purged=true when
             this resource is no longer included in the configuration model.
-        :param managed This determines whether this resource is managed by Inmanta or not.
     """
     bool purged=false
     bool purge_on_delete=true
+end
+
+entity ManagedResource extends Resource:
+    """
+        :param managed This determines whether this resource is managed by Inmanta or not.
+    """
     bool managed=true
 end
 
