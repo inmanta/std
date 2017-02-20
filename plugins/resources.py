@@ -20,12 +20,10 @@ import logging
 import re
 import urllib
 import os
-import base64
 
 from inmanta.agent.handler import provider, ResourceHandler
 from inmanta.execute.util import Unknown
 from inmanta.resources import Resource, resource, ResourceNotFoundExcpetion
-from inmanta import methods
 
 
 LOGGER = logging.getLogger(__name__)
@@ -376,7 +374,7 @@ class YumPackage(ResourceHandler):
         return props
 
     def _run_yum(self, args):
-        #todo: cache value
+        # todo: cache value
         if self._io.file_exists("/usr/bin/dnf"):
             return self._io.run("/usr/bin/dnf", ["-d", "0", "-e", "0", "-y"] + args)
         else:
@@ -434,7 +432,7 @@ class YumPackage(ResourceHandler):
         stdout = output[0].strip()
         error_msg = output[1].strip()
         if output[2] != 0:
-            raise Exception("Yum failed: stdout:"+stdout +" errout: " + error_msg)
+            raise Exception("Yum failed: stdout:" + stdout + " errout: " + error_msg)
 
     def do_changes(self, resource):
         changes = self.list_changes(resource)
@@ -573,4 +571,3 @@ class SymlinkProvider(ResourceHandler):
             changed = True
 
         return changed
-
