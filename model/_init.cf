@@ -1,5 +1,5 @@
 """
-    Copyright 2016 Inmanta
+    Copyright 2017 Inmanta
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -18,8 +18,32 @@
 
 typedef uuid as string matching /[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/
 
-implementation none for std::Entity:
+implementation none for Entity:
+end
 
+entity Resource:
+    """
+        A base entity for resources that can be exported. This type add specific attributes
+        that are common for most handlers.
+    """
+end
+
+entity PurgeableResource extends Resource:
+    """
+        :param purged Set whether this resource should exist or not.
+        :param purge_on_delete Purge the resource when it is deleted from the configuration model.
+            When this attribute is true, the server will include a resource with purged=true when
+            this resource is no longer included in the configuration model.
+    """
+    bool purged=false
+    bool purge_on_delete=true
+end
+
+entity ManagedResource extends Resource:
+    """
+        :param managed This determines whether this resource is managed by Inmanta or not.
+    """
+    bool managed=true
 end
 
 entity ManagedDevice:
