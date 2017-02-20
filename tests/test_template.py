@@ -1,5 +1,5 @@
 """
-    Copyright 2016 Inmanta
+    Copyright 2017 Inmanta
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 """
 
 
-def test_IsDefined(project):
+def test_is_defined(project):
     project.add_mock_file("templates", "testtemplate.tmpl",
                           "{% if other is defined %} {{name}} : {{ other.name }} "
                           "{% if other.other is defined %} sub: {{ other.other.name }} {% endif %} "
@@ -51,7 +51,7 @@ Test1(name="t3",other=Test1(name="t31",other=Test1(name="t32")))
     assert "t2 is not defined" in project.get_stdout()
 
 
-def test_Template(project):
+def test_template(project):
     """
         Test the evaluation of a template
     """

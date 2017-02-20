@@ -21,7 +21,6 @@ import os
 import random
 import re
 import time
-import uuid
 import logging
 from operator import attrgetter
 from itertools import chain
@@ -29,28 +28,22 @@ from collections import defaultdict
 
 
 from inmanta.ast import OptionalValueException, RuntimeException
-from inmanta.ast.statements import ExpressionStatement
-from inmanta.ast.variables import Reference
 from inmanta.execute.proxy import DynamicProxy, UnknownException
 from inmanta.execute.util import Unknown
 from inmanta.export import dependency_manager
-from inmanta.plugins import plugin, Context, PluginMeta
-from inmanta.resources import Resource
+from inmanta.plugins import plugin, Context
 from inmanta.export import unknown_parameters
 from inmanta import resources
 from inmanta.module import Project
-from inmanta import protocol
 from inmanta.config import Config
 
 
-from jinja2 import Environment, meta, FileSystemLoader, PrefixLoader, Template
-from jinja2.defaults import DEFAULT_NAMESPACE
 from copy import copy
-from jinja2.runtime import Undefined
 from inmanta.ast import NotFoundException
-from inmanta.execute.runtime import ExecutionContext
-import jinja2
+from jinja2 import Environment, FileSystemLoader, PrefixLoader
 from jinja2.exceptions import UndefinedError
+from jinja2.runtime import Undefined
+import jinja2
 
 
 @plugin
@@ -95,7 +88,7 @@ class JinjaDynamicProxy(DynamicProxy):
         try:
             value = instance.get_attribute(attribute).get_value()
             return JinjaDynamicProxy.return_value(value)
-        except (OptionalValueException, NotFoundException) as e:
+        except (OptionalValueException, NotFoundException):
             return Undefined("variable %s not set on %s" % (attribute, instance), instance, attribute)
 
 
@@ -211,7 +204,6 @@ def template(ctx: Context, path: "string"):
         return out
     except UndefinedError as e:
         raise NotFoundException(ctx.owner, None, e.message)
-
 
 
 @dependency_manager
@@ -900,7 +892,7 @@ def environment_server(ctx: Context) -> "string":
 def is_set(obj: "any", attribute: "string") -> "bool":
     try:
         getattr(obj, attribute)
-    except:
+    except Exception:
         return False
     return True
 
@@ -940,7 +932,7 @@ def server_port():
 
 
 @plugin
-def get_env(name: "string", default_value: "string" = None) -> "string":
+def get_env(name: "string", default_value: "string"=None) -> "string":
     env = os.environ
     if name in env:
         return env[name]
@@ -949,8 +941,9 @@ def get_env(name: "string", default_value: "string" = None) -> "string":
     else:
         return Unknown(source=name)
 
+
 @plugin
-def get_env_int(name: "string", default_value: "number" = None) -> "number":
+def get_env_int(name: "string", default_value: "number"=None) -> "number":
     env = os.environ
     if name in env:
         return int(env[name])
