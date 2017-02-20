@@ -60,7 +60,7 @@ class Service(Resource):
     """
         This class represents a service on a system.
     """
-    fields = ("onboot", "state", "name")
+    fields = ("onboot", "state", "name", "reload")
 
 
 @resource("std::File", agent="host.name", id_attribute="path")

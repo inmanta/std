@@ -25,6 +25,7 @@ import uuid
 import logging
 from operator import attrgetter
 from itertools import chain
+from collections import defaultdict
 
 
 from inmanta.ast import OptionalValueException, RuntimeException
@@ -218,18 +219,21 @@ def dir_before_file(model, resources):
     """
         If a file is defined on a host, then make the file depend on its parent directory
     """
-    # loop over all resources to find files
+    # loop over all resources to find files and dirs
+    per_host = defaultdict(list)
+    per_host_dirs = defaultdict(list)
     for _id, resource in resources.items():
-
         if resource.is_type("std::File") or resource.is_type("std::Directory"):
-            model = resource.model
-            host = model.host
+            per_host[resource.model.host].append(resource)
+            per_host_dirs[resource.model.host].append(resource)
 
-            for dir in host.directories:
-                dir_res = Resource.get_resource(dir)
-                if dir_res is not None and os.path.dirname(resource.path) == dir_res.path:
+    # now add deps per host
+    for host, files in per_host.items():
+        for hfile in files:
+            for pdir in per_host_dirs[host]:
+                if os.path.dirname(hfile.path) == pdir.path:
                     # Make the File resource require the directory
-                    resource.requires.add(dir_res)
+                    hfile.requires.add(pdir)
 
 
 def get_passwords(pw_file):
@@ -944,7 +948,7 @@ def get_env(name: "string", default_value: "string" = None) -> "string":
         return default_value
     else:
         return Unknown(source=name)
-    
+
 @plugin
 def get_env_int(name: "string", default_value: "number" = None) -> "number":
     env = os.environ
