@@ -21,7 +21,7 @@ import re
 import urllib
 import os
 
-from inmanta.agent.handler import provider, ResourceHandler
+from inmanta.agent.handler import provider, ResourceHandler, HandlerContext
 from inmanta.execute.util import Unknown
 from inmanta.resources import Resource, resource, ResourceNotFoundExcpetion
 
@@ -100,13 +100,19 @@ class PosixFileProvider(ResourceHandler):
     """
         This handler can deploy files on a unix system
     """
-    def check_resource(self, resource):
+    def check_resource(self, ctx: HandlerContext, resource: File) -> File:
         current = resource.clone(purged=False, reload=resource.reload, hash=0)
+
         if not self._io.file_exists(resource.path):
             current.purged = True
             current.hash = 0
+            current.owner = None
+            current.group = None
+            current.permissions = None
+
         else:
             current.hash = self._io.hash_file(resource.path)
+            print(current.hash)
 
             # upload the previous version for back up and for generating a diff!
             content = self._io.read_binary(resource.path)
@@ -119,57 +125,46 @@ class PosixFileProvider(ResourceHandler):
 
         return current
 
-    def _list_changes(self, desired):
-        current = self.check_resource(desired)
-        changes = self._diff(current, desired)
-
-        if desired.purged:
-            if current.purged:
-                return {}
-
-            else:
-                return {"purged": (False, True)}
-
-        return changes
-
-    def list_changes(self, desired):
-        changes = self._list_changes(desired)
-        return changes
-
-    def do_changes(self, resource):
-        changes = self._list_changes(resource)
-        changed = False
-
-        if "purged" in changes and changes["purged"][1]:
+    def do_changes(self, ctx: HandlerContext, resource: File, changes: dict) -> None:
+        if "purged" in changes and changes["purged"]["desired"]:
             self._io.remove(resource.path)
-            return True
+            ctx.set_purged()
+            return
 
+        created = False
+        updated = False
         if "hash" in changes:
             # write the new version
             dir_name = os.path.dirname(resource.path)
-
             if self._io.file_exists(dir_name):
                 data = self.get_file(resource.hash)
                 self._io.put(resource.path, data)
-                changed = True
             else:
                 raise Exception("Parent of %s does not exist, unable to write file." % resource.path)
 
-        if "permissions" in changes or ("purged" in changes and changes["purged"][0]):
+            if "purged" in changes:
+                created = True
+            else:
+                updated = True
+
+        if "permissions" in changes:
             if not self._io.file_exists(resource.path):
                 raise Exception("Cannot change permissions of %s because does not exist" % resource.path)
 
             self._io.chmod(resource.path, str(resource.permissions))
-            changed = True
+            updated = True
 
-        if "owner" in changes or "group" in changes or ("purged" in changes and changes["purged"][0]):
+        if "owner" in changes or "group" in changes:
             if not self._io.file_exists(resource.path):
                 raise Exception("Cannot change ownership of %s because does not exist" % resource.path)
 
             self._io.chown(resource.path, resource.owner, resource.group)
-            changed = True
+            updated = True
 
-        return changes
+        if created:
+            ctx.set_created()
+        elif updated:
+            ctx.set_updated()
 
     def snapshot(self, resource):
         return self._io.read_binary(resource.path)
@@ -194,7 +189,7 @@ class SystemdService(ResourceHandler):
 
         return self._systemd_path is not None
 
-    def check_resource(self, resource):
+    def check_resource(self, ctx, resource):
         current = resource.clone()
 
         exists = self._io.run(self._systemd_path, ["status", "%s.service" % resource.name])[0]
@@ -213,30 +208,22 @@ class SystemdService(ResourceHandler):
         current.onboot = enabled
         return current
 
-    def list_changes(self, desired):
-        current = self.check_resource(desired)
-        changes = self._diff(current, desired)
-        return changes
-
     def can_reload(self):
         """
             Can this handler reload?
         """
         return True
 
-    def do_reload(self, resource):
+    def do_reload(self, ctx, resource):
         """
             Reload this resource
         """
         self._io.run(self._systemd_path, ["reload-or-restart", "%s.service" % resource.name])
 
-    def do_changes(self, resource):
-        changes = self.list_changes(resource)
-        changed = False
-
-        if "state" in changes and changes["state"][0] != changes["state"][1]:
+    def do_changes(self, ctx, resource, changes):
+        if "state" in changes:
             action = "start"
-            if changes["state"][1] == "stopped":
+            if changes["state"]["desired"] == "stopped":
                 action = "stop"
 
             # start or stop the service
@@ -245,21 +232,19 @@ class SystemdService(ResourceHandler):
             if re.search("^Failed", result[1]):
                 raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
 
-            changed = True
+            ctx.set_updated()
 
-        if "onboot" in changes and changes["onboot"][0] != changes["onboot"][1]:
+        if "onboot" in changes:
             action = "enable"
 
-            if not changes["onboot"][1]:
+            if not changes["onboot"]["desired"]:
                 action = "disable"
 
             result = self._io.run(self._systemd_path, [action, "%s.service" % resource.name])
-            changed = True
+            ctx.set_updated()
 
             if re.search("^Failed", result[1]):
                 raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
-
-        return changed
 
 
 @provider("std::Service", name="redhat_service")

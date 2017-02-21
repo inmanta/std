@@ -1,5 +1,5 @@
 """
-    Copyright 2016 Inmanta
+    Copyright 2017 Inmanta
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ from inmanta.config import Config
 LOGGER = logging.getLogger(__name__)
 
 
-def formatMultiplicity(rel):
+def format_multiplicity(rel):
     low = rel.low
     high = rel.high
 
@@ -41,7 +41,7 @@ def formatMultiplicity(rel):
     return str(low) + ":" + str(high)
 
 
-def getFirstStatement(stmts):
+def get_first_statement(stmts):
     out = None
     line = float("inf")
     for stmt in stmts:
@@ -55,7 +55,7 @@ def warn(message):
     LOGGER.warning(message)
 
 
-class Emitter:
+class Emitter(object):
     def __init__(self, dir, file):
         self.dir = dir
         self.index = file
@@ -70,12 +70,12 @@ Contents:
 """
         self.index.write(contents)
 
-    def emitHeading(self, heading, char):
+    def emit_heading(self, heading, char):
         """emit a sphinx heading/section  underlined by char """
         self.file.write(heading + "\n")
         self.file.write(char * len(heading) + "\n\n")
 
-    def emitAttributes(self, entity):
+    def emit_attributes(self, entity):
         all = [entity.get_attribute(name) for name in list(entity._attributes.keys())]
         relations = [x for x in all if isinstance(x, RelationAttribute)]
         others = [x for x in all if not isinstance(x, RelationAttribute)]
@@ -83,7 +83,7 @@ Contents:
         defaults = entity.get_default_values()
 
         if(len(others) != 0):
-            self.emitHeading("attributes", "-")
+            self.emit_heading("attributes", "-")
         for attr in others:
             self.file.write("   .. attribute:: {2}.{0}\n\n      type: :class:`{1}`\n\n".format(
                             attr.get_name(), attr.get_type().__str__().replace("::", "."), entity.get_name()))
@@ -92,7 +92,7 @@ Contents:
                 self.file.write("      default: {0}\n\n".format(defaults[attr.get_name()]))
 
         if(len(relations) != 0):
-            self.emitHeading("relations", "-")
+            self.emit_heading("relations", "-")
 
         for attr in relations:
             otherend = attr.end.get_entity().get_full_name().replace("::", ".") + "." + attr.end.get_name()
@@ -100,40 +100,40 @@ Contents:
                              "multiplicity: {}\n\n      other end: :attr:`{}`\n\n").format(
                             entity.get_name(),
                             attr.get_name(),
-                            formatMultiplicity(attr),
-                            formatMultiplicity(attr.end),
+                            format_multiplicity(attr),
+                            format_multiplicity(attr.end),
                             otherend))
 
-    def emitImplementations(self, entity):
+    def emit_implementations(self, entity):
         if len(entity.implementations) != 0:
-            self.emitHeading("implementations", "-")
+            self.emit_heading("implementations", "-")
 
         for impl in entity.implementations:
             self.file.write("   .. method:: {0}.{1}\n\n".format(entity.get_name(), impl.constraint))
             for impll in impl.implementations:
-                first = getFirstStatement(impll.statements)
+                first = get_first_statement(impll.statements)
                 if first:
                     self.file.write("      name: {0}  ({1}:{2}) \n\n".format(impll.name, first.filename, first.line))
                 else:
                     self.file.write("      name: {0}  \n\n".format(impll.name))
 
-    def emitEntity(self, entity):
+    def emit_entity(self, entity):
         heading = "Entity: {0}".format(entity.get_full_name())
-        self.emitHeading(heading, "=")
+        self.emit_heading(heading, "=")
 
         self.file.write(".. class:: {0}\n\n".format(entity.get_name()))
         for x in entity.parent_entities:
             self.file.write("   superclass: :class:`{0}`\n\n".format(x.get_full_name().replace("::", ".")))
         if(entity.comment):
-            self.emitComment(entity.get_full_name(), entity.comment)
+            self.emit_comment(entity.get_full_name(), entity.comment)
 
-        self.emitAttributes(entity)
+        self.emit_attributes(entity)
 
-        self.emitImplementations(entity)
+        self.emit_implementations(entity)
 
         self.file.write("\n")
 
-    def emitModule(self, module):
+    def emit_module(self, module):
         entities = [var for var in module.variables() if isinstance(var.value, (Entity))]
 
         if len(entities) == 0:
@@ -146,9 +146,9 @@ Contents:
             self.file.write(".. module:: {0}\n\n".format(module.get_full_name().replace("::", ".")))
 
             for var in entities:
-                    self.emitEntity(var.value)
+                    self.emit_entity(var.value)
 
-    def emitComment(self, context, comment):
+    def emit_comment(self, context, comment):
         prewhite = re.match(r"\n?([ \t]+)", comment)
         if prewhite is not None:
             prewhite = prewhite.group(1)
@@ -178,4 +178,4 @@ def export_doc(exporter, types):
         scopes = [x for x in root.get_child_scopes() if not x.get_name().startswith("0x") and not x.get_name().startswith("__")]
         scopes = sorted(scopes, key=lambda x: x.get_full_name())
         for scope in scopes:
-            em.emitModule(scope)
+            em.emit_module(scope)
