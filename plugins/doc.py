@@ -56,8 +56,8 @@ def warn(message):
 
 
 class Emitter(object):
-    def __init__(self, dir, file):
-        self.dir = dir
+    def __init__(self, directory, file):
+        self.dir = directory
         self.index = file
         contents = """Inmanta Documentation
 ===============================
@@ -76,9 +76,9 @@ Contents:
         self.file.write(char * len(heading) + "\n\n")
 
     def emit_attributes(self, entity):
-        all = [entity.get_attribute(name) for name in list(entity._attributes.keys())]
-        relations = [x for x in all if isinstance(x, RelationAttribute)]
-        others = [x for x in all if not isinstance(x, RelationAttribute)]
+        all_attributes = [entity.get_attribute(name) for name in list(entity._attributes.keys())]
+        relations = [x for x in all_attributes if isinstance(x, RelationAttribute)]
+        others = [x for x in all_attributes if not isinstance(x, RelationAttribute)]
 
         defaults = entity.get_default_values()
 
