@@ -16,6 +16,7 @@
     Contact: code@inmanta.com
 """
 
+
 def test_resources(project):
     """
         Test compiling a simple model that uses std

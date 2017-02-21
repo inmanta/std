@@ -20,11 +20,12 @@ import os
 import pytest
 
 
-def test_deploy_file(project, tmpdir):
+def test_file(project, tmpdir):
     """
         Test deploying a file
     """
     # TODO: check reported changes
+    # TODO: check changing user, group and mode
     test_path_1 = str(tmpdir.join("file1"))
     test_path_2 = str(tmpdir.join("file2"))
     file_2_content = "file2 content"
@@ -62,6 +63,9 @@ std::ConfigFile(host=host, path="%s", content="file4")
     ctx = project.deploy(file1, run_as_root=True)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert os.path.exists(test_path_1)
+    with open(test_path_1, "r") as fd:
+        content = fd.read()
+        assert content == "file1"
 
     file2 = project.get_resource("std::File", path=test_path_2)
     ctx = project.deploy(file2, run_as_root=True)
@@ -80,6 +84,55 @@ std::ConfigFile(host=host, path="%s", content="file4")
     file4 = project.get_resource("std::File", path=test_path_4)
     ctx = project.deploy(file4)
     assert ctx.status == inmanta.const.ResourceState.failed
+
+
+def test_directory(project, tmpdir):
+    test_path_1 = str(tmpdir.join("dir1"))
+    project.compile("""
+import unittest
+
+host = std::Host(name="server", os=std::linux)
+std::Directory(host=host, path="%s", owner="root", group="root", mode="755")
+        """ % (test_path_1))
+
+    assert not os.path.exists(test_path_1)
+    d1 = project.get_resource("std::Directory", path=test_path_1)
+    assert d1.path == test_path_1
+    ctx = project.deploy(d1, run_as_root=True)
+    assert ctx.status == inmanta.const.ResourceState.deployed
+    assert os.path.isdir(test_path_1)
+
+
+def test_symlink(project, tmpdir):
+    test_path_1 = str(tmpdir.join("sym1"))
+    project.compile("""
+import unittest
+
+host = std::Host(name="server", os=std::linux)
+std::Symlink(host=host, source="/dev/null", target="%s")
+        """ % (test_path_1))
+
+    assert not os.path.exists(test_path_1)
+    s1 = project.get_resource("std::Symlink", target=test_path_1)
+    ctx = project.deploy(s1)
+    assert ctx.status == inmanta.const.ResourceState.deployed
+
+    assert os.path.islink(test_path_1)
+    assert os.readlink(test_path_1) == "/dev/null"
+
+    project.compile("""
+import unittest
+
+host = std::Host(name="server", os=std::linux)
+std::Symlink(host=host, source="/dev/random", target="%s")
+        """ % (test_path_1))
+
+    s1 = project.get_resource("std::Symlink", target=test_path_1)
+    ctx = project.deploy(s1)
+    assert ctx.status == inmanta.const.ResourceState.deployed
+
+    assert os.path.islink(test_path_1)
+    assert os.readlink(test_path_1) == "/dev/random"
 
 
 class SystemdMock(object):
