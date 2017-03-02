@@ -21,7 +21,7 @@ import re
 import urllib
 import os
 
-from inmanta.agent.handler import provider, ResourceHandler
+from inmanta.agent.handler import provider, ResourceHandler, HandlerContext
 from inmanta.execute.util import Unknown
 from inmanta.resources import Resource, resource, ResourceNotFoundExcpetion
 
@@ -100,11 +100,16 @@ class PosixFileProvider(ResourceHandler):
     """
         This handler can deploy files on a unix system
     """
-    def check_resource(self, resource):
+    def check_resource(self, ctx: HandlerContext, resource: File) -> File:
         current = resource.clone(purged=False, reload=resource.reload, hash=0)
+
         if not self._io.file_exists(resource.path):
             current.purged = True
             current.hash = 0
+            current.owner = None
+            current.group = None
+            current.permissions = None
+
         else:
             current.hash = self._io.hash_file(resource.path)
 
@@ -119,57 +124,46 @@ class PosixFileProvider(ResourceHandler):
 
         return current
 
-    def _list_changes(self, desired):
-        current = self.check_resource(desired)
-        changes = self._diff(current, desired)
-
-        if desired.purged:
-            if current.purged:
-                return {}
-
-            else:
-                return {"purged": (False, True)}
-
-        return changes
-
-    def list_changes(self, desired):
-        changes = self._list_changes(desired)
-        return changes
-
-    def do_changes(self, resource):
-        changes = self._list_changes(resource)
-        changed = False
-
-        if "purged" in changes and changes["purged"][1]:
+    def do_changes(self, ctx: HandlerContext, resource: File, changes: dict) -> None:
+        if "purged" in changes and changes["purged"]["desired"]:
             self._io.remove(resource.path)
-            return True
+            ctx.set_purged()
+            return
 
+        created = False
+        updated = False
         if "hash" in changes:
             # write the new version
             dir_name = os.path.dirname(resource.path)
-
             if self._io.file_exists(dir_name):
                 data = self.get_file(resource.hash)
                 self._io.put(resource.path, data)
-                changed = True
             else:
                 raise Exception("Parent of %s does not exist, unable to write file." % resource.path)
 
-        if "permissions" in changes or ("purged" in changes and changes["purged"][0]):
+            if "purged" in changes:
+                created = True
+            else:
+                updated = True
+
+        if "permissions" in changes:
             if not self._io.file_exists(resource.path):
                 raise Exception("Cannot change permissions of %s because does not exist" % resource.path)
 
             self._io.chmod(resource.path, str(resource.permissions))
-            changed = True
+            updated = True
 
-        if "owner" in changes or "group" in changes or ("purged" in changes and changes["purged"][0]):
+        if "owner" in changes or "group" in changes:
             if not self._io.file_exists(resource.path):
                 raise Exception("Cannot change ownership of %s because does not exist" % resource.path)
 
             self._io.chown(resource.path, resource.owner, resource.group)
-            changed = True
+            updated = True
 
-        return changes
+        if created:
+            ctx.set_created()
+        elif updated:
+            ctx.set_updated()
 
     def snapshot(self, resource):
         return self._io.read_binary(resource.path)
@@ -194,7 +188,7 @@ class SystemdService(ResourceHandler):
 
         return self._systemd_path is not None
 
-    def check_resource(self, resource):
+    def check_resource(self, ctx, resource):
         current = resource.clone()
 
         exists = self._io.run(self._systemd_path, ["status", "%s.service" % resource.name])[0]
@@ -213,30 +207,22 @@ class SystemdService(ResourceHandler):
         current.onboot = enabled
         return current
 
-    def list_changes(self, desired):
-        current = self.check_resource(desired)
-        changes = self._diff(current, desired)
-        return changes
-
     def can_reload(self):
         """
             Can this handler reload?
         """
         return True
 
-    def do_reload(self, resource):
+    def do_reload(self, ctx, resource):
         """
             Reload this resource
         """
         self._io.run(self._systemd_path, ["reload-or-restart", "%s.service" % resource.name])
 
-    def do_changes(self, resource):
-        changes = self.list_changes(resource)
-        changed = False
-
-        if "state" in changes and changes["state"][0] != changes["state"][1]:
+    def do_changes(self, ctx, resource, changes):
+        if "state" in changes:
             action = "start"
-            if changes["state"][1] == "stopped":
+            if changes["state"]["desired"] == "stopped":
                 action = "stop"
 
             # start or stop the service
@@ -245,21 +231,19 @@ class SystemdService(ResourceHandler):
             if re.search("^Failed", result[1]):
                 raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
 
-            changed = True
+            ctx.set_updated()
 
-        if "onboot" in changes and changes["onboot"][0] != changes["onboot"][1]:
+        if "onboot" in changes:
             action = "enable"
 
-            if not changes["onboot"][1]:
+            if not changes["onboot"]["desired"]:
                 action = "disable"
 
             result = self._io.run(self._systemd_path, [action, "%s.service" % resource.name])
-            changed = True
+            ctx.set_updated()
 
             if re.search("^Failed", result[1]):
                 raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
-
-        return changed
 
 
 @provider("std::Service", name="redhat_service")
@@ -271,7 +255,7 @@ class ServiceService(ResourceHandler):
         return (self._io.file_exists("/sbin/chkconfig") and self._io.file_exists("/sbin/service") and
                 not self._io.file_exists("/usr/bin/systemctl"))
 
-    def check_resource(self, resource):
+    def check_resource(self, ctx, resource):
         current = resource.clone()
         exists = self._io.run("/sbin/chkconfig", ["--list", resource.name])[0]
 
@@ -289,30 +273,22 @@ class ServiceService(ResourceHandler):
 
         return current
 
-    def list_changes(self, desired):
-        current = self.check_resource(desired)
-        changes = self._diff(current, desired)
-        return changes
-
     def can_reload(self):
         """
             Can this handler reload?
         """
         return True
 
-    def do_reload(self, resource):
+    def do_reload(self, ctx, resource):
         """
             Reload this resource
         """
         self._io.run("/sbin/service", [resource.name, "reload"])
 
-    def do_changes(self, resource):
-        changes = self.list_changes(resource)
-        changed = False
-
-        if "state" in changes and changes["state"][0] != changes["state"][1]:
+    def do_changes(self, ctx, resource, changes):
+        if "state" in changes:
             action = "start"
-            if changes["state"][1] == "stopped":
+            if changes["state"]["desired"] == "stopped":
                 action = "stop"
 
             # start or stop the service
@@ -321,21 +297,19 @@ class ServiceService(ResourceHandler):
             if re.search("^Failed", result[1]):
                 raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
 
-            changed = True
+            ctx.set_updated()
 
-        if "enabled" in changes and changes["enabled"][0] != changes["enabled"][1]:
+        if "enabled" in changes:
             action = "on"
 
-            if not changes["enabled"][1]:
+            if not changes["enabled"]["desired"]:
                 action = "off"
 
             result = self._io.run("/sbin/chkconfig", [resource.name, action])
-            changed = True
+            ctx.set_updated()
 
             if re.search("^Failed", result[1]):
                 raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
-
-        return changed
 
 
 @provider("std::Package", name="yum")
@@ -380,7 +354,7 @@ class YumPackage(ResourceHandler):
         else:
             return self._io.run("/usr/bin/yum", ["-d", "0", "-e", "0", "-y"] + args)
 
-    def check_resource(self, resource):
+    def check_resource(self, ctx, resource):
         yum_output = self._run_yum(["info", resource.name])
         lines = yum_output[0].split("\n")
 
@@ -411,8 +385,8 @@ class YumPackage(ResourceHandler):
 
         return data
 
-    def list_changes(self, resource):
-        state = self.check_resource(resource)
+    def list_changes(self, ctx, resource):
+        state = self.check_resource(ctx, resource)
 
         changes = {}
         if resource.state == "removed":
@@ -434,23 +408,19 @@ class YumPackage(ResourceHandler):
         if output[2] != 0:
             raise Exception("Yum failed: stdout:" + stdout + " errout: " + error_msg)
 
-    def do_changes(self, resource):
-        changes = self.list_changes(resource)
-        changed = False
-
+    def do_changes(self, ctx, resource, changes):
         if "state" in changes:
             if changes["state"][1] == "removed":
                 self._result(self._run_yum(["remove", resource.name]))
+                ctx.set_purged()
 
             elif changes["state"][1] == "installed":
                 self._result(self._run_yum(["install", resource.name]))
-                changed = True
+                ctx.set_created()
 
         if "version" in changes:
             self._result(self._run_yum(["update", resource.name]))
-            changed = True
-
-        return changed
+            ctx.set_updated()
 
 
 @provider("std::Directory", name="posix_directory")
@@ -460,7 +430,7 @@ class DirectoryHandler(ResourceHandler):
 
         TODO: add recursive operations
     """
-    def check_resource(self, resource):
+    def check_resource(self, ctx, resource):
         current = resource.clone(purged=False)
 
         if not self._io.file_exists(resource.path):
@@ -472,39 +442,31 @@ class DirectoryHandler(ResourceHandler):
 
         return current
 
-    def list_changes(self, resource):
-        current = self.check_resource(resource)
-        if resource.purged:
-            if current.purged:
-                return {}
-
-            else:
-                return {"purged": (False, True)}
-
-        changes = self._diff(current, resource)
-        return changes
-
-    def do_changes(self, resource):
-        changes = self.list_changes(resource)
-
-        changed = False
+    def do_changes(self, ctx, resource, changes):
+        created = False
+        updated = False
         if "purged" in changes:
-            if changes["purged"][1]:
+            if changes["purged"]["desired"]:
                 self._io.rmdir(resource.path)
+                ctx.set_purged()
                 return
             else:
                 self._io.mkdir(resource.path)
+                created = True
 
-        if "permissions" in changes or ("purged" in changes and changes["purged"][0]):
+        if "permissions" in changes or created:
             mode = str(resource.permissions)
             self._io.chmod(resource.path, mode)
-            changed = True
+            updated = True
 
-        if "owner" in changes or "group" in changes or ("purged" in changes and changes["purged"][0]):
+        if "owner" in changes or "group" in changes or created:
             self._io.chown(resource.path, resource.owner, resource.group)
-            changed = True
+            updated = True
 
-        return changed
+        if created:
+            ctx.set_created()
+        elif updated:
+            ctx.set_updated()
 
 
 @provider("std::Symlink", name="posix_symlink")
@@ -515,11 +477,13 @@ class SymlinkProvider(ResourceHandler):
     def available(self, resource):
         return self._io.file_exists("/usr/bin/ln") or self._io.file_exists("/bin/ln")
 
-    def check_resource(self, resource):
+    def check_resource(self, ctx, resource):
         current = resource.clone(purged=False)
 
         if not self._io.file_exists(resource.target):
             current.purged = True
+            current.source = None
+            current.target = None
 
         elif not self._io.is_symlink(resource.target):
             raise Exception("The target of resource %s already exists but is not a symlink." % resource)
@@ -529,45 +493,17 @@ class SymlinkProvider(ResourceHandler):
 
         return current
 
-    def list_changes(self, resource):
-        current = self.check_resource(resource)
-
-        changes = {}
-
-        if resource.purged:
-            if current.purged:
-                return {}
-
-            else:
-                changes["purged"] = (False, True)
-                return changes
-
-        if current.purged:
-            changes["source"] = (None, resource.source)
-            changes["target"] = (None, resource.target)
-
-        elif current.source != resource.source:
-            changes["source"] = (current.source, resource.source)
-            changes["target"] = (resource.target, resource.target)
-
-        return changes
-
-    def do_changes(self, resource):
-        changes = self.list_changes(resource)
-        changed = False
-
+    def do_changes(self, ctx, resource, changes):
         if "purged" in changes:
-            if changes["purged"][1]:
+            if changes["purged"]["desired"]:
                 self._io.remove(resource.target)
-                changed = True
-                return changed
+                ctx.set_purged()
 
             else:
-                self._io.symlink(changes["source"][1], changes["target"][1])
-                changed = True
+                self._io.symlink(resource.source, resource.target)
+                ctx.set_created()
 
-        if "source" in changes:
-            self._io.symlink(changes["source"][1], changes["target"][1])
-            changed = True
-
-        return changed
+        elif "source" in changes:
+            self._io.remove(resource.target)
+            self._io.symlink(resource.source, resource.target)
+            ctx.set_updated()

@@ -16,16 +16,17 @@
     Contact: code@inmanta.com
 """
 
-
-def test_resources(project):
+def test_get_facts(project):
     """
-        Test compiling a simple model that uses std
+        Test mocking out facts during unit tests
     """
+    project.add_fact("std::File[test,path=/etc/motd]", "mode", 755)
     project.compile("""
-import unittest
+    import unittest
+    h = std::Host(name="test", os=std::linux)
+    f = std::File(host=h, path="/etc/motd", content="", owner="root", group="root")
+    f.mode=std::getfact(f, "mode")
+    """)
 
-host = std::Host(name="server", os=std::linux)
-file = std::ConfigFile(host=host, path="/tmp/test", content="1234")
-        """)
-
-    assert len(project.resources) == 1
+    f = project.get_resource("std::File")
+    assert f.permissions == 755

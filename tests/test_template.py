@@ -18,6 +18,9 @@
 
 
 def test_is_defined(project):
+    """
+        Test the use of is defined
+    """
     project.add_mock_file("templates", "testtemplate.tmpl",
                           "{% if other is defined %} {{name}} : {{ other.name }} "
                           "{% if other.other is defined %} sub: {{ other.other.name }} {% endif %} "
@@ -61,4 +64,4 @@ value = "1234"
 std::print(std::template("unittest/test.tmpl"))
     """)
 
-    assert "1234\n" == project.get_stdout()
+    assert project.get_stdout() == "1234\n"

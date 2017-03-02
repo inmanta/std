@@ -816,6 +816,21 @@ def getfact(context: Context, resource: "any", fact_name: "string", default_valu
         Retrieve a fact of the given resource
     """
     resource_id = resources.to_id(resource)
+    if resource_id is None:
+        raise Exception("Facts can only be retreived from resources.")
+
+    # Special case for unit testing and mocking
+    if hasattr(context.compiler, "refs") and "facts" in context.compiler.refs:
+        if resource_id in context.compiler.refs["facts"] and fact_name in context.compiler.refs["facts"][resource_id]:
+            return context.compiler.refs["facts"][resource_id][fact_name]
+
+        fact_value = Unknown(source=resource)
+        unknown_parameters.append({"resource": resource_id, "parameter": fact_name, "source": "fact"})
+
+        if default_value is not None:
+            return default_value
+        return fact_value
+    # End special case
 
     fact_value = None
     try:
@@ -865,13 +880,13 @@ def environment_name(ctx: Context) -> "string":
     """
         Return the name of the environment (as defined on the server)
     """
-    env_id = environment()
+    env = environment()
 
     def call():
-        return ctx.get_client().get_environment(id=env_id)
+        return ctx.get_client().get_environment(id=env)
     result = ctx.run_sync(call)
     if result.code != 200:
-        return Unknown(source=env_id)
+        return Unknown(source=env)
     return result.result["environment"]["name"]
 
 
@@ -961,3 +976,4 @@ def is_instance(ctx: Context, obj: "any", cls: "string") -> "bool":
     except RuntimeException:
         return False
     return True
+
