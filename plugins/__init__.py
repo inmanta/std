@@ -607,18 +607,11 @@ def select_attr(item_list: "list", attr: "string") -> "list":
     """
         This query method projects the list onto a new list by transforming
         the list as defined in the expression.
-
-        @param expression: An expression that returns the item that is to be
-            included in the resulting list. The first argument of the
-            expression is the item in the source sequence.
     """
     new_list = []
 
-    if isinstance(attr, str):
-        expression = lambda x: getattr(x, attr)
-
     for item in item_list:
-        new_list.append(expression(item))
+        new_list.append(lambda x: getattr(x, attr))
 
     return new_list
 
