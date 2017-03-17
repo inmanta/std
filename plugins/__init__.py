@@ -25,7 +25,6 @@ import logging
 from operator import attrgetter
 from itertools import chain
 from collections import defaultdict
-import json
 
 
 from inmanta.ast import OptionalValueException, RuntimeException
@@ -977,4 +976,3 @@ def is_instance(ctx: Context, obj: "any", cls: "string") -> "bool":
     except RuntimeException:
         return False
     return True
-

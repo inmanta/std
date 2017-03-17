@@ -16,6 +16,7 @@
     Contact: code@inmanta.com
 """
 
+
 def test_get_facts(project):
     """
         Test mocking out facts during unit tests
