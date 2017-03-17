@@ -15,7 +15,6 @@
 
     Contact: code@inmanta.com
 """
-
 typedef uuid as string matching /[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/
 
 implementation none for Entity:
@@ -25,7 +24,11 @@ entity Resource:
     """
         A base entity for resources that can be exported. This type add specific attributes
         that are common for most handlers.
+        It is not required to inherit from this entity at the moment but highly recommended for documentation purposes.
+
+        :param send_event This controls wether a resource should send its deploy state to the resources in its provides.
     """
+    bool send_event=false
 end
 
 entity PurgeableResource extends Resource:
@@ -65,7 +68,21 @@ index Host(name)
 
 typedef hoststring as string matching /^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*$/
 
-entity File:
+entity Reload extends Resource:
+    """
+        An entity to make the (old) reload mechanism compatible with the event mechanism
+
+        :param reload If a service requires this file, reload or restart the service when this file changes.
+    """
+    bool reload=false
+    bool send_event=undef
+end
+
+implementation reload for Reload:
+    self.send_event=self.reload
+end
+
+entity File extends PurgeableResource, Reload:
     """
         This represents a file on the filesystem
 
@@ -74,23 +91,20 @@ entity File:
         :param owner The owner of the file
         :param group The group of the file
         :param content The file contents
-        :param reload If a service requires this file, reload or restart
-            the service when this file changes.
     """
-    string  path
-    number  mode
-    string  owner
-    string  group
-    string  content
-    bool    reload = false
-    bool    purged = false
+    string path
+    number mode
+    string owner
+    string group
+    string content
+    bool purge_on_delete=false
 end
 
-implement File using std::none
+implement File using reload
 
 typedef ConfigFile as File(mode = 644, owner = "root", group = "root")
 
-Host host [1] -- [0:] File files
+File.host [1] -- Host.files [0:]
 
 index File(host, path)
 
@@ -98,30 +112,28 @@ index File(host, path)
 typedef service_state as string matching self == "running" or self == "stopped"
 
 # a service that is managed
-entity Service:
-    string          name
-    service_state   state
-    bool            onboot
-    bool            reload = false
+entity Service extends Reload:
+    string name
+    service_state state
+    bool onboot
 end
 
-implement Service using std::none
+implement Service using reload
 
-Host host [1] -- [0:] Service services
+Service.host [1] -- Host.services [0:]
 
 index Service(host, name)
 
 # the state of a package
-typedef package_state as string matching self == "installed" or
-                                         self == "removed" or self == "latest"
+typedef package_state as string matching self == "installed" or self == "removed" or self == "latest"
 
-entity Package:
+entity Package extends Reload:
     """
         A software package installed on a managed device.
     """
-    string          name
-    package_state   state
-    bool            reload = false
+    string name
+    package_state state
+    bool reload=false
 end
 
 implement Package using std::none
@@ -130,19 +142,18 @@ Host host [1] -- [0:] Package packages
 
 index Package(host, name)
 
-entity Directory:
+entity Directory extends PurgeableResource, Reload:
     """
         A directory on the filesystem
     """
-    string  path
-    number  mode
-    string  owner
-    string  group
-    bool    reload = false
-    bool    purged = false
+    string path
+    number mode
+    string owner
+    string group
+    bool purge_on_delete=false
 end
 
-implement Directory using std::none
+implement Directory using reload
 
 typedef DefaultDirectory as Directory(mode = 755, owner = "root", group = "root")
 
@@ -150,17 +161,16 @@ Host host [1] -- [0:] Directory directories
 
 index Directory(host, path)
 
-entity Symlink:
+entity Symlink extends PurgeableResource, Reload:
     """
         A symbolic link on the filesystem
     """
-    string  source
-    string  target
-    bool    purged = false
-    bool    reload = false
+    string source
+    string target
+    bool purge_on_delete=false
 end
 
-implement Symlink using std::none
+implement Symlink using std::reload
 
 Host host [1] -- [0:] Symlink symlinks
 
@@ -201,12 +211,6 @@ end
 Host host [1] -- [1] HostConfig host_config
 implement HostConfig using std::none
 
-# deps:
-# Package   requires Service    when Package.host   == Service.host
-# File      requires Service    when File.host      == Service.host
-# Directory requires File       when Directory.host == File.host
-# Package   requires File       when Package.host   == File.host
-
 implementation hostDefaults for std::Host:
     HostConfig(host = self)
 end
@@ -220,9 +224,9 @@ entity State:
         :param state_id The id to identify the state. If left empty, the resource id is used.
                         (This can be used for cross environment/model restores)
     """
-    bool allow_snapshot = true
-    bool allow_restore = true
-    string state_id = ""
+    bool allow_snapshot=true
+    bool allow_restore=true
+    string state_id=""
 end
 
 entity HostGroup:

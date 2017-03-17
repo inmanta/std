@@ -25,6 +25,7 @@ import logging
 from operator import attrgetter
 from itertools import chain
 from collections import defaultdict
+import json
 
 
 from inmanta.ast import OptionalValueException, RuntimeException

@@ -23,7 +23,7 @@ import os
 
 from inmanta.agent.handler import provider, ResourceHandler, HandlerContext
 from inmanta.execute.util import Unknown
-from inmanta.resources import Resource, resource, ResourceNotFoundExcpetion
+from inmanta.resources import Resource, PurgeableResource, resource, ResourceNotFoundExcpetion
 
 
 LOGGER = logging.getLogger(__name__)
@@ -62,20 +62,20 @@ class Service(Resource):
 
 
 @resource("std::File", agent="host.name", id_attribute="path")
-class File(Resource):
+class File(PurgeableResource):
     """
         A file on a filesystem
     """
-    fields = ("path", "owner", "hash", "group", "permissions", "purged", "reload")
+    fields = ("path", "owner", "hash", "group", "permissions", "reload")
     map = {"hash": store_file, "permissions": lambda y, x: int(x.mode)}
 
 
 @resource("std::Directory", agent="host.name", id_attribute="path")
-class Directory(Resource):
+class Directory(PurgeableResource):
     """
         A directory on a filesystem
     """
-    fields = ("path", "owner", "group", "permissions", "purged", "reload")
+    fields = ("path", "owner", "group", "permissions", "reload")
     map = {"permissions": lambda y, x: int(x.mode)}
 
 
@@ -88,11 +88,11 @@ class Package(Resource):
 
 
 @resource("std::Symlink", agent="host.name", id_attribute="target")
-class Symlink(Resource):
+class Symlink(PurgeableResource):
     """
         A symbolic link on the filesystem
     """
-    fields = ("source", "target", "purged", "reload")
+    fields = ("source", "target", "reload")
 
 
 @provider("std::File", name="posix_file")
