@@ -82,7 +82,7 @@ implementation reload for Reload:
     self.send_event=self.reload
 end
 
-entity File extends PurgeableResource, Reload:
+entity File extends Reload, PurgeableResource:
     """
         This represents a file on the filesystem
 
@@ -98,6 +98,7 @@ entity File extends PurgeableResource, Reload:
     string group
     string content
     bool purge_on_delete=false
+    bool send_event=undef
 end
 
 implement File using reload
@@ -136,13 +137,13 @@ entity Package extends Reload:
     bool reload=false
 end
 
-implement Package using std::none
+implement Package using reload
 
 Host host [1] -- [0:] Package packages
 
 index Package(host, name)
 
-entity Directory extends PurgeableResource, Reload:
+entity Directory extends Reload, PurgeableResource:
     """
         A directory on the filesystem
     """
@@ -161,13 +162,14 @@ Host host [1] -- [0:] Directory directories
 
 index Directory(host, path)
 
-entity Symlink extends PurgeableResource, Reload:
+entity Symlink extends Reload, PurgeableResource:
     """
         A symbolic link on the filesystem
     """
     string source
     string target
     bool purge_on_delete=false
+    bool send_event=undef
 end
 
 implement Symlink using std::reload
