@@ -404,7 +404,7 @@ def timestamp(dummy: "any"=None) -> "number":
     """
         Return an integer with the current unix timestamp
 
-        @param any: A dummy argument to be able to use this function as a filter
+        :param any: A dummy argument to be able to use this function as a filter
     """
     return int(time.time())
 
@@ -488,7 +488,7 @@ def any(item_list: "list", expression: "expression") -> "bool":
         This method returns true when at least on item evaluates expression
         to true, otherwise it returns false
 
-        @param expression: An expression that accepts one arguments and
+        :param expression: An expression that accepts one arguments and
             returns true or false
     """
     for item in item_list:
@@ -503,7 +503,7 @@ def all(item_list: "list", expression: "expression") -> "bool":
         This method returns false when at least one item does not evaluate
         expression to true, otherwise it returns true
 
-        @param expression: An expression that accepts one argument and
+        :param expression: An expression that accepts one argument and
             returns true or false
     """
     for item in item_list:
@@ -525,7 +525,7 @@ def each(item_list: "list", expression: "expression") -> "list":
     """
         Iterate over this list executing the expression for each item.
 
-        @param expression: An expression that accepts one arguments and
+        :param expression: An expression that accepts one arguments and
             is evaluated for each item. The returns value of the expression
             is placed in a new list
     """
@@ -545,11 +545,11 @@ def order_by(item_list: "list", expression: "expression"=None, comparator: "expr
         expression and optionally using the comparator function to determine
         the order.
 
-        @param expression: The expression that selects the attributes of the
+        :param expression: The expression that selects the attributes of the
             items in the source list that are used to determine the order
             of the returned list.
 
-        @param comparator: An optional expression that compares two items.
+        :param comparator: An optional expression that compares two items.
     """
     expression_cache = {}
 
@@ -623,12 +623,12 @@ def select_many(item_list: "list", expression: "expression",
         This query method is similar to the select query but it merges
         the results into one list.
 
-        @param expresion: An expression that returns the item that is to be
+        :param expresion: An expression that returns the item that is to be
             included in the resulting list. If that item is a list itself
             it is merged into the result list. The first argument of the
             expression is the item in the source sequence.
 
-        @param selector_expression: This optional arguments allows to
+        :param selector_expression: This optional arguments allows to
             provide an expression that projects the result of the first
             expression. This selector expression is equivalent to what the
             select method expects. If the returned item of expression is
@@ -657,7 +657,7 @@ def where(item_list: "list", expression: "expression") -> "list":
         This query method selects the items in the list that evaluate the
         expression to true.
 
-        @param expression: An expression that returns true or false
+        :param expression: An expression that returns true or false
             to determine if an item from the list is included. The first
             argument of the expression is the item that is to be evaluated.
             The second optional argument is the index of the item in the
@@ -679,7 +679,7 @@ def where_compare(item_list: "list", expr_list: "list") -> "list":
         This query selects items in a list but uses the tupples in expr_list
         to select the items.
 
-        @param expr_list: A list of tupples where the first item is the attr
+        :param expr_list: A list of tupples where the first item is the attr
             name and the second item in the tupple is the value
     """
     new_list = []
@@ -925,17 +925,17 @@ def server_ca():
 
 
 @plugin
-def server_password():
+def server_password() -> "string":
     return Config.get("compiler_rest_transport", "password", "")
 
 
 @plugin
-def server_username():
+def server_username() -> "string":
     return Config.get("compiler_rest_transport", "username", "")
 
 
 @plugin
-def server_port():
+def server_port() -> "string":
     return Config.get("compiler_rest_transport", "port", 8888)
 
 

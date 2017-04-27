@@ -18,6 +18,9 @@
 typedef uuid as string matching /[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/
 
 implementation none for Entity:
+    """
+        An empty implementation that can be used as a safe default.
+    """
 end
 
 entity Resource:
@@ -194,7 +197,13 @@ end
 
 implement OS using std::none
 
-OS os [1] -- [0:] Host host
+Host.os [1] -- OS
+"""
+    Each host has an OS defined. This values is mostly used to select implementation in the
+    where clause of an `implement` statement. The :py:func:`familyof` plugin can be used
+    for this.
+"""
+
 OS member [0:] -- [0:1] OS family
 
 entity HostConfig:
