@@ -29,7 +29,7 @@ from collections import defaultdict
 
 from inmanta.ast import OptionalValueException, RuntimeException
 from inmanta.execute.proxy import DynamicProxy, UnknownException
-from inmanta.execute.util import Unknown
+from inmanta.execute.util import Unknown, NoneValue
 from inmanta.export import dependency_manager
 from inmanta.plugins import plugin, Context
 from inmanta.export import unknown_parameters
@@ -64,6 +64,9 @@ class JinjaDynamicProxy(DynamicProxy):
     @classmethod
     def return_value(cls, value):
         if value is None:
+            return None
+
+        if isinstance(value, NoneValue):
             return None
 
         if isinstance(value, Unknown):
