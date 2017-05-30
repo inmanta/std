@@ -65,3 +65,43 @@ std::print(std::template("unittest/test.tmpl"))
     """)
 
     assert project.get_stdout() == "1234\n"
+    
+    
+def test_plugin_with_list(project):
+    """
+        Test the use of is defined
+    """
+    project.add_mock_file("templates", "test.tmpl",
+                          """{% for item in items | std.key_sort("name") %}  {{ item.name }}
+{% endfor %}""")
+
+    project.compile("""
+import std
+import unittest
+
+entity Item:
+    string name
+end
+
+implement Item using std::none
+
+entity Collection:
+    string content
+end
+
+implementation makeContent for Collection:
+    self.content = std::template("unittest/test.tmpl")
+end
+
+implement Collection using makeContent
+
+Collection.items [0:] -- Item.collection [0:]
+
+c1 = Collection()
+
+t1 = Item(name="t1", collection=c1)
+t2 = Item(name="t2", collection=c1)
+t3 = Item(name="t3", collection=c1)
+    """)
+
+

@@ -180,7 +180,11 @@ def _get_template_engine(ctx):
 
     # register all plugins as filters
     for name, cls in ctx.get_compiler().get_plugins().items():
-        env.filters[name.replace("::", ".")] = cls
+        def curywrapper(func):
+            def safewrapper(*args):
+                return JinjaDynamicProxy.return_value(func(*args))
+            return safewrapper
+        env.filters[name.replace("::", ".")] = curywrapper(cls)
 
     engine_cache = env
     return env
