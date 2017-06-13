@@ -942,7 +942,7 @@ def server_username() -> "string":
 
 
 @plugin
-def server_port() -> "string":
+def server_port() -> "number":
     return Config.get("compiler_rest_transport", "port", 8888)
 
 
