@@ -223,7 +223,7 @@ Host host [1] -- [1] HostConfig host_config
 implement HostConfig using std::none
 
 implementation hostDefaults for std::Host:
-    HostConfig(host = self)
+    HostConfig(host=self)
 end
 
 entity State:
@@ -250,3 +250,29 @@ end
 std::Host hosts [0:] -- [0:] HostGroup host_groups
 
 implement HostGroup using std::none
+
+entity AgentConfig extends PurgeableResource:
+    """
+        Control agent settings. Currently these settings are only applied to autostarted agents
+
+        :attr autostart: When this flag is set to true, the resource will be exported and set the agent map
+                          on the orchestrator. When false (or not set), this instance is ignore but can be used to generate
+                          agent configuration files.
+        :attr agentname: The name of the agent to which this config applies.
+        :attr agent: If a resource is exported, agent manages the resource.
+        :attr uri: The uri that indicates how the agent should execute. Currently the following uri are supported:
+                   * "" An empty string. This is the same as running it locally
+                   * local: Manage resource locally
+                   * ssh://[user@]hostname[:port] Login using ssh. When user is left out, root is assumed. For port, the system
+                     default is used.
+                   * host The actual hostname or ip to use. Altough this is not a valid host in uri form it is supported.
+    """
+    bool? autostart
+    string agentname
+    string agent="internal"
+    string uri="local:"
+end
+
+implement AgentConfig using std::none
+
+index AgentConfig(agentname)
