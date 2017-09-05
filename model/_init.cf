@@ -106,7 +106,13 @@ end
 
 implement File using reload
 
-typedef ConfigFile as File(mode = 644, owner = "root", group = "root")
+entity ConfigFile extends File:
+    number mode=644
+    string owner="root"
+    string group="root"
+end
+
+implement ConfigFile using reload
 
 File.host [1] -- Host.files [0:]
 
@@ -159,7 +165,13 @@ end
 
 implement Directory using reload
 
-typedef DefaultDirectory as Directory(mode = 755, owner = "root", group = "root")
+entity DefaultDirectory extends Directory:
+    number mode=755
+    string owner="root"
+    string group="root"
+end
+
+implement DefaultDirectory using reload
 
 Host host [1] -- [0:] Directory directories
 
