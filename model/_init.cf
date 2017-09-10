@@ -36,6 +36,9 @@ end
 
 entity PurgeableResource extends Resource:
     """
+        A base class for a resource that can be purged and can be purged by Inmanta whenever the resource is no
+        longer managed.
+
         :param purged Set whether this resource should exist or not.
         :param purge_on_delete Purge the resource when it is deleted from the configuration model.
             When this attribute is true, the server will include a resource with purged=true when
@@ -47,6 +50,8 @@ end
 
 entity ManagedResource extends Resource:
     """
+        A base class for a resource that can be ignored/unmanaged by Inmanta.
+
         :param managed This determines whether this resource is managed by Inmanta or not.
     """
     bool managed=true
@@ -107,6 +112,9 @@ end
 implement File using reload
 
 entity ConfigFile extends File:
+    """
+        A file with often used defaults for configuration files.
+    """
     number mode=644
     string owner="root"
     string group="root"
@@ -123,6 +131,13 @@ typedef service_state as string matching self == "running" or self == "stopped"
 
 # a service that is managed
 entity Service extends Reload:
+    """
+        Manage a service on a host.
+
+        :attr name: The name of the service to manage
+        :attr state: The desired state of the service. Valid values are 'running' or 'stopped'
+        :attr onboot: Should the service start on boot.
+    """
     string name
     service_state state
     bool onboot
@@ -140,10 +155,13 @@ typedef package_state as string matching self == "installed" or self == "removed
 entity Package extends Reload:
     """
         A software package installed on a managed device.
+
+        :attr name: The name of the package to manage
+        :attr state: The state of the package. Valid values are 'installed', 'removed' or 'latest'.
+                     latest will upgrade the package when an update is available.
     """
     string name
     package_state state
-    bool reload=false
 end
 
 implement Package using reload
@@ -166,6 +184,9 @@ end
 implement Directory using reload
 
 entity DefaultDirectory extends Directory:
+    """
+        A directory that is world readable. It is also writable for its owner root.
+    """
     number mode=755
     string owner="root"
     string group="root"
