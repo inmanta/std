@@ -236,6 +236,7 @@ class SystemdService(ResourceHandler):
         """
             Reload this resource
         """
+        ctx.info("Reloading service with reload-or-restart")
         self._io.run(self._systemd_path, ["reload-or-restart", "%s.service" % resource.name])
 
     def do_changes(self, ctx, resource, changes):
