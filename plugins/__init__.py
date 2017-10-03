@@ -222,15 +222,17 @@ def dir_before_file(model, resources):
     per_host = defaultdict(list)
     per_host_dirs = defaultdict(list)
     for _id, resource in resources.items():
-        if resource.is_type("std::File") or resource.is_type("std::Directory"):
+        if resource.id.get_entity_type() == "std::File" or resource.id.get_entity_type() == "std::Directory":
             per_host[resource.model.host].append(resource)
+
+        if resource.id.get_entity_type() == "std::Directory":
             per_host_dirs[resource.model.host].append(resource)
 
     # now add deps per host
     for host, files in per_host.items():
         for hfile in files:
             for pdir in per_host_dirs[host]:
-                if os.path.dirname(hfile.path) == pdir.path:
+                if hfile.path != pdir.path and hfile.path[:len(pdir.path)] == pdir.path:
                     # Make the File resource require the directory
                     hfile.requires.add(pdir)
 
