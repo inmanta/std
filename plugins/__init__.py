@@ -88,11 +88,15 @@ class JinjaDynamicProxy(DynamicProxy):
 
     def __getattr__(self, attribute):
         instance = self._get_instance()
-        try:
-            value = instance.get_attribute(attribute).get_value()
-            return JinjaDynamicProxy.return_value(value)
-        except (OptionalValueException, NotFoundException):
-            return Undefined("variable %s not set on %s" % (attribute, instance), instance, attribute)
+        if hasattr(instance, "get_attribute"):
+            try:
+                value = instance.get_attribute(attribute).get_value()
+                return JinjaDynamicProxy.return_value(value)
+            except (OptionalValueException, NotFoundException):
+                return Undefined("variable %s not set on %s" % (attribute, instance), instance, attribute)
+        else:
+            # A native python object such as a dict
+            return getattr(instance, attribute)
 
 
 class SequenceProxy(JinjaDynamicProxy):
@@ -850,11 +854,13 @@ def getfact(context: Context, resource: "any", fact_name: "string", default_valu
         if result.code == 200:
             fact_value = result.result["parameter"]["value"]
         else:
-            logging.getLogger(__name__).debug("Param %s of resource %s is unknown", fact_name, resource_id)
+            logging.getLogger(__name__).info("Param %s of resource %s is unknown", fact_name, resource_id)
             fact_value = Unknown(source=resource)
             unknown_parameters.append({"resource": resource_id, "parameter": fact_name, "source": "fact"})
 
     except ConnectionRefusedError:
+        logging.getLogger(__name__).warning("Param %s of resource %s is unknown because connection to server was refused",
+                                            fact_name, resource_id)
         fact_value = Unknown(source=resource)
         unknown_parameters.append({"resource": resource_id, "parameter": fact_name, "source": "fact"})
 

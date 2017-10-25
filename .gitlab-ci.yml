@@ -1,6 +1,0 @@
-validate:
-    image: fedora-inmanta
-    tags:
-        - docker
-    script:
-        - inmanta -vvv modules validate
