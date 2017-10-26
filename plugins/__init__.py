@@ -921,7 +921,7 @@ def is_set(obj: "any", attribute: "string") -> "bool":
 
 
 @plugin
-def server_ca():
+def server_ca() -> "string":
     filename = Config.get("compiler_rest_transport", "ssl_ca_cert_file", "")
     if filename == "":
         return ""
@@ -940,13 +940,35 @@ def server_ca():
 
 
 @plugin
-def server_password() -> "string":
-    return Config.get("compiler_rest_transport", "password", "")
+def server_token(context: Context) -> "string":
+    token = Config.get("compiler_rest_transport", "token", "")
+    if token == "":
+        return ""
 
+    # Request a new token for this agent
+    token = ""
+    try:
+        client = context.get_client()
 
-@plugin
-def server_username() -> "string":
-    return Config.get("compiler_rest_transport", "username", "")
+        env = Config.get("config", "environment", None)
+        if env is None:
+            raise Exception("The environment of this model should be configured in config>environment")
+
+        def call():
+            return client.create_token(tid=env, client_types=["agent"], idempotent=True)
+
+        result = context.run_sync(call)
+
+        if result.code == 200:
+            token = result.result["token"]
+        else:
+            logging.getLogger(__name__).warning("Unable to get a new token")
+            raise Exception("Unable to get a valid token")
+    except ConnectionRefusedError:
+        logging.getLogger(__name__).exception("Unable to get a new token")
+        raise Exception("Unable to get a valid token")
+
+    return token
 
 
 @plugin
