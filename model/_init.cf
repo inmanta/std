@@ -109,7 +109,7 @@ entity File extends Reload, PurgeableResource:
     bool send_event=undef
 end
 
-implement File using reload
+implement File using reload, fileHost
 
 entity ConfigFile extends File:
     """
@@ -120,11 +120,15 @@ entity ConfigFile extends File:
     string group="root"
 end
 
-implement ConfigFile using reload
+implement ConfigFile using reload, fileHost
 
 File.host [1] -- Host.files [0:]
 
 index File(host, path)
+
+implementation fileHost for File:
+    self.requires = self.host.requires
+end
 
 # the state of a service
 typedef service_state as string matching self == "running" or self == "stopped"
@@ -143,11 +147,15 @@ entity Service extends Reload:
     bool onboot
 end
 
-implement Service using reload
+implement Service using reload, serviceHost
 
 Service.host [1] -- Host.services [0:]
 
 index Service(host, name)
+
+implementation serviceHost for Service:
+    self.requires = self.host.requires
+end
 
 # the state of a package
 typedef package_state as string matching self == "installed" or self == "removed" or self == "latest"
@@ -164,12 +172,17 @@ entity Package extends Reload:
     package_state state
 end
 
-implement Package using reload
+implement Package using reload, pkgHost
 
 Host host [1] -- [0:] Package packages
 
 index Package(host, name)
 
+implementation pkgHost for Package:
+    self.requires = self.host.requires
+end
+
+# a directory
 entity Directory extends Reload, PurgeableResource:
     """
         A directory on the filesystem
@@ -181,7 +194,7 @@ entity Directory extends Reload, PurgeableResource:
     bool purge_on_delete=false
 end
 
-implement Directory using reload
+implement Directory using reload, dirHost
 
 entity DefaultDirectory extends Directory:
     """
@@ -192,12 +205,17 @@ entity DefaultDirectory extends Directory:
     string group="root"
 end
 
-implement DefaultDirectory using reload
+implement DefaultDirectory using reload, dirHost
 
 Host host [1] -- [0:] Directory directories
 
 index Directory(host, path)
 
+implementation dirHost for Directory:
+    self.requires = self.host.requires
+end
+
+# symlink
 entity Symlink extends Reload, PurgeableResource:
     """
         A symbolic link on the filesystem
@@ -208,9 +226,13 @@ entity Symlink extends Reload, PurgeableResource:
     bool send_event=undef
 end
 
-implement Symlink using std::reload
+implement Symlink using std::reload, symHost
 
 Host host [1] -- [0:] Symlink symlinks
+
+implementation symHost for Symlink:
+    self.requires = self.host.requires
+end
 
 # define operating systems
 unix = OS(name = "unix")
