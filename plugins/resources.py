@@ -31,6 +31,21 @@ LOGGER = logging.getLogger(__name__)
 FILE_SOURCE = "imp-module-source:"
 
 
+def generate_content(content_list, seperator):
+    """
+        Generate a sorted list of content to prefix or suffix a file
+    """
+    sort_list = []
+    for content in content_list:
+        if content.sorting_key is None:
+            sort_list.append((content.value, content.value))
+        else:
+            sort_list.append((content.sorting_key, content.value))
+
+    sort_list.sort(key=lambda tup: tup[0])
+    return seperator.join([x[1] for x in sort_list]) + seperator
+
+
 def store_file(exporter, obj):
     content = obj.content
     if isinstance(content, Unknown):
@@ -50,6 +65,11 @@ def store_file(exporter, obj):
         else:
             raise Exception("%s scheme not support for file %s" %
                             (parts.scheme, parts.path))
+
+    if len(obj.prefix_content) > 0:
+        content = generate_content(obj.prefix_content, obj.content_seperator) + obj.content_seperator + content
+    if len(obj.suffix_content) > 0:
+        content += obj.content_seperator + generate_content(obj.suffix_content, obj.content_seperator)
 
     return exporter.upload_file(content)
 

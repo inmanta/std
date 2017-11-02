@@ -759,7 +759,7 @@ def get_file_content(ctx, module_dir, path):
         raise Exception("%s does not exist" % path)
 
     if not os.path.isfile(filename):
-        raise Exception("%s isn't a valid file" % path)
+        raise Exception("%s isn't a valid file (%s)" % (path, filename))
 
     file_fd = open(filename, 'r')
     if file_fd is None:
@@ -940,7 +940,7 @@ def server_ca() -> "string":
 
 
 @plugin
-def server_token(context: Context) -> "string":
+def server_token(context: Context, client_types: "string[]" = ["agent"]) -> "string":
     token = Config.get("compiler_rest_transport", "token", "")
     if token == "":
         return ""
@@ -955,7 +955,7 @@ def server_token(context: Context) -> "string":
             raise Exception("The environment of this model should be configured in config>environment")
 
         def call():
-            return client.create_token(tid=env, client_types=["agent"], idempotent=True)
+            return client.create_token(tid=env, client_types=list(client_types), idempotent=True)
 
         result = context.run_sync(call)
 

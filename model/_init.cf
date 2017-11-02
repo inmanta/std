@@ -29,7 +29,7 @@ entity Resource:
         that are common for most handlers.
         It is not required to inherit from this entity at the moment but highly recommended for documentation purposes.
 
-        :param send_event This controls wether a resource should send its deploy state to the resources in its provides.
+        :attr send_event: This controls wether a resource should send its deploy state to the resources in its provides.
     """
     bool send_event=false
 end
@@ -39,10 +39,11 @@ entity PurgeableResource extends Resource:
         A base class for a resource that can be purged and can be purged by Inmanta whenever the resource is no
         longer managed.
 
-        :param purged Set whether this resource should exist or not.
-        :param purge_on_delete Purge the resource when it is deleted from the configuration model.
-            When this attribute is true, the server will include a resource with purged=true when
-            this resource is no longer included in the configuration model.
+        :attr purged: Set whether this resource should exist or not.
+        :attr purge_on_delete: Purge the resource when it is deleted from the configuration model.
+                               When this attribute is true, the server will include a resource with
+                               purged=true when this resource is no longer included in the
+                               configuration model.
     """
     bool purged=false
     bool purge_on_delete=true
@@ -52,7 +53,7 @@ entity ManagedResource extends Resource:
     """
         A base class for a resource that can be ignored/unmanaged by Inmanta.
 
-        :param managed This determines whether this resource is managed by Inmanta or not.
+        :attr managed: This determines whether this resource is managed by Inmanta or not.
     """
     bool managed=true
 end
@@ -80,7 +81,8 @@ entity Reload extends Resource:
     """
         An entity to make the (old) reload mechanism compatible with the event mechanism
 
-        :param reload If a service requires this file, reload or restart the service when this file changes.
+        :attr reload: If a service requires this file, reload or restart the service when this file
+                      changes.
     """
     bool reload=false
     bool send_event=undef
@@ -94,11 +96,11 @@ entity File extends Reload, PurgeableResource:
     """
         This represents a file on the filesystem
 
-        :param path The path of the file
-        :param mode The permissions of the file
-        :param owner The owner of the file
-        :param group The group of the file
-        :param content The file contents
+        :attr path: The path of the file
+        :attr mode: The permissions of the file
+        :attr owner: The owner of the file
+        :attr group: The group of the file
+        :attr content: The file contents
     """
     string path
     number mode
@@ -107,9 +109,28 @@ entity File extends Reload, PurgeableResource:
     string content
     bool purge_on_delete=false
     bool send_event=undef
+    string content_seperator="\n"
 end
 
 implement File using reload, fileHost
+
+entity Content:
+    """
+        A content block as a prefix or suffix to a file. This blocks are only merged with the content at export time. This
+        is an advanced pattern that can be used to speed up the compilation in very specific use cases.
+
+        :attr sorting_key: The key to use to sort the content blocks in the same list. When this attribute is not set
+                           value is used as sorting key.
+        :attr value: The value to prepend or append
+    """
+    string? sorting_key=null
+    string value
+end
+
+implement Content using std::none
+
+File.prefix_content [0:] -- Content
+File.suffix_content [0:] -- Content
 
 entity ConfigFile extends File:
     """
@@ -285,9 +306,9 @@ entity State:
     """
         Baseclass for entities that contain state
 
-        :param allow_snapshot Allow a snapshot of the state contained in this entity
-        :param allow_restore Allow a restore of the state containted in this entity
-        :param state_id The id to identify the state. If left empty, the resource id is used.
+        :attr allow_snapshot: Allow a snapshot of the state contained in this entity
+        :attr allow_restore: Allow a restore of the state containted in this entity
+        :attr state_id: The id to identify the state. If left empty, the resource id is used.
                         (This can be used for cross environment/model restores)
     """
     bool allow_snapshot=true
