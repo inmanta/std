@@ -417,10 +417,12 @@ class YumPackage(ResourceHandler):
 
         if len(lines) > 0:
             parts = re.search("([^\s]+)\s+([^\s]+)\s+([^\s]+)", lines[0])
-            if parts is not None and not lines[0].startswith("Security:"):
+            if parts is not None and not (lines[0].startswith("Security:") or lines[0].startswith("Update notice")) :
                 version_str = parts.groups()[1]
-                version, release = version_str.split("-")
-
+                pair = version_str.split("-")
+                if len(pair) != 2:
+                    raise Exception("Unexpected output from yum: "+ yum_output[0])
+                version, release = pair
                 data["update"] = (version, release)
 
         return data
