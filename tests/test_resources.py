@@ -135,6 +135,29 @@ std::Symlink(host=host, source="/dev/random", target="%s")
     assert os.readlink(test_path_1) == "/dev/random"
 
 
+def test_symlink_purge(project, tmpdir):
+    """
+        Test removing a symlink
+    """
+    test_path_1 = str(tmpdir.join("sym1"))
+    os.symlink("/dev/null", test_path_1)
+
+    project.compile("""
+import unittest
+
+host = std::Host(name="server", os=std::linux)
+std::Symlink(host=host, source="/dev/null", target="%s", purged=true)
+        """ % (test_path_1))
+
+    s1 = project.get_resource("std::Symlink", target=test_path_1)
+    ctx = project.deploy(s1)
+    assert ctx.status == inmanta.const.ResourceState.deployed
+    assert not os.path.exists(test_path_1)
+
+    ctx = project.deploy(s1)
+    assert ctx.status == inmanta.const.ResourceState.deployed
+
+
 class SystemdMock(object):
     def __init__(self, io):
         self._io = io

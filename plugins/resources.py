@@ -522,8 +522,6 @@ class SymlinkProvider(ResourceHandler):
 
         if not self._io.file_exists(resource.target):
             current.purged = True
-            current.source = None
-            current.target = None
 
         elif not self._io.is_symlink(resource.target):
             raise Exception("The target of resource %s already exists but is not a symlink." % resource)
