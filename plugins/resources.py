@@ -302,10 +302,12 @@ class ServiceService(ResourceHandler):
         if re.search('error reading information on service', exists):
             raise ResourceNotFoundExcpetion("The %s service does not exist" % resource.name)
 
-        enabled = ":on" in self._io.run("/sbin/chkconfig", ["--list", resource.name])[0]
+
+        raw_enabled = self._io.run("/sbin/chkconfig", ["--list", resource.name])[0]        
+        enabled = ":on" in raw_enabled
         running = self._io.run("/sbin/service", [resource.name, "status"])[2] == 0
 
-        current.enabled = enabled
+        current.onboot = enabled
         if running:
             current.state = "running"
         else:
@@ -339,11 +341,13 @@ class ServiceService(ResourceHandler):
 
             ctx.set_updated()
 
-        if "enabled" in changes:
+        if "onboot" in changes:
             action = "on"
 
-            if not changes["enabled"]["desired"]:
+            if not changes["onboot"]["desired"]:
                 action = "off"
+            
+            ctx.debug("Performing /sbin/chkconfig %(args)s", args=[resource.name, action])
 
             result = self._io.run("/sbin/chkconfig", [resource.name, action])
             ctx.set_updated()
