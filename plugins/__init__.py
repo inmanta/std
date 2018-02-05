@@ -1006,3 +1006,19 @@ def is_instance(ctx: Context, obj: "any", cls: "string") -> "bool":
     except RuntimeException:
         return False
     return True
+
+
+@plugin
+def length(value: "string") -> "number":
+    """
+        Return the length of the string
+    """
+    return len(value)
+
+
+@plugin
+def filter(values: "list", not_item: "std::Entity") -> "list":
+    """
+        Filter not_item from values
+    """
+    return [x for x in values if x != not_item]
