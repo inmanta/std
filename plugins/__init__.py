@@ -940,6 +940,11 @@ def server_ca() -> "string":
 
 
 @plugin
+def server_ssl() -> "bool":
+    return Config.get("compiler_rest_transport", "ssl", False)
+
+
+@plugin
 def server_token(context: Context, client_types: "string[]" = ["agent"]) -> "string":
     token = Config.get("compiler_rest_transport", "token", "")
     if token == "":
@@ -1022,3 +1027,11 @@ def filter(values: "list", not_item: "std::Entity") -> "list":
         Filter not_item from values
     """
     return [x for x in values if x != not_item]
+
+
+@plugin
+def dict_get(dct: "dict", key: "string") -> "string":
+    """
+        Get an element from the dict. Raises an exception when the key is not found in the dict
+    """
+    return dct[key]
