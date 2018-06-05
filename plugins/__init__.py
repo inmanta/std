@@ -119,6 +119,9 @@ class SequenceProxy(JinjaDynamicProxy):
 
         return IteratorProxy(instance.__iter__())
 
+    def items(self):
+        return self._get_instance().items()
+
 
 class CallProxy(JinjaDynamicProxy):
     """
