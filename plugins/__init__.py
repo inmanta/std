@@ -27,7 +27,7 @@ from itertools import chain
 from collections import defaultdict
 
 
-from inmanta.ast import OptionalValueException, RuntimeException
+from inmanta.ast import OptionalValueException, RuntimeException, NotFoundException
 from inmanta.execute.proxy import DynamicProxy, UnknownException
 from inmanta.execute.util import Unknown, NoneValue
 from inmanta.export import dependency_manager
@@ -1035,3 +1035,22 @@ def dict_get(dct: "dict", key: "string") -> "string":
         Get an element from the dict. Raises an exception when the key is not found in the dict
     """
     return dct[key]
+
+
+@plugin
+def contains(dct: "dict", key: "string") -> "bool":
+    """
+        Check if key exists in dct.
+    """
+    return key in dct
+
+
+@plugin("getattr")
+def getattribute(entity: "std::Entity", attribute_name: "string", default_value: "any"=None) -> "any":
+    """
+        Return the value of the given attribute. If the attribute does not exist, return the default value.
+    """
+    try:
+        return getattr(entity, attribute_name)
+    except (NotFoundException, KeyError):
+        return default_value
