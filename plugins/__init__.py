@@ -1049,11 +1049,25 @@ def contains(dct: "dict", key: "string") -> "bool":
 
 
 @plugin("getattr")
-def getattribute(entity: "std::Entity", attribute_name: "string", default_value: "any"=None) -> "any":
+def getattribute(entity: "std::Entity", attribute_name: "string", default_value: "any"=None, no_unknown: "bool"=True) -> "any":
     """
         Return the value of the given attribute. If the attribute does not exist, return the default value.
+
+        :attr no_unknown: When this argument is set to true, this method will return the default value when the attribute
+                          is unknown.
     """
     try:
-        return getattr(entity, attribute_name)
+        value = getattr(entity, attribute_name)
+        if isinstance(value, Unknown) and no_unknown:
+            return default_value
+        return value
     except (NotFoundException, KeyError):
         return default_value
+
+
+@plugin
+def invert(value: "bool") -> "bool":
+    """
+        Invert a boolean value
+    """
+    return not value
