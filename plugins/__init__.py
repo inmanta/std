@@ -1071,3 +1071,10 @@ def invert(value: "bool") -> "bool":
         Invert a boolean value
     """
     return not value
+
+@plugin
+def to_number(value: "string") -> "number":
+    """
+        Convert a string to a number
+    """
+    return int(value)
