@@ -1073,8 +1073,8 @@ def invert(value: "bool") -> "bool":
     return not value
 
 @plugin
-def to_number(value: "string") -> "number":
+def to_number(value: "any") -> "number":
     """
-        Convert a string to a number
+        Convert a value to a number
     """
     return int(value)
