@@ -1,18 +1,16 @@
 pipeline {
-  agent {
-    docker {
-      image 'ssh_and_python'
-      args '-u jenkins'
-    }
-  }
+  agent any
   triggers {
     pollSCM '* * * * *'
   }
   stages {
       stage("build"){
-        steps{
-          sh "/home/jenkins/venv/bin/python -m pytest tests"
-        }
+        sh "vagrant up"
       }
+  }
+  post{
+    always{
+      sh "vagrant destroy"
+    }
   }
 }
