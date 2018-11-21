@@ -2,7 +2,6 @@ pipeline {
   agent {
     docker {
       image 'ssh_and_python'
-      args "/usr/sbin/sshd -D"
     }
   }
   triggers {
