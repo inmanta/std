@@ -2,6 +2,7 @@ pipeline {
   agent {
     docker {
       image 'ssh_and_python'
+      args "/usr/sbin/sshd -D"
     }
   }
   triggers {
@@ -10,7 +11,7 @@ pipeline {
   stages {
       stage("build"){
         steps{
-          sh "/home/jenkins/venv/bin/python pytest tests"
+          sh "/home/jenkins/venv/bin/python -m pytest tests"
         }
       }
   }
