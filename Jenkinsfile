@@ -5,7 +5,9 @@ pipeline {
   }
   stages {
       stage("build"){
-        sh "vagrant up"
+        steps{
+          sh "vagrant up"
+        } 
       }
   }
   post{
