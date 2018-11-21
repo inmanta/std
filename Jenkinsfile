@@ -2,6 +2,7 @@ pipeline {
   agent {
     docker {
       image 'ssh_and_python'
+      args '-u jenkins'
     }
   }
   triggers {
