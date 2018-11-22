@@ -30,12 +30,10 @@ pipeline {
     always{
       script{
         withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
+          junit "junit.xml", allowEmptyResults: true
           sh "vagrant destroy"
         }
       }
-    }
-    always{
-      junit "junit.xml"
     }
   }
 
