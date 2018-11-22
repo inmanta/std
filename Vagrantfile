@@ -11,7 +11,7 @@ Vagrant.configure('2') do |config|
     os.tenant_name        = ENV['OS_USERNAME']
     os.project_name = ENV['OS_USERNAME']
     os.flavor             = 'c1m1'
-    os.image              = '20180115-CentOS7-7.4'
+    os.image              = 'ssh_and_python'
     os.floating_ip_pool   = 'public'
     os.networks = 'jenkins'
   end
