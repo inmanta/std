@@ -4,7 +4,11 @@ pipeline {
     pollSCM '* * * * *'
   }
   options { disableConcurrentBuilds() }
- 
+  environment {
+        OS_AUTH_URL         = credentials('jenkins_on_openstack_url')
+        OS_FLOATING_IP_POOL = credentials('jenkins_on_openstack_floating_ip_pool')
+        OS_NETWORK          = credentials('jenkins_on_openstack_network')
+  }
   stages {
     stage("setup"){
       steps{
