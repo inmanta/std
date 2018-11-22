@@ -2,8 +2,6 @@ require 'vagrant-openstack-provider'
 
 Vagrant.configure('2') do |config|
 
-  config.ssh.username = 'centos'
-
   config.vm.provider :openstack do |os|
     os.openstack_auth_url = 'http://node1.inmanta.com:5000/v3'
     os.identity_api_version = '3'
@@ -18,5 +16,7 @@ Vagrant.configure('2') do |config|
     os.networks = 'jenkins'
   end
 
-  config.vm.synced_folder ".", "/sharedolder", type: "sshfs"
+  config.vm.synced_folder ".", "/home/centos/std"
+  config.ssh.username = 'centos'
+  config.vm.provision :shell, path: "vagrant/centos_test_setup.sh"
 end
