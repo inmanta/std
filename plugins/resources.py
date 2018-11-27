@@ -315,7 +315,7 @@ class ServiceService(ResourceHandler):
             raise ResourceNotFoundExcpetion("The %s service does not exist" % resource.name)
 
 
-        raw_enabled = self._io.run("/sbin/chkconfig", ["--list", resource.name])[0]        
+        raw_enabled = self._io.run("/sbin/chkconfig", ["--list", resource.name])[0]
         enabled = ":on" in raw_enabled
         running = self._io.run("/sbin/service", [resource.name, "status"])[2] == 0
 
@@ -360,7 +360,7 @@ class ServiceService(ResourceHandler):
 
             if not changes["onboot"]["desired"]:
                 action = "off"
-            
+
             ctx.debug("Performing /sbin/chkconfig %(args)s", args=[resource.name, action])
 
             result = self._io.run("/sbin/chkconfig", [resource.name, action])
@@ -390,7 +390,7 @@ class YumPackage(ResourceHandler):
             if line.strip() == "Available Packages":
                 break
 
-            result = re.search("^(.+) :\s+(.+)", line)
+            result = re.search(r"""^(.+) :\s+(.+)""", line)
             if result is None:
                 continue
 
@@ -434,7 +434,7 @@ class YumPackage(ResourceHandler):
                 "release": output["Release"], "update": None}
 
         if len(lines) > 0:
-            parts = re.search("([^\s]+)\s+([^\s]+)\s+([^\s]+)", lines[0])
+            parts = re.search(r"""([^\s]+)\s+([^\s]+)\s+([^\s]+)""", lines[0])
             if parts is not None and not lines[0].startswith("Security:"):
                 version_str = parts.groups()[1]
                 version, release = version_str.split("-")

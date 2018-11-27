@@ -27,7 +27,7 @@ from itertools import chain
 from collections import defaultdict
 
 
-from inmanta.ast import OptionalValueException, RuntimeException
+from inmanta.ast import OptionalValueException, RuntimeException, NotFoundException
 from inmanta.execute.proxy import DynamicProxy, UnknownException
 from inmanta.execute.util import Unknown, NoneValue
 from inmanta.export import dependency_manager
@@ -118,6 +118,9 @@ class SequenceProxy(JinjaDynamicProxy):
         instance = self._get_instance()
 
         return IteratorProxy(instance.__iter__())
+
+    def items(self):
+        return self._get_instance().items()
 
 
 class CallProxy(JinjaDynamicProxy):
@@ -1035,3 +1038,43 @@ def dict_get(dct: "dict", key: "string") -> "string":
         Get an element from the dict. Raises an exception when the key is not found in the dict
     """
     return dct[key]
+
+
+@plugin
+def contains(dct: "dict", key: "string") -> "bool":
+    """
+        Check if key exists in dct.
+    """
+    return key in dct
+
+
+@plugin("getattr")
+def getattribute(entity: "std::Entity", attribute_name: "string", default_value: "any"=None, no_unknown: "bool"=True) -> "any":
+    """
+        Return the value of the given attribute. If the attribute does not exist, return the default value.
+
+        :attr no_unknown: When this argument is set to true, this method will return the default value when the attribute
+                          is unknown.
+    """
+    try:
+        value = getattr(entity, attribute_name)
+        if isinstance(value, Unknown) and no_unknown:
+            return default_value
+        return value
+    except (NotFoundException, KeyError):
+        return default_value
+
+
+@plugin
+def invert(value: "bool") -> "bool":
+    """
+        Invert a boolean value
+    """
+    return not value
+
+@plugin
+def to_number(value: "any") -> "number":
+    """
+        Convert a value to a number
+    """
+    return int(value)

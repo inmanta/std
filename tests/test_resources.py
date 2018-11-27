@@ -58,7 +58,7 @@ std::ConfigFile(host=host, path="%s", content="file4")
     assert os.path.exists(test_path_3)
     assert os.path.exists(test_path_4)
 
-    file1 = project.get_resource("std::File", path=test_path_1)
+    file1 = project.get_resource("std::ConfigFile", path=test_path_1)
     assert file1.path == test_path_1
     ctx = project.deploy(file1, run_as_root=True)
     assert ctx.status == inmanta.const.ResourceState.deployed
@@ -67,7 +67,7 @@ std::ConfigFile(host=host, path="%s", content="file4")
         content = fd.read()
         assert content == "file1"
 
-    file2 = project.get_resource("std::File", path=test_path_2)
+    file2 = project.get_resource("std::ConfigFile", path=test_path_2)
     ctx = project.deploy(file2, run_as_root=True)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert os.path.exists(test_path_2)
@@ -76,12 +76,12 @@ std::ConfigFile(host=host, path="%s", content="file4")
         assert content != file_2_content
         assert content == "file2"
 
-    file3 = project.get_resource("std::File", path=test_path_3)
+    file3 = project.get_resource("std::ConfigFile", path=test_path_3)
     ctx = project.deploy(file3, run_as_root=True)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert not os.path.exists(test_path_3)
 
-    file4 = project.get_resource("std::File", path=test_path_4)
+    file4 = project.get_resource("std::ConfigFile", path=test_path_4)
     ctx = project.deploy(file4)
     assert ctx.status == inmanta.const.ResourceState.failed
 
@@ -92,7 +92,7 @@ def test_directory(project, tmpdir):
 import unittest
 
 host = std::Host(name="server", os=std::linux)
-std::Directory(host=host, path="%s", owner="root", group="root", mode="755")
+std::Directory(host=host, path="%s", owner="root", group="root", mode=755)
         """ % (test_path_1))
 
     assert not os.path.exists(test_path_1)
