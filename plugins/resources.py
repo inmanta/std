@@ -204,9 +204,6 @@ class PosixFileProvider(ResourceHandler):
         elif updated:
             ctx.set_updated()
 
-    def snapshot(self, resource):
-        return self._io.read_binary(resource.path)
-
 
 @provider("std::Service", name="systemd")
 class SystemdService(ResourceHandler):
