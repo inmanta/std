@@ -26,6 +26,16 @@ from inmanta.agent.handler import provider, ResourceHandler, HandlerContext, CRU
 from inmanta.execute.util import Unknown
 from inmanta.resources import Resource, PurgeableResource, resource, ResourceNotFoundExcpetion, IgnoreResourceException
 
+import hashlib
+
+def hash_file(content):
+    """
+        Create a hash from the given content
+    """
+    sha1sum = hashlib.new("sha1")
+    sha1sum.update(content)
+
+    return sha1sum.hexdigest()
 
 LOGGER = logging.getLogger(__name__)
 FILE_SOURCE = "imp-module-source:"
@@ -176,6 +186,8 @@ class PosixFileProvider(ResourceHandler):
             dir_name = os.path.dirname(resource.path)
             if self._io.file_exists(dir_name):
                 data = self.get_file(resource.hash)
+                if hash_file(data) != resource.hash:
+                    raise Exception("File has was %s expected %s" % (resource.hash, hash_file(data)))    
                 self._io.put(resource.path, data)
             else:
                 raise Exception("Parent of %s does not exist, unable to write file." % resource.path)
@@ -325,7 +337,9 @@ class ServiceService(ResourceHandler):
         """
             Reload this resource
         """
-        self._io.run("/sbin/service", [resource.name, "reload"])
+        (o, e, ret) = self._io.run("/sbin/service", [resource.name, "reload"])
+        if ret != 0:
+            ctx.info("could not reload! %(ret)s %(out)s %(err)s", ret=ret, out=o, err=e)
 
     def do_changes(self, ctx, resource, changes):
         if "state" in changes:
