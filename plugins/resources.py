@@ -38,7 +38,6 @@ def hash_file(content):
     return sha1sum.hexdigest()
 
 LOGGER = logging.getLogger(__name__)
-FILE_SOURCE = "imp-module-source:"
 
 
 def generate_content(content_list, seperator):
@@ -61,20 +60,9 @@ def store_file(exporter, obj):
     if isinstance(content, Unknown):
         return content
 
-    elif content.startswith(FILE_SOURCE):
-        parts = urllib.parse.urlparse(content[len(FILE_SOURCE):])
-
-        if parts.scheme == "file":
-            with open(parts.path, "rb") as fd:
-                content = fd.read()
-
-        elif parts.scheme == "tmp":
-            with open(parts.path, "rb") as fd:
-                content = fd.read()
-
-        else:
-            raise Exception("%s scheme not support for file %s" %
-                            (parts.scheme, parts.path))
+    if "FileMarker" in content.__class__.__name__ :
+        with open(content.filename,"rb") as fd:
+            content = fd.read()
 
     if len(obj.prefix_content) > 0:
         content = generate_content(obj.prefix_content, obj.content_seperator) + obj.content_seperator + content

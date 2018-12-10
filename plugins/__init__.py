@@ -26,7 +26,6 @@ from operator import attrgetter
 from itertools import chain
 from collections import defaultdict
 
-
 from inmanta.ast import OptionalValueException, RuntimeException, NotFoundException
 from inmanta.execute.proxy import DynamicProxy, UnknownException
 from inmanta.execute.util import Unknown, NoneValue
@@ -781,6 +780,22 @@ def source(ctx: Context, path: "string") -> "string":
     """
     return get_file_content(ctx, 'files', path)
 
+class FileMarker(str):
+    """
+        Marker class to indicate that this string is actually a reference to a file on disk.
+
+        This mechanism is backward compatible with the old in-band mechanism.
+
+        To pass file references from other modules, you can copy paste this class into your own module.
+        The matching in the file handler is:
+        
+            if "FileMarker" in content.__class__.__name__ 
+
+    """
+    def __new__(cls, filename):
+        obj = str.__new__(cls, "imp-module-source:file://" + filename)
+        obj.filename = filename
+        return obj
 
 @plugin
 def file(ctx: Context, path: "string") -> "string":
@@ -788,14 +803,14 @@ def file(ctx: Context, path: "string") -> "string":
         Return the textual contents of the given file
     """
     filename = determine_path(ctx, 'files', path)
-    any
+    
     if filename is None:
         raise Exception("%s does not exist" % path)
 
     if not os.path.isfile(filename):
         raise Exception("%s isn't a valid file" % path)
 
-    return "imp-module-source:file://" + os.path.abspath(filename)
+    return FileMarker(os.path.abspath(filename))
 
 
 @plugin

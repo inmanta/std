@@ -18,12 +18,15 @@
 import inmanta
 import os
 import pytest
+import getpass
 
 
 def test_file(project, tmpdir):
     """
         Test deploying a file
     """
+    user = getpass.getuser()
+
     # TODO: check reported changes
     # TODO: check changing user, group and mode
     test_path_1 = str(tmpdir.join("file1"))
@@ -39,19 +42,28 @@ def test_file(project, tmpdir):
     test_path_4 = str(tmpdir.join("file4"))
     os.mkdir(test_path_4)
 
-    project.compile("""
+    project.compile(
+        """
 import unittest
 
 host = std::Host(name="server", os=std::linux)
 # create a file
-std::ConfigFile(host=host, path="%s", content="file1")
+std::ConfigFile(host=host, path="%(path1)s", content="file1", owner="%(user)s", group="%(user)s")
 # modify a file
-std::ConfigFile(host=host, path="%s", content="file2")
+std::ConfigFile(host=host, path="%(path2)s", content="file2", owner="%(user)s", group="%(user)s")
 # purge a file
-std::ConfigFile(host=host, path="%s", content="file3", purged=true)
+std::ConfigFile(host=host, path="%(path3)s", content="file3", purged=true, owner="%(user)s", group="%(user)s")
 # path is a dir
-std::ConfigFile(host=host, path="%s", content="file4")
-        """ % (test_path_1, test_path_2, test_path_3, test_path_4))
+std::ConfigFile(host=host, path="%(path4)s", content="file4", owner="%(user)s", group="%(user)s")
+        """
+        % {
+            "path1": test_path_1,
+            "path2": test_path_2,
+            "path3": test_path_3,
+            "path4": test_path_4,
+            "user": user,
+        }
+    )
 
     assert not os.path.exists(test_path_1)
     assert os.path.exists(test_path_2)
@@ -60,7 +72,7 @@ std::ConfigFile(host=host, path="%s", content="file4")
 
     file1 = project.get_resource("std::ConfigFile", path=test_path_1)
     assert file1.path == test_path_1
-    ctx = project.deploy(file1, run_as_root=True)
+    ctx = project.deploy(file1, run_as_root=False)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert os.path.exists(test_path_1)
     with open(test_path_1, "r") as fd:
@@ -68,7 +80,7 @@ std::ConfigFile(host=host, path="%s", content="file4")
         assert content == "file1"
 
     file2 = project.get_resource("std::ConfigFile", path=test_path_2)
-    ctx = project.deploy(file2, run_as_root=True)
+    ctx = project.deploy(file2, run_as_root=False)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert os.path.exists(test_path_2)
     with open(test_path_2, "r") as fd:
@@ -77,7 +89,7 @@ std::ConfigFile(host=host, path="%s", content="file4")
         assert content == "file2"
 
     file3 = project.get_resource("std::ConfigFile", path=test_path_3)
-    ctx = project.deploy(file3, run_as_root=True)
+    ctx = project.deploy(file3, run_as_root=False)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert not os.path.exists(test_path_3)
 
@@ -88,12 +100,15 @@ std::ConfigFile(host=host, path="%s", content="file4")
 
 def test_directory(project, tmpdir):
     test_path_1 = str(tmpdir.join("dir1"))
-    project.compile("""
+    project.compile(
+        """
 import unittest
 
 host = std::Host(name="server", os=std::linux)
 std::Directory(host=host, path="%s", owner="root", group="root", mode=755)
-        """ % (test_path_1))
+        """
+        % (test_path_1)
+    )
 
     assert not os.path.exists(test_path_1)
     d1 = project.get_resource("std::Directory", path=test_path_1)
@@ -105,12 +120,15 @@ std::Directory(host=host, path="%s", owner="root", group="root", mode=755)
 
 def test_symlink(project, tmpdir):
     test_path_1 = str(tmpdir.join("sym1"))
-    project.compile("""
+    project.compile(
+        """
 import unittest
 
 host = std::Host(name="server", os=std::linux)
 std::Symlink(host=host, source="/dev/null", target="%s")
-        """ % (test_path_1))
+        """
+        % (test_path_1)
+    )
 
     assert not os.path.exists(test_path_1)
     s1 = project.get_resource("std::Symlink", target=test_path_1)
@@ -120,12 +138,15 @@ std::Symlink(host=host, source="/dev/null", target="%s")
     assert os.path.islink(test_path_1)
     assert os.readlink(test_path_1) == "/dev/null"
 
-    project.compile("""
+    project.compile(
+        """
 import unittest
 
 host = std::Host(name="server", os=std::linux)
 std::Symlink(host=host, source="/dev/random", target="%s")
-        """ % (test_path_1))
+        """
+        % (test_path_1)
+    )
 
     s1 = project.get_resource("std::Symlink", target=test_path_1)
     ctx = project.deploy(s1)
@@ -142,12 +163,15 @@ def test_symlink_purge(project, tmpdir):
     test_path_1 = str(tmpdir.join("sym1"))
     os.symlink("/dev/null", test_path_1)
 
-    project.compile("""
+    project.compile(
+        """
 import unittest
 
 host = std::Host(name="server", os=std::linux)
 std::Symlink(host=host, source="/dev/null", target="%s", purged=true)
-        """ % (test_path_1))
+        """
+        % (test_path_1)
+    )
 
     s1 = project.get_resource("std::Symlink", target=test_path_1)
     ctx = project.deploy(s1)
@@ -173,7 +197,9 @@ class SystemdMock(object):
         assert self._systemd_path is not None
 
     def setup(self):
-        self._io.put("/etc/systemd/system/%s.service" % self._name, """
+        self._io.put(
+            "/etc/systemd/system/%s.service" % self._name,
+            """
 [Unit]
 Description=Test daemon
 Before=default.target
@@ -183,7 +209,8 @@ ExecStart=/bin/sleep 12345
 
 [Install]
 WantedBy=default.target
-""")
+""",
+        )
         self._io.run(self._systemd_path, ["daemon-reload"])
 
     def clean(self):
@@ -191,10 +218,20 @@ WantedBy=default.target
         self._io.run(self._systemd_path, ["daemon-reload"])
 
     def is_active(self):
-        return self._io.run(self._systemd_path, ["is-active", "%s.service" % self._name])[2] == 0
+        return (
+            self._io.run(self._systemd_path, ["is-active", "%s.service" % self._name])[
+                2
+            ]
+            == 0
+        )
 
     def is_enabled(self):
-        return self._io.run(self._systemd_path, ["is-enabled", "%s.service" % self._name])[2] == 0
+        return (
+            self._io.run(self._systemd_path, ["is-enabled", "%s.service" % self._name])[
+                2
+            ]
+            == 0
+        )
 
 
 @pytest.fixture
@@ -212,12 +249,14 @@ def test_systemd_service(project, systemd):
         Test deploying systemd
     """
     # TODO: test reload
-    project.compile("""
+    project.compile(
+        """
 import unittest
 
 host = std::Host(name="server", os=std::linux)
 svc = std::Service(host=host, name="test", state="running", onboot=true)
-""")
+"""
+    )
 
     svc = project.get_resource("std::Service", name="test")
     ctx = project.deploy(svc, run_as_root=True)
@@ -226,12 +265,14 @@ svc = std::Service(host=host, name="test", state="running", onboot=true)
     assert systemd.is_enabled()
     assert systemd.is_active()
 
-    project.compile("""
+    project.compile(
+        """
 import unittest
 
 host = std::Host(name="server", os=std::linux)
 svc = std::Service(host=host, name="test", state="stopped", onboot=true)
-""")
+"""
+    )
 
     svc = project.get_resource("std::Service", name="test")
     ctx = project.deploy(svc, run_as_root=True)
@@ -240,12 +281,14 @@ svc = std::Service(host=host, name="test", state="stopped", onboot=true)
     assert systemd.is_enabled()
     assert not systemd.is_active()
 
-    project.compile("""
+    project.compile(
+        """
 import unittest
 
 host = std::Host(name="server", os=std::linux)
 svc = std::Service(host=host, name="test", state="stopped", onboot=false)
-""")
+"""
+    )
 
     svc = project.get_resource("std::Service", name="test")
     ctx = project.deploy(svc, run_as_root=True)
