@@ -118,6 +118,33 @@ std::Directory(host=host, path="%s", owner="root", group="root", mode=755)
     assert os.path.isdir(test_path_1)
 
 
+@pytest.mark.parametrize("current_state_purged", [True, False])
+def test_directory_purge(project, tmpdir, current_state_purged):
+    test_path_1 = str(tmpdir.join("dir1"))
+
+    if current_state_purged:
+        assert not os.path.exists(test_path_1)
+    else:
+        os.mkdir(test_path_1)
+        assert os.path.exists(test_path_1)
+
+    project.compile(
+        """
+import unittest
+
+host = std::Host(name="server", os=std::linux)
+std::Directory(host=host, path="%s", owner="root", group="root", mode=755, purged=true)
+        """
+        % (test_path_1)
+    )
+
+    d1 = project.get_resource("std::Directory", path=test_path_1)
+    assert d1.path == test_path_1
+    ctx = project.deploy(d1, run_as_root=True)
+    assert ctx.status == inmanta.const.ResourceState.deployed
+    assert not os.path.exists(test_path_1)
+
+
 def test_symlink(project, tmpdir):
     test_path_1 = str(tmpdir.join("sym1"))
     project.compile(
@@ -156,12 +183,18 @@ std::Symlink(host=host, source="/dev/random", target="%s")
     assert os.readlink(test_path_1) == "/dev/random"
 
 
-def test_symlink_purge(project, tmpdir):
+@pytest.mark.parametrize("current_state_purged", [True, False])
+def test_symlink_purge(project, tmpdir, current_state_purged):
     """
         Test removing a symlink
     """
     test_path_1 = str(tmpdir.join("sym1"))
-    os.symlink("/dev/null", test_path_1)
+
+    if current_state_purged:
+        assert not os.path.exists(test_path_1)
+    else:
+        os.symlink("/dev/null", test_path_1)
+        assert os.path.exists(test_path_1)
 
     project.compile(
         """
@@ -180,6 +213,7 @@ std::Symlink(host=host, source="/dev/null", target="%s", purged=true)
 
     ctx = project.deploy(s1)
     assert ctx.status == inmanta.const.ResourceState.deployed
+    assert not os.path.exists(test_path_1)
 
 
 class SystemdMock(object):
