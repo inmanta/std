@@ -2,6 +2,7 @@ pipeline {
   agent any
   triggers {
     pollSCM '* * * * *'
+    cron("H H(2-5) * * *")
   }
   options { disableConcurrentBuilds() }
   environment {
