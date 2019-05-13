@@ -33,6 +33,7 @@ std::ConfigFile(host=host, path="%(path1)s", content=std::file("unittest/testfil
     assert file1.path == test_path_1
 
     ctx_dryrun1 = project.dryrun(file1)
+    assert len(ctx_dryrun1.changes) == 1
     assert ctx_dryrun1.changes["purged"]["current"]
     assert not ctx_dryrun1.changes["purged"]["desired"]
 
