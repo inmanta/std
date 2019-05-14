@@ -99,23 +99,71 @@ std::ConfigFile(host=host, path="%(path4)s", content="file4", owner="%(user)s", 
 
 
 def test_directory(project, tmpdir):
+    user = getpass.getuser()
     test_path_1 = str(tmpdir.join("dir1"))
     project.compile(
-        """
+        f"""
 import unittest
 
 host = std::Host(name="server", os=std::linux)
-std::Directory(host=host, path="%s", owner="root", group="root", mode=755)
+std::Directory(host=host, path="{test_path_1}", owner="{user}", group="{user}", mode=755)
         """
-        % (test_path_1)
     )
 
     assert not os.path.exists(test_path_1)
     d1 = project.get_resource("std::Directory", path=test_path_1)
     assert d1.path == test_path_1
-    ctx = project.deploy(d1, run_as_root=True)
+
+    ctx_dryrun1 = project.dryrun(d1)
+    assert len(ctx_dryrun1.changes) == 1
+    assert ctx_dryrun1.changes["purged"]["current"]
+    assert not ctx_dryrun1.changes["purged"]["desired"]
+
+    ctx = project.deploy(d1, run_as_root=False)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert os.path.isdir(test_path_1)
+
+    ctx_dryrun2 = project.dryrun(d1)
+    assert not ctx_dryrun2.changes
+
+
+@pytest.mark.parametrize("current_state_purged", [True, False])
+def test_directory_purge(project, tmpdir, current_state_purged):
+    user = getpass.getuser()
+    test_path_1 = str(tmpdir.join("dir1"))
+
+    if current_state_purged:
+        assert not os.path.exists(test_path_1)
+    else:
+        os.mkdir(test_path_1)
+        assert os.path.exists(test_path_1)
+
+    project.compile(
+        f"""
+import unittest
+
+host = std::Host(name="server", os=std::linux)
+std::Directory(host=host, path="{test_path_1}", owner="{user}", group="{user}", mode=775, purged=true)
+        """
+    )
+
+    d1 = project.get_resource("std::Directory", path=test_path_1)
+    assert d1.path == test_path_1
+
+    ctx_dryrun1 = project.dryrun(d1)
+    if current_state_purged:
+        assert not ctx_dryrun1.changes
+    else:
+        assert len(ctx_dryrun1.changes) == 1
+        assert not ctx_dryrun1.changes["purged"]["current"]
+        assert ctx_dryrun1.changes["purged"]["desired"]
+
+    ctx = project.deploy(d1, run_as_root=False)
+    assert ctx.status == inmanta.const.ResourceState.deployed
+    assert not os.path.exists(test_path_1)
+
+    ctx_dryrun2 = project.dryrun(d1)
+    assert not ctx_dryrun2.changes
 
 
 def test_symlink(project, tmpdir):
@@ -132,6 +180,12 @@ std::Symlink(host=host, source="/dev/null", target="%s")
 
     assert not os.path.exists(test_path_1)
     s1 = project.get_resource("std::Symlink", target=test_path_1)
+
+    ctx_dryrun1 = project.dryrun(s1)
+    assert len(ctx_dryrun1.changes) == 1
+    assert ctx_dryrun1.changes["purged"]["current"]
+    assert not ctx_dryrun1.changes["purged"]["desired"]
+
     ctx = project.deploy(s1)
     assert ctx.status == inmanta.const.ResourceState.deployed
 
@@ -149,19 +203,34 @@ std::Symlink(host=host, source="/dev/random", target="%s")
     )
 
     s1 = project.get_resource("std::Symlink", target=test_path_1)
+
+    ctx_dryrun2 = project.dryrun(s1)
+    assert len(ctx_dryrun2.changes) == 1
+    assert ctx_dryrun2.changes["source"]["current"] == "/dev/null"
+    assert ctx_dryrun2.changes["source"]["desired"] == "/dev/random"
+
     ctx = project.deploy(s1)
     assert ctx.status == inmanta.const.ResourceState.deployed
 
     assert os.path.islink(test_path_1)
     assert os.readlink(test_path_1) == "/dev/random"
 
+    ctx_dryrun2 = project.dryrun(s1)
+    assert not ctx_dryrun2.changes
 
-def test_symlink_purge(project, tmpdir):
+
+@pytest.mark.parametrize("current_state_purged", [True, False])
+def test_symlink_purge(project, tmpdir, current_state_purged):
     """
         Test removing a symlink
     """
     test_path_1 = str(tmpdir.join("sym1"))
-    os.symlink("/dev/null", test_path_1)
+
+    if current_state_purged:
+        assert not os.path.exists(test_path_1)
+    else:
+        os.symlink("/dev/null", test_path_1)
+        assert os.path.exists(test_path_1)
 
     project.compile(
         """
@@ -174,12 +243,27 @@ std::Symlink(host=host, source="/dev/null", target="%s", purged=true)
     )
 
     s1 = project.get_resource("std::Symlink", target=test_path_1)
+
+    ctx_dryrun1 = project.dryrun(s1)
+    if current_state_purged:
+        assert not ctx_dryrun1.changes
+    else:
+        assert len(ctx_dryrun1.changes) == 1
+        assert ctx_dryrun1.changes["purged"]["desired"]
+
     ctx = project.deploy(s1)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert not os.path.exists(test_path_1)
 
+    ctx_dryrun2 = project.dryrun(s1)
+    assert not ctx_dryrun2.changes
+
     ctx = project.deploy(s1)
     assert ctx.status == inmanta.const.ResourceState.deployed
+    assert not os.path.exists(test_path_1)
+
+    ctx_dryrun3 = project.dryrun(s1)
+    assert not ctx_dryrun3.changes
 
 
 class SystemdMock(object):

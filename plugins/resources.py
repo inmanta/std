@@ -133,76 +133,59 @@ class AgentConfig(PurgeableResource):
 
 
 @provider("std::File", name="posix_file")
-class PosixFileProvider(ResourceHandler):
+class PosixFileProvider(CRUDHandler):
     """
         This handler can deploy files on a unix system
     """
-    def check_resource(self, ctx: HandlerContext, resource: File) -> File:
-        current = resource.clone(purged=False, reload=resource.reload, hash=0)
-
+    def read_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
         if not self._io.file_exists(resource.path):
-            current.purged = True
-            current.hash = 0
-            current.owner = None
-            current.group = None
-            current.permissions = None
+            raise ResourcePurged()
 
-        else:
-            current.hash = self._io.hash_file(resource.path)
+        resource.hash = self._io.hash_file(resource.path)
 
-            # upload the previous version for back up and for generating a diff!
-            content = self._io.read_binary(resource.path)
+        # upload the previous version for back up and for generating a diff!
+        content = self._io.read_binary(resource.path)
 
-            if not self.stat_file(current.hash):
-                self.upload_file(current.hash, content)
+        if not self.stat_file(resource.hash):
+            self.upload_file(resource.hash, content)
 
-            for key, value in self._io.file_stat(resource.path).items():
-                setattr(current, key, value)
+        for key, value in self._io.file_stat(resource.path).items():
+            setattr(resource, key, value)
 
-        return current
+    def create_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
+        if self._io.file_exists(resource.path):
+            raise Exception(f"Cannot create file {resource.path}, because it already exists.")
 
-    def do_changes(self, ctx: HandlerContext, resource: File, changes: dict) -> None:
-        if "purged" in changes and changes["purged"]["desired"]:
+        data = self.get_file(resource.hash)
+        if hash_file(data) != resource.hash:
+            raise Exception("File hash was %s expected %s" % (resource.hash, hash_file(data)))
+
+        self._io.put(resource.path, data)
+        self._io.chmod(resource.path, str(resource.permissions))
+        self._io.chown(resource.path, resource.owner, resource.group)
+        ctx.set_created()
+
+    def delete_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
+        if self._io.file_exists(resource.path):
             self._io.remove(resource.path)
             ctx.set_purged()
-            return
 
-        created = False
-        updated = False
+    def update_resource(self, ctx: HandlerContext, changes: dict, resource: PurgeableResource) -> None:
+        if not self._io.file_exists(resource.path):
+            raise Exception(f"Cannot update file {resource.path} because it doesn't exist")
+
         if "hash" in changes:
-            # write the new version
-            dir_name = os.path.dirname(resource.path)
-            if self._io.file_exists(dir_name):
-                data = self.get_file(resource.hash)
-                if hash_file(data) != resource.hash:
-                    raise Exception("File has was %s expected %s" % (resource.hash, hash_file(data)))    
-                self._io.put(resource.path, data)
-            else:
-                raise Exception("Parent of %s does not exist, unable to write file." % resource.path)
-
-            if "purged" in changes:
-                created = True
-            else:
-                updated = True
+            data = self.get_file(resource.hash)
+            if hash_file(data) != resource.hash:
+                raise Exception("File hash was %s expected %s" % (resource.hash, hash_file(data)))
+            self._io.put(resource.path, data)
 
         if "permissions" in changes:
-            if not self._io.file_exists(resource.path):
-                raise Exception("Cannot change permissions of %s because does not exist" % resource.path)
-
             self._io.chmod(resource.path, str(resource.permissions))
-            updated = True
 
         if "owner" in changes or "group" in changes:
-            if not self._io.file_exists(resource.path):
-                raise Exception("Cannot change ownership of %s because does not exist" % resource.path)
-
             self._io.chown(resource.path, resource.owner, resource.group)
-            updated = True
-
-        if created:
-            ctx.set_created()
-        elif updated:
-            ctx.set_updated()
+        ctx.set_updated()
 
 
 @provider("std::Service", name="systemd")
@@ -467,87 +450,67 @@ class YumPackage(ResourceHandler):
 
 
 @provider("std::Directory", name="posix_directory")
-class DirectoryHandler(ResourceHandler):
+class DirectoryHandler(CRUDHandler):
     """
         A handler for creating directories
 
         TODO: add recursive operations
     """
-    def check_resource(self, ctx, resource):
-        current = resource.clone(purged=False)
-
+    def read_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
         if not self._io.file_exists(resource.path):
-            current.purged = True
-
+            raise ResourcePurged()
         else:
             for key, value in self._io.file_stat(resource.path).items():
-                setattr(current, key, value)
+                setattr(resource, key, value)
 
-        return current
+    def create_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
+        self._io.mkdir(resource.path)
+        mode = str(resource.permissions)
+        self._io.chmod(resource.path, mode)
+        self._io.chown(resource.path, resource.owner, resource.group)
+        ctx.set_created()
 
-    def do_changes(self, ctx, resource, changes):
-        created = False
-        updated = False
-        if "purged" in changes:
-            if changes["purged"]["desired"]:
-                self._io.rmdir(resource.path)
-                ctx.set_purged()
-                return
-            else:
-                self._io.mkdir(resource.path)
-                created = True
+    def delete_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
+        self._io.rmdir(resource.path)
+        ctx.set_purged()
 
-        if "permissions" in changes or created:
+    def update_resource(self, ctx: HandlerContext, changes: dict, resource: PurgeableResource) -> None:
+        if "permissions" in changes:
             mode = str(resource.permissions)
             self._io.chmod(resource.path, mode)
-            updated = True
-
-        if "owner" in changes or "group" in changes or created:
+        if "owner" in changes or "group" in changes:
             self._io.chown(resource.path, resource.owner, resource.group)
-            updated = True
-
-        if created:
-            ctx.set_created()
-        elif updated:
-            ctx.set_updated()
+        ctx.set_updated()
 
 
 @provider("std::Symlink", name="posix_symlink")
-class SymlinkProvider(ResourceHandler):
+class SymlinkProvider(CRUDHandler):
     """
         This handler can deploy symlinks on unix systems
     """
     def available(self, resource):
         return self._io.file_exists("/usr/bin/ln") or self._io.file_exists("/bin/ln")
 
-    def check_resource(self, ctx, resource):
-        current = resource.clone(purged=False)
-
+    def read_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
         if not self._io.file_exists(resource.target):
-            current.purged = True
-
+            raise ResourcePurged()
         elif not self._io.is_symlink(resource.target):
             raise Exception("The target of resource %s already exists but is not a symlink." % resource)
-
         else:
-            current.source = self._io.readlink(resource.target)
+            resource.source = self._io.readlink(resource.target)
 
-        return current
+    def create_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
+        self._io.symlink(resource.source, resource.target)
+        ctx.set_created()
 
-    def do_changes(self, ctx, resource, changes):
-        if "purged" in changes:
-            if changes["purged"]["desired"]:
-                self._io.remove(resource.target)
-                ctx.set_purged()
+    def delete_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
+        self._io.remove(resource.target)
+        ctx.set_purged()
 
-            else:
-                self._io.symlink(resource.source, resource.target)
-                ctx.set_created()
-
-        elif "source" in changes:
-            self._io.remove(resource.target)
-            self._io.symlink(resource.source, resource.target)
-            ctx.set_updated()
+    def update_resource(self, ctx: HandlerContext, changes: dict, resource: PurgeableResource) -> None:
+        self._io.remove(resource.target)
+        self._io.symlink(resource.source, resource.target)
+        ctx.set_updated()
 
 
 @provider("std::AgentConfig", name="agentrest")
