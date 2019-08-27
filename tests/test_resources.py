@@ -345,6 +345,7 @@ svc = std::Service(host=host, name="test", state="running", onboot=true)
     svc = project.get_resource("std::Service", name="test")
     ctx = project.deploy(svc, run_as_root=True)
     assert ctx.status == inmanta.const.ResourceState.deployed
+    assert ctx.change == inmanta.const.Change.updated
 
     assert systemd.is_enabled()
     assert systemd.is_active()
@@ -361,6 +362,7 @@ svc = std::Service(host=host, name="test", state="stopped", onboot=true)
     svc = project.get_resource("std::Service", name="test")
     ctx = project.deploy(svc, run_as_root=True)
     assert ctx.status == inmanta.const.ResourceState.deployed
+    assert ctx.change == inmanta.const.Change.updated
 
     assert systemd.is_enabled()
     assert not systemd.is_active()
@@ -377,6 +379,7 @@ svc = std::Service(host=host, name="test", state="stopped", onboot=false)
     svc = project.get_resource("std::Service", name="test")
     ctx = project.deploy(svc, run_as_root=True)
     assert ctx.status == inmanta.const.ResourceState.deployed
+    assert ctx.change == inmanta.const.Change.updated
 
     assert not systemd.is_enabled()
     assert not systemd.is_active()
