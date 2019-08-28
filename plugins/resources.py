@@ -240,6 +240,7 @@ class SystemdService(ResourceHandler):
         self._io.run(self._systemd_path, ["reload-or-restart", "%s.service" % resource.name])
 
     def do_changes(self, ctx, resource, changes):
+        updated = False
         if "state" in changes:
             action = "start"
             if changes["state"]["desired"] == "stopped":
@@ -251,7 +252,7 @@ class SystemdService(ResourceHandler):
             if re.search("^Failed", result[1]):
                 raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
 
-            ctx.set_updated()
+            updated = True
 
         if "onboot" in changes:
             action = "enable"
@@ -260,10 +261,13 @@ class SystemdService(ResourceHandler):
                 action = "disable"
 
             result = self._io.run(self._systemd_path, [action, "%s.service" % resource.name])
-            ctx.set_updated()
+            updated = True
 
             if re.search("^Failed", result[1]):
                 raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
+
+        if updated:
+            ctx.set_updated()
 
 
 @provider("std::Service", name="redhat_service")
@@ -310,6 +314,7 @@ class ServiceService(ResourceHandler):
             ctx.info("could not reload! %(ret)s %(out)s %(err)s", ret=ret, out=o, err=e)
 
     def do_changes(self, ctx, resource, changes):
+        updated = False
         if "state" in changes:
             action = "start"
             if changes["state"]["desired"] == "stopped":
@@ -321,7 +326,7 @@ class ServiceService(ResourceHandler):
             if re.search("^Failed", result[1]):
                 raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
 
-            ctx.set_updated()
+            updated = True
 
         if "onboot" in changes:
             action = "on"
@@ -332,10 +337,13 @@ class ServiceService(ResourceHandler):
             ctx.debug("Performing /sbin/chkconfig %(args)s", args=[resource.name, action])
 
             result = self._io.run("/sbin/chkconfig", [resource.name, action])
-            ctx.set_updated()
+            updated = True
 
             if re.search("^Failed", result[1]):
                 raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
+
+        if updated:
+            ctx.set_updated()
 
 
 @provider("std::Package", name="yum")
@@ -442,9 +450,10 @@ class YumPackage(ResourceHandler):
 
             elif changes["state"][1] == "installed":
                 self._result(self._run_yum(["install", resource.name]))
+                self._result(self._run_yum(["update", resource.name]))
                 ctx.set_created()
 
-        if "version" in changes:
+        elif "version" in changes:
             self._result(self._run_yum(["update", resource.name]))
             ctx.set_updated()
 

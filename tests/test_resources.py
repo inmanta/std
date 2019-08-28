@@ -345,6 +345,7 @@ svc = std::Service(host=host, name="test", state="running", onboot=true)
     svc = project.get_resource("std::Service", name="test")
     ctx = project.deploy(svc, run_as_root=True)
     assert ctx.status == inmanta.const.ResourceState.deployed
+    assert ctx.change == inmanta.const.Change.updated
 
     assert systemd.is_enabled()
     assert systemd.is_active()
@@ -361,6 +362,7 @@ svc = std::Service(host=host, name="test", state="stopped", onboot=true)
     svc = project.get_resource("std::Service", name="test")
     ctx = project.deploy(svc, run_as_root=True)
     assert ctx.status == inmanta.const.ResourceState.deployed
+    assert ctx.change == inmanta.const.Change.updated
 
     assert systemd.is_enabled()
     assert not systemd.is_active()
@@ -377,6 +379,97 @@ svc = std::Service(host=host, name="test", state="stopped", onboot=false)
     svc = project.get_resource("std::Service", name="test")
     ctx = project.deploy(svc, run_as_root=True)
     assert ctx.status == inmanta.const.ResourceState.deployed
+    assert ctx.change == inmanta.const.Change.updated
 
     assert not systemd.is_enabled()
     assert not systemd.is_active()
+
+
+class YumMock(object):
+    def __init__(self, io):
+        self._io = io
+        self._package_name = "wget"
+
+        if self._io.file_exists("/usr/bin/yum"):
+            self._yum_path = "/usr/bin/yum"
+
+        elif self._io.file_exists("/bin/yum"):
+            self._yum_path = "/bin/yum"
+
+        assert self._yum_path is not None
+
+    def setup(self):
+        self._io.run(self._yum_path, ["-y", "remove", self._package_name])
+
+    def clean(self):
+        self._io.run(self._yum_path, ["-y", "remove", self._package_name])
+
+    def is_installed(self):
+        return (
+            self._io.run(self._yum_path, ["-q", "list", "installed", self._package_name])[
+                2
+            ]
+            == 0
+        )
+
+
+@pytest.fixture
+def yum(project):
+    yum = YumMock(project.io(run_as_root=True))
+    yum.setup()
+
+    yield yum
+
+    yum.clean()
+
+
+def test_std_package(project, yum):
+    assert not yum.is_installed()
+
+    project.compile(
+        """
+import unittest
+
+host = std::Host(name="server", os=std::linux)
+svc = std::Package(host=host, name="wget", state="installed")
+"""
+    )
+
+    svc = project.get_resource("std::Package", name="wget")
+    ctx = project.deploy(svc, run_as_root=True)
+    assert ctx.status == inmanta.const.ResourceState.deployed
+    assert ctx.change == inmanta.const.Change.created
+
+    assert yum.is_installed()
+
+    project.compile(
+        """
+import unittest
+
+host = std::Host(name="server", os=std::linux)
+svc = std::Package(host=host, name="wget", state="installed")
+"""
+    )
+
+    svc = project.get_resource("std::Package", name="wget")
+    ctx = project.deploy(svc, run_as_root=True)
+    assert ctx.status == inmanta.const.ResourceState.deployed
+    assert ctx.change == inmanta.const.Change.nochange
+
+    assert yum.is_installed()
+
+    project.compile(
+        """
+import unittest
+
+host = std::Host(name="server", os=std::linux)
+svc = std::Package(host=host, name="wget", state="removed")
+"""
+    )
+
+    svc = project.get_resource("std::Package", name="wget")
+    ctx = project.deploy(svc, run_as_root=True)
+    assert ctx.status == inmanta.const.ResourceState.deployed
+    assert ctx.change == inmanta.const.Change.purged
+
+    assert not yum.is_installed()
