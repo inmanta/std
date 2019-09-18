@@ -1093,3 +1093,11 @@ def to_number(value: "any") -> "number":
         Convert a value to a number
     """
     return int(value)
+
+@plugin
+def list_files(ctx: Context, path: "string") -> "list":
+    """
+        List files in a directory
+    """
+    path = determine_path(ctx, 'files', path)
+    return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
