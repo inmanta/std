@@ -623,12 +623,7 @@ def select_attr(item_list: "list", attr: "string") -> "list":
         This query method projects the list onto a new list by transforming
         the list as defined in the expression.
     """
-    new_list = []
-
-    for item in item_list:
-        new_list.append(lambda x: getattr(x, attr))
-
-    return new_list
+    return [getattr(item, attr) for item in item_list]
 
 
 @plugin
