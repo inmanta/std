@@ -25,7 +25,7 @@ def test_select_attr(project):
     c.containers += Container(field="B")
     c.containers += Container(field="C")
 
-    Out(fields = std::select_attr(c.containers,"field"))
+    Out(fields = std::select(c.containers,"field"))
 
     """)
 
