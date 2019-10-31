@@ -833,12 +833,15 @@ def familyof(member: "std::OS", family: "string") -> "bool":
 
     return False
 
+fact_cache={}
 
 @plugin
 def getfact(context: Context, resource: "any", fact_name: "string", default_value: "any"=None) -> "any":
     """
         Retrieve a fact of the given resource
     """
+    global fact_cache
+
     resource_id = resources.to_id(resource)
     if resource_id is None:
         raise Exception("Facts can only be retreived from resources.")
@@ -856,13 +859,30 @@ def getfact(context: Context, resource: "any", fact_name: "string", default_valu
         return fact_value
     # End special case
 
-    fact_value = None
     try:
         client = context.get_client()
 
         env = Config.get("config", "environment", None)
         if env is None:
             raise Exception("The environment of this model should be configured in config>environment")
+
+        # load cache
+        if not fact_cache:
+            def call():
+                return client.list_params(tid=env,)
+
+            result = context.run_sync(call)
+            if result.code == 200:
+                fact_values = result.result["parameters"]
+                for fact_value in fact_values:
+                    fact_cache.setdefault(fact_value["resource_id"],{})[fact_value["name"]] = fact_value["value"]
+
+        # attempt cache hit
+        if resource_id in  fact_cache:
+            if fact_name in fact_cache[resource_id]:
+                return fact_cache[resource_id][fact_name]
+
+        fact_value = None
 
         def call():
             return client.get_param(tid=env, id=fact_name, resource_id=resource_id)
