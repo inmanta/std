@@ -384,7 +384,7 @@ def select(objects: "list", attr: "string") -> "list":
     """
         Return a list with the select attributes
     """
-    return [getattr(item, attr) for item in item_list]
+    return [getattr(item, attr) for item in objects]
 
 
 @plugin
