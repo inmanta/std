@@ -34,8 +34,8 @@ std::ConfigFile(host=host, path="%(path1)s", content=std::file("unittest/testfil
 
     ctx_dryrun1 = project.dryrun(file1)
     assert len(ctx_dryrun1.changes) == 1
-    assert ctx_dryrun1.changes["purged"]["current"]
-    assert not ctx_dryrun1.changes["purged"]["desired"]
+    assert ctx_dryrun1.changes["purged"].current
+    assert not ctx_dryrun1.changes["purged"].desired
 
     ctx = project.deploy(file1, run_as_root=False)
     assert ctx.status == ResourceState.deployed
@@ -90,8 +90,8 @@ std::ConfigFile(host=host,
         assert not ctx_dryrun1.changes
     else:
         assert len(ctx_dryrun1.changes) == 1
-        assert not ctx_dryrun1.changes["purged"]["current"]
-        assert ctx_dryrun1.changes["purged"]["desired"]
+        assert not ctx_dryrun1.changes["purged"].current
+        assert ctx_dryrun1.changes["purged"].desired
 
     ctx = project.deploy(file1, run_as_root=False)
     assert ctx.status == ResourceState.deployed
