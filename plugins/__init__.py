@@ -1063,7 +1063,7 @@ def contains(dct: "dict", key: "string") -> "bool":
     return key in dct
 
 
-@plugin("getattr")
+@plugin("getattr", allow_unknown=True)
 def getattribute(entity: "std::Entity", attribute_name: "string", default_value: "any"=None, no_unknown: "bool"=True) -> "any":
     """
         Return the value of the given attribute. If the attribute does not exist, return the default value.
