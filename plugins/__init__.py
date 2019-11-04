@@ -348,23 +348,6 @@ def equals(arg1: "any", arg2: "any", desc: "string"=None):
             raise AssertionError("%s != %s" % (arg1, arg2))
 
 
-@plugin("assert")
-def assert_function(expression: "bool", message: "string"=""):
-    """
-        Raise assertion error is expression is false
-    """
-    if not expression:
-        raise AssertionError("Assertion error: " + message)
-
-
-@plugin
-def delay(x: "any") -> "any":
-    """
-        Delay evaluation
-    """
-    return x
-
-
 @plugin
 def get(ctx: Context, path: "string") -> "any":
     """
