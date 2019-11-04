@@ -116,8 +116,8 @@ std::Directory(host=host, path="{test_path_1}", owner="{user}", group="{user}", 
 
     ctx_dryrun1 = project.dryrun(d1)
     assert len(ctx_dryrun1.changes) == 1
-    assert ctx_dryrun1.changes["purged"]["current"]
-    assert not ctx_dryrun1.changes["purged"]["desired"]
+    assert ctx_dryrun1.changes["purged"].current
+    assert not ctx_dryrun1.changes["purged"].desired
 
     ctx = project.deploy(d1, run_as_root=False)
     assert ctx.status == inmanta.const.ResourceState.deployed
@@ -155,8 +155,8 @@ std::Directory(host=host, path="{test_path_1}", owner="{user}", group="{user}", 
         assert not ctx_dryrun1.changes
     else:
         assert len(ctx_dryrun1.changes) == 1
-        assert not ctx_dryrun1.changes["purged"]["current"]
-        assert ctx_dryrun1.changes["purged"]["desired"]
+        assert not ctx_dryrun1.changes["purged"].current
+        assert ctx_dryrun1.changes["purged"].desired
 
     ctx = project.deploy(d1, run_as_root=False)
     assert ctx.status == inmanta.const.ResourceState.deployed
@@ -183,8 +183,8 @@ std::Symlink(host=host, source="/dev/null", target="%s")
 
     ctx_dryrun1 = project.dryrun(s1)
     assert len(ctx_dryrun1.changes) == 1
-    assert ctx_dryrun1.changes["purged"]["current"]
-    assert not ctx_dryrun1.changes["purged"]["desired"]
+    assert ctx_dryrun1.changes["purged"].current
+    assert not ctx_dryrun1.changes["purged"].desired
 
     ctx = project.deploy(s1)
     assert ctx.status == inmanta.const.ResourceState.deployed
@@ -206,8 +206,8 @@ std::Symlink(host=host, source="/dev/random", target="%s")
 
     ctx_dryrun2 = project.dryrun(s1)
     assert len(ctx_dryrun2.changes) == 1
-    assert ctx_dryrun2.changes["source"]["current"] == "/dev/null"
-    assert ctx_dryrun2.changes["source"]["desired"] == "/dev/random"
+    assert ctx_dryrun2.changes["source"].current == "/dev/null"
+    assert ctx_dryrun2.changes["source"].desired == "/dev/random"
 
     ctx = project.deploy(s1)
     assert ctx.status == inmanta.const.ResourceState.deployed
@@ -249,7 +249,7 @@ std::Symlink(host=host, source="/dev/null", target="%s", purged=true)
         assert not ctx_dryrun1.changes
     else:
         assert len(ctx_dryrun1.changes) == 1
-        assert ctx_dryrun1.changes["purged"]["desired"]
+        assert ctx_dryrun1.changes["purged"].desired
 
     ctx = project.deploy(s1)
     assert ctx.status == inmanta.const.ResourceState.deployed
