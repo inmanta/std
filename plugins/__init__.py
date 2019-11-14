@@ -878,3 +878,8 @@ def to_number(value: "any") -> "number":
         Convert a value to a number
     """
     return int(value)
+
+
+@plugin(allow_unknown=True)
+def is_unknown(value: "any") -> "bool":
+    return isinstance(value, Unknown)
