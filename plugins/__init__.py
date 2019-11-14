@@ -348,23 +348,6 @@ def equals(arg1: "any", arg2: "any", desc: "string"=None):
             raise AssertionError("%s != %s" % (arg1, arg2))
 
 
-@plugin("assert")
-def assert_function(expression: "bool", message: "string"=""):
-    """
-        Raise assertion error is expression is false
-    """
-    if not expression:
-        raise AssertionError("Assertion error: " + message)
-
-
-@plugin
-def delay(x: "any") -> "any":
-    """
-        Delay evaluation
-    """
-    return x
-
-
 @plugin
 def get(ctx: Context, path: "string") -> "any":
     """
@@ -384,11 +367,7 @@ def select(objects: "list", attr: "string") -> "list":
     """
         Return a list with the select attributes
     """
-    r = []
-    for obj in objects:
-        r.append(getattr(obj, attr))
-
-    return r
+    return [getattr(item, attr) for item in objects]
 
 
 @plugin
@@ -498,109 +477,11 @@ def first_of(context: Context, value: "list", type_name: "string") -> "any":
 
 
 @plugin
-def any(item_list: "list", expression: "expression") -> "bool":
-    """
-        This method returns true when at least on item evaluates expression
-        to true, otherwise it returns false
-
-        :param expression: An expression that accepts one arguments and
-            returns true or false
-    """
-    for item in item_list:
-        if expression(item):
-            return True
-    return False
-
-
-@plugin
-def all(item_list: "list", expression: "expression") -> "bool":
-    """
-        This method returns false when at least one item does not evaluate
-        expression to true, otherwise it returns true
-
-        :param expression: An expression that accepts one argument and
-            returns true or false
-    """
-    for item in item_list:
-        if not expression(item):
-            return False
-    return True
-
-
-@plugin
 def count(item_list: "list") -> "number":
     """
         Returns the number of elements in this list
     """
     return len(item_list)
-
-
-@plugin
-def each(item_list: "list", expression: "expression") -> "list":
-    """
-        Iterate over this list executing the expression for each item.
-
-        :param expression: An expression that accepts one arguments and
-            is evaluated for each item. The returns value of the expression
-            is placed in a new list
-    """
-    new_list = []
-
-    for item in item_list:
-        value = expression(item)
-        new_list.append(value)
-
-    return new_list
-
-
-@plugin
-def order_by(item_list: "list", expression: "expression"=None, comparator: "expression"=None) -> "list":
-    """
-        This operation orders a list using the object returned by
-        expression and optionally using the comparator function to determine
-        the order.
-
-        :param expression: The expression that selects the attributes of the
-            items in the source list that are used to determine the order
-            of the returned list.
-
-        :param comparator: An optional expression that compares two items.
-    """
-    expression_cache = {}
-
-    def get_from_cache(item):
-        """
-            Function that is used to retrieve cache results
-        """
-        if item in expression_cache:
-            return expression_cache[item]
-        else:
-            data = expression(item)
-            expression_cache[item] = data
-            return data
-
-    def sort_cmp(item_a, item_b):
-        """
-            A function that uses the optional expressions to sort item_a list
-        """
-        if expression is not None:
-            a_data = get_from_cache(item_a)
-            b_data = get_from_cache(item_b)
-        else:
-            a_data = item_a
-            b_data = item_b
-
-        if comparator is not None:
-            return comparator(a_data, b_data)
-        else:
-            if a_data > b_data:
-                return 1
-            elif b_data > a_data:
-                return -1
-            return 0
-
-    # sort
-    return sorted(item_list, sort_cmp)
 
 
 @plugin
@@ -615,102 +496,6 @@ def unique(item_list: "list") -> "bool":
         seen.add(item)
 
     return True
-
-
-@plugin
-def select_attr(item_list: "list", attr: "string") -> "list":
-    """
-        This query method projects the list onto a new list by transforming
-        the list as defined in the expression.
-    """
-    new_list = []
-
-    for item in item_list:
-        new_list.append(lambda x: getattr(x, attr))
-
-    return new_list
-
-
-@plugin
-def select_many(item_list: "list", expression: "expression",
-                selector_expression: "expression"=None) -> "list":
-    """
-        This query method is similar to the select query but it merges
-        the results into one list.
-
-        :param expresion: An expression that returns the item that is to be
-            included in the resulting list. If that item is a list itself
-            it is merged into the result list. The first argument of the
-            expression is the item in the source sequence.
-
-        :param selector_expression: This optional arguments allows to
-            provide an expression that projects the result of the first
-            expression. This selector expression is equivalent to what the
-            select method expects. If the returned item of expression is
-            not a list this expression is not applied.
-    """
-    new_list = []
-
-    for item in item_list:
-        result = expression(item)
-
-        if not hasattr(result, "__iter__"):
-            new_list.append(result)
-        else:
-            if selector_expression:
-                for result_item in result:
-                    new_list.append(selector_expression(result_item))
-            else:
-                new_list.extend(result)
-
-    return new_list
-
-
-@plugin
-def where(item_list: "list", expression: "expression") -> "list":
-    """
-        This query method selects the items in the list that evaluate the
-        expression to true.
-
-        :param expression: An expression that returns true or false
-            to determine if an item from the list is included. The first
-            argument of the expression is the item that is to be evaluated.
-            The second optional argument is the index of the item in the
-            list.
-    """
-    new_list = []
-    for index in range(len(item_list)):
-        item = item_list[index]
-
-        if expression(item):
-            new_list.append(item)
-
-    return new_list
-
-
-@plugin
-def where_compare(item_list: "list", expr_list: "list") -> "list":
-    """
-        This query selects items in a list but uses the tupples in expr_list
-        to select the items.
-
-        :param expr_list: A list of tupples where the first item is the attr
-            name and the second item in the tupple is the value
-    """
-    new_list = []
-
-    new_expr_list = []
-    for i in range(0, len(expr_list), 2):
-        new_expr_list.append((expr_list[i], expr_list[i + 1]))
-
-    for index in range(len(item_list)):
-        item = item_list[index]
-
-        for attr, value in new_expr_list:
-            if getattr(item, attr) == value:
-                new_list.append(item)
-
-    return new_list
 
 
 @plugin
