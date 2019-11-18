@@ -15,7 +15,122 @@
 
     Contact: code@inmanta.com
 """
-typedef uuid as string matching /[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/
+
+typedef date as string matching std::validate_type("datetime.date", self)
+"""
+    A date expressed in the following format: ``YYYY-MM-DD``
+"""
+typedef time as string matching std::validate_type("datetime.time", self)
+"""
+    A time expressed in the following format: ``HH:MM[:SS[.ffffff]]``
+"""
+typedef datetime as string matching std::validate_type("datetime.datetime", self)
+"""
+    A date and time combination expressed in the following format: ``YYYY-MM-DD[T]HH:MM[:SS[.ffffff]][Z[±]HH[:]MM]]]``
+"""
+typedef ipv4_address as string matching std::validate_type("ipaddress.IPv4Address", self)
+"""
+    A string representing a valid IPv4 address (e.g. 192.168.0.1).
+"""
+typedef ipv4_interface as string matching std::validate_type("ipaddress.IPv4Interface", self)
+"""
+    A string representing an IPv4 interface. This type is equivalent to ipv4_network,
+    except that arbitrary host addresses are accepted.
+"""
+typedef ipv4_network as string matching std::validate_type("ipaddress.IPv4Network", self)
+"""
+    A string consisting of an IPv4 network address and an optional mask, separated by a slash (/). The mask can
+    be either a single number, or a string representation of an IPv4 address.
+
+    Examples: 192.168.1.0/24, 192.168.1.0/255.255.255.0 and 192.168.1.0/0.0.0.255.
+"""
+typedef ipv6_address as string matching std::validate_type("ipaddress.IPv6Address", self)
+"""
+    A string representing a valid IPv6 address.
+
+    Example: 2001:db8::1000
+"""
+typedef ipv6_interface as string matching std::validate_type("ipaddress.IPv6Interface", self)
+"""
+    A string representing an IPv6 interface. This type is equivalent to ipv6_network,
+    except that arbitrary host addresses are accepted.
+"""
+typedef ipv6_network as string matching std::validate_type("ipaddress.IPv6Network", self)
+"""
+    A string consisting of an IPv6 address and an optional prefix length, separated by a slash (/). The IP address
+    is the network address, and the prefix length must be a single number, the prefix.
+
+    Example: 2001:db00::0/24
+"""
+typedef uuid as string matching std::validate_type("uuid.UUID", self)
+"""
+    A string repesenting a uuid.
+"""
+typedef email_str as string matching std::validate_type("pydantic.EmailStr", self)
+"""
+    A string representing a valid email address.
+"""
+typedef name_email as string matching std::validate_type("pydantic.NameEmail", self)
+"""
+    A string consisting of a name and email address combination.
+
+    Example: Fred Bloggs <fred.bloggs@example.com>
+"""
+typedef any_url as string matching std::validate_type("pydantic.AnyUrl", self)
+"""
+    A string representing a URL.
+"""
+typedef any_http_url as string matching std::validate_type("pydantic.AnyHttpUrl", self)
+"""
+    A string representing a URL with scheme http or https.
+"""
+typedef http_url as string matching std::validate_type("pydantic.HttpUrl", self)
+"""
+    A string representing a URL with the following constraints:
+        * scheme: http or https
+        * Top-level domain name must be present in the hostname
+        * Maximum length of 2083 characters
+"""
+typedef ipv_any_address as string matching std::validate_type("pydantic.IPvAnyAddress", self)
+"""
+    A string representing a valid IPv4 or IPv6 address.
+"""
+typedef ipv_any_interface as string matching std::validate_type("pydantic.IPvAnyInterface", self)
+"""
+    A string matching the requiremenst of ipv4_interface or ipv6_interface.
+"""
+typedef ipv_any_network as string matching std::validate_type("pydantic.IPvAnyNetwork", self)
+"""
+    A string matching the requiremenst of ipv4_network or ipv6_network.
+"""
+typedef negative_float as number matching std::validate_type("pydantic.NegativeFloat", self)
+"""
+    A floating point number less than zero.
+"""
+typedef negative_int as number matching std::validate_type("pydantic.NegativeInt", self)
+"""
+    A integer number less than zero.
+"""
+typedef positive_float as number matching std::validate_type("pydantic.PositiveFloat", self)
+"""
+    A floating point number greater than zero.
+"""
+typedef positive_int as number matching std::validate_type("pydantic.PositiveInt", self)
+"""
+    A integer number greater than zero.
+"""
+typedef int as number matching std::validate_type("pydantic.StrictInt", self)
+"""
+    An integer number.
+"""
+typedef alfanum as string matching std::validate_type("pydantic.constr", self, {"regex": "^[a-zA-Z0-9]*$", "strict": true})
+"""
+    An alfanumeric number (lower- and uppercase characters are allowed).
+"""
+typedef base64 as string matching std::is_base64_encoded(self)
+"""
+    A string representing a base64-encoded string.
+"""
 
 implementation none for Entity:
     """

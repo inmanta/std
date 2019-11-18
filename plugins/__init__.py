@@ -25,6 +25,9 @@ import logging
 from operator import attrgetter
 from itertools import chain
 from collections import defaultdict
+import pydantic
+import importlib
+import base64
 
 from inmanta.ast import OptionalValueException, RuntimeException, NotFoundException
 from inmanta.execute.proxy import DynamicProxy, UnknownException
@@ -788,8 +791,8 @@ class FileMarker(str):
 
         To pass file references from other modules, you can copy paste this class into your own module.
         The matching in the file handler is:
-        
-            if "FileMarker" in content.__class__.__name__ 
+
+            if "FileMarker" in content.__class__.__name__
 
     """
     def __new__(cls, filename):
@@ -803,7 +806,7 @@ def file(ctx: Context, path: "string") -> "string":
         Return the textual contents of the given file
     """
     filename = determine_path(ctx, 'files', path)
-    
+
     if filename is None:
         raise Exception("%s does not exist" % path)
 
@@ -1087,9 +1090,86 @@ def invert(value: "bool") -> "bool":
     """
     return not value
 
+
 @plugin
 def to_number(value: "any") -> "number":
     """
         Convert a value to a number
     """
     return int(value)
+
+
+@plugin
+def validate_type(fq_type_name: "string", value: "any", validation_parameters: "dict" = None) -> "bool":
+    """
+        Check whether `value` satisfies the constraints of type `fq_type_name`. When the given type (fq_type_name)
+        requires validation_parameters, they can be provided using the optional `validation_parameters` argument.
+
+        The following types require validation_parameters:
+
+            * pydantic.condecimal:
+                gt: Decimal = None
+                ge: Decimal = None
+                lt: Decimal = None
+                le: Decimal = None
+                max_digits: int = None
+                decimal_places: int = None    
+                multiple_of: Decimal = None
+            * pydantic.confloat and pydantic.conint:
+                gt: float = None
+                ge: float = None
+                lt: float = None
+                le: float = None
+                multiple_of: float = None,
+            * pydantic.constr:
+                min_length: int = None
+                max_length: int = None
+                curtail_length: int = None (Only verify the regex on the first curtail_length of characters)
+                regex: str = None          (The regex is verified via the behavior of Pattern.match())
+            * pydantic.stricturl:
+                min_length: int = 1
+                max_length: int = 2 ** 16
+                tld_required: bool = True
+                allowed_schemes: Optional[Set[str]] = None
+
+        Example usage:
+
+            * Define a vlan_id type which represent a valid vlan ID (0-4,095):
+
+              typedef vlan_id as number matching std::validate_type("pydantic.conint", self, {"ge": 0, "le": 4095})
+
+
+    """
+    if not (fq_type_name.startswith("pydantic.") or
+            fq_type_name.startswith("datetime.") or
+            fq_type_name.startswith("ipaddress.") or
+            fq_type_name.startswith("uuid.")):
+        return False
+    module_name, type_name = fq_type_name.split(".", 1)
+    module = importlib.import_module(module_name)
+    t = getattr(module, type_name)
+    # Construct pydantic model
+    if validation_parameters is not None:
+        model = pydantic.create_model(fq_type_name, value=(t(**validation_parameters), ...))
+    else:
+        model = pydantic.create_model(fq_type_name, value=(t, ...))
+    # Do validation
+    try:
+        model(value=value)
+    except pydantic.ValidationError:
+        return False
+
+    return True
+
+
+@plugin
+def is_base64_encoded(s: "string") -> "bool":
+    """
+        Check whether the given string is base64 encoded.
+    """
+    try:
+        encoded_str = s.encode("utf-8")
+        base64.b64decode(encoded_str, validate=True)
+    except Exception:
+        return False
+    return True
