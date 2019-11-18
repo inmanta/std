@@ -48,7 +48,7 @@ from inmanta.ast import AttributeException
     ("std::positive_int", '5', True),
     ("std::positive_int", '0', False),
     ("std::int", '-2', True),
-    ("std::int", '-2.1', True),
+    ("std::int", '-2.1', False),
     ("std::alfanum", '"Qwerty123"', True),
     ("std::alfanum", '"qwerty/123"', False),
     ("std::base64", '"dGVzdA=="', True),
@@ -62,7 +62,7 @@ def test_attribute_types(project, attr_type, value, is_valid):
 
             implement Test using std::none
 
-            Test(test={value})
+            Test(attr={value})
             """
     if is_valid:
         project.compile(model)
@@ -71,41 +71,15 @@ def test_attribute_types(project, attr_type, value, is_valid):
             project.compile(model)
 
 
-# * pydantic.condecimal:
-#     gt: Decimal = None
-#     ge: Decimal = None
-#     lt: Decimal = None
-#     le: Decimal = None
-#     max_digits: int = None
-#     decimal_places: int = None
-#     multiple_of: Decimal = None
-# * pydantic.confloat and pydantic.conint:
-#     gt: float = None
-#     ge: float = None
-#     lt: float = None
-#     le: float = None
-#     multiple_of: float = None,
-# * pydantic.constr:
-#     min_length: int = None
-#     max_length: int = None
-#     curtail_length: int = None (Only verify the regex on the first curtail_length of characters)
-#     regex: str = None          (The regex is verified via the behavior of Pattern.match())
-# * pydantic.stricturl:
-#     min_length: int = 1
-#     max_length: int = 2 ** 16
-#     tld_required: bool = True
-#     allowed_schemes: Optional[Set[str]] = None
-
-
 @pytest.mark.parametrize("attr_type,base_type,value,validation_parameters,is_valid", [
     ("pydantic.condecimal", "number", 8, '{"gt": 0, "lt": 10}', True),
     ("pydantic.condecimal", "number", 8, '{"gt": 0, "lt": 5}', False),
     ("pydantic.confloat", "number", 1.5, '{"multiple_of": 0.5}', True),
     ("pydantic.confloat", "number", 1.5, '{"multiple_of": 0.2}', False),
-    ("pydantic.conint", "number", 4, ''{"ge": 4}, True),
-    ("pydantic.conint", "number", 4, ''{"ge": 5}, False),
-    ("pydantic.constr", "string", '"test123"', {"regex": "^test.*$"}, True),
-    ("pydantic.constr", "string", '"test123"', {"regex": "^tst.*$"}, False),
+    ("pydantic.conint", "number", 4, '{"ge": 4}', True),
+    ("pydantic.conint", "number", 4, '{"ge": 5}', False),
+    ("pydantic.constr", "string", '"test123"', '{"regex": "^test.*$"}', True),
+    ("pydantic.constr", "string", '"test123"', '{"regex": "^tst.*$"}', False),
     ("pydantic.stricturl", "string", '"http://test:8080"', '{"tld_required": false}', True),
     ("pydantic.stricturl", "string", '"http://test:8080"', '{"tld_required": true}', False),
 ])
