@@ -923,7 +923,7 @@ def validate_type(fq_type_name: "string", value: "any", validation_parameters: "
                 lt: Decimal = None
                 le: Decimal = None
                 max_digits: int = None
-                decimal_places: int = None    
+                decimal_places: int = None
                 multiple_of: Decimal = None
             * pydantic.confloat and pydantic.conint:
                 gt: float = None
@@ -934,8 +934,8 @@ def validate_type(fq_type_name: "string", value: "any", validation_parameters: "
             * pydantic.constr:
                 min_length: int = None
                 max_length: int = None
-                curtail_length: int = None (Only verify the regex on the first curtail_length of characters)
-                regex: str = None          (The regex is verified via the behavior of Pattern.match())
+                curtail_length: int = None (Only verify the regex on the first curtail_length characters)
+                regex: str = None          (The regex is verified via Pattern.match())
             * pydantic.stricturl:
                 min_length: int = 1
                 max_length: int = 2 ** 16
