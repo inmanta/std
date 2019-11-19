@@ -14,11 +14,9 @@ pipeline {
     stage("setup"){
       steps{
         script{
-          withEnv(["GIT_LOCAL_BRANCH=${env.GIT_LOCAL_BRANCH}"]) {
             withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
-              sh "echo \"TEST: ${env}\""
+              sh 'printenv'
               sh "vagrant up"
-            }
           }
         }
       }
@@ -26,12 +24,10 @@ pipeline {
     stage("test"){
       steps{
         script{
-          withEnv(["GIT_LOCAL_BRANCH=${env.GIT_LOCAL_BRANCH}"]) {
-            withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
-              sh "vagrant ssh -c 'cd std; /home/centos/venv/bin/python3 -m pytest tests -s --junitxml=junit.xml'"
-              sh "vagrant ssh-config >ssh.conf"
-              sh "scp -F ssh.conf default:std/junit.xml ."
-            }
+          withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
+            sh "vagrant ssh -c 'cd std; /home/centos/venv/bin/python3 -m pytest tests -s --junitxml=junit.xml'"
+            sh "vagrant ssh-config >ssh.conf"
+            sh "scp -F ssh.conf default:std/junit.xml ."
           }
         }
       }
@@ -40,11 +36,9 @@ pipeline {
   post{
     always{
       script{
-        withEnv(["GIT_LOCAL_BRANCH=${env.GIT_LOCAL_BRANCH}"]) {
-          withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
-            sh "vagrant destroy"
-            junit testResults:"junit.xml", allowEmptyResults: true
-          }
+        withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
+          sh "vagrant destroy"
+          junit testResults:"junit.xml", allowEmptyResults: true
         }
       }
     }
