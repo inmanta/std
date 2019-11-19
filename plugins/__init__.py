@@ -350,7 +350,7 @@ def equals(arg1: "any", arg2: "any", desc: "string"=None):
 @plugin("assert")
 def assert_function(expression: "bool", message: "string"=""):
     """
-        Raise assertion error is expression is false
+        Raise assertion error if expression is false
     """
     if not expression:
         raise AssertionError("Assertion error: " + message)
