@@ -347,6 +347,13 @@ def equals(arg1: "any", arg2: "any", desc: "string"=None):
         else:
             raise AssertionError("%s != %s" % (arg1, arg2))
 
+@plugin("assert")
+def assert_function(expression: "bool", message: "string"=""):
+    """
+        Raise assertion error if expression is false
+    """
+    if not expression:
+        raise AssertionError("Assertion error: " + message)
 
 @plugin
 def get(ctx: Context, path: "string") -> "any":

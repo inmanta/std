@@ -1,3 +1,6 @@
+V1.0.1
+ - Re-Added unnecessary removed plugin `assert_function`
+
 V1.0.0
  - Removed legacy plugins 'any', 'all', 'each', 'order_by', 'select_attr', 'select_many', 'where', 'where_compare', 'delay', 'assert_function'
  - Added is_unknown plugin
