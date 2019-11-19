@@ -14,11 +14,11 @@ pipeline {
     stage("setup"){
       steps{
         script{
-          withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
-            sh "vagrant up"
+            withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
+              sh "vagrant up"
           }
         }
-      } 
+      }
     }
     stage("test"){
       steps{

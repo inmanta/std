@@ -18,5 +18,5 @@ Vagrant.configure('2') do |config|
 
   config.vm.synced_folder ".", "/home/centos/std", type: "rsync"
   config.ssh.username = 'centos'
-  config.vm.provision :shell, path: "vagrant/centos_test_setup.sh"
+  config.vm.provision :shell, path: "vagrant/centos_test_setup.sh", env: {"BRANCH_NAME" => ENV["BRANCH_NAME"]}
 end
