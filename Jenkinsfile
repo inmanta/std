@@ -15,7 +15,6 @@ pipeline {
       steps{
         script{
             withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
-              sh 'printenv'
               sh "vagrant up"
           }
         }
