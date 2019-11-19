@@ -18,7 +18,7 @@ pipeline {
             sh "vagrant up"
           }
         }
-      } 
+      }
     }
     stage("test"){
       steps{
