@@ -16,7 +16,7 @@ pipeline {
         script{
           withEnv(["GIT_LOCAL_BRANCH=${env.GIT_LOCAL_BRANCH}"]) {
             withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
-              sh "echo \"TEST: ${env.GIT_LOCAL_BRANCH}\""
+              sh "echo \"TEST: ${env}\""
               sh "vagrant up"
             }
           }
