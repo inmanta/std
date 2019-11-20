@@ -131,6 +131,12 @@ typedef base64 as string matching std::is_base64_encoded(self)
 """
     A string representing a base64-encoded string.
 """
+typedef readable_ascii as string matching std::validate_type(
+"pydantic.constr", self, {"regex": "^[a-zA-Z-0-9\\!\\"\\#\\$\\%\\&\\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^_\\`\\{\\|\\}\\~]*$", "strict": true}
+)
+"""
+    A string consisting of only readable ascii characters.
+"""
 
 implementation none for Entity:
     """

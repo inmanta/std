@@ -1,5 +1,6 @@
 import pytest
 from inmanta.ast import AttributeException
+import string
 
 
 @pytest.mark.parametrize("attr_type,value,is_valid", [
@@ -98,5 +99,39 @@ def test_constrained_types(project, attr_type, base_type, value, validation_para
     if is_valid:
         project.compile(model)
     else:
+        with pytest.raises(AttributeException):
+            project.compile(model)
+
+
+def test_readable_ascii_type(project):
+    # Test valid characters
+    all_char_string = string.ascii_letters + string.digits + string.punctuation
+    char_set = set([s for s in all_char_string if s != '"' and s != '\\'])
+    char_set.add('\\"')  # Escape double quote
+    char_set.add('\\\\')  # Escape backslash
+    for char in char_set:
+        model = f"""
+                    entity Test:
+                        std::readable_ascii attr
+                    end
+
+                    implement Test using std::none
+
+                    Test(attr="{char}c")
+                    """
+        project.compile(model)
+
+    # Test invalid characters
+    for char in ["test 123", "val1\tval2", "test\x0b", "\x0ctest"]:
+        model = f"""
+                    entity Test:
+                        std::readable_ascii attr
+                    end
+
+                    implement Test using std::none
+
+                    Test(attr="{char}")
+                    """
+
         with pytest.raises(AttributeException):
             project.compile(model)
