@@ -1,1 +1,1 @@
-pytest-inmanta
+pytest-inmanta==0.8.0
