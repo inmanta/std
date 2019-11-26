@@ -1,5 +1,6 @@
 import pytest
 from inmanta.ast import AttributeException
+import string
 
 
 @pytest.mark.parametrize("attr_type,value,is_valid", [
@@ -98,5 +99,47 @@ def test_constrained_types(project, attr_type, base_type, value, validation_para
     if is_valid:
         project.compile(model)
     else:
+        with pytest.raises(AttributeException):
+            project.compile(model)
+
+
+@pytest.mark.parametrize(
+    "type_name,allow_whitespace", [("std::printable_ascii", True), ("std::ascii_word", False)]
+)
+def test_printable_ascii_type(project, type_name, allow_whitespace):
+    # Test valid characters
+    all_char_string = string.ascii_letters + string.digits + string.punctuation
+    if allow_whitespace:
+        all_char_string += " "
+    char_set = set([s for s in all_char_string if s != '"' and s != '\\'])
+    char_set.add('\\"')  # Escape double quote
+    char_set.add('\\\\')  # Escape backslash
+    for char in char_set:
+        model = f"""
+                    entity Test:
+                        {type_name} attr
+                    end
+
+                    implement Test using std::none
+
+                    Test(attr="{char}c")
+                    """
+        project.compile(model)
+
+    # Test invalid characters
+    invalid_strings = ["val1\tval2", "test\x0b", "\x0ctest"]
+    if not allow_whitespace:
+        invalid_strings.append("test 123")
+    for s in invalid_strings:
+        model = f"""
+                    entity Test:
+                        {type_name} attr
+                    end
+
+                    implement Test using std::none
+
+                    Test(attr="{s}")
+                    """
+
         with pytest.raises(AttributeException):
             project.compile(model)

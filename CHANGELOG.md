@@ -1,3 +1,6 @@
+V1.2.0
+ - Added the types printable_ascii and ascii_word
+
 V1.1.0
  - Re-Added unnecessary removed plugin `assert_function`
  - Added extra types and support for custom constrained types
