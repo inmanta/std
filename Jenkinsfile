@@ -6,19 +6,19 @@ pipeline {
   }
   options { disableConcurrentBuilds() }
   environment {
-        OS_AUTH_URL         = credentials('jenkins_on_openstack_url')
-        OS_FLOATING_IP_POOL = credentials('jenkins_on_openstack_floating_ip_pool')
-        OS_NETWORK          = credentials('jenkins_on_openstack_network')
+        OS_AUTH_URL              = credentials('jenkins_on_openstack_url')
+        OS_FLOATING_IP_POOL_NAME = credentials('jenkins_on_openstack_floating_ip_pool_name')
+        OS_NETWORK               = credentials('jenkins_on_openstack_network')
   }
   stages {
     stage("setup"){
       steps{
         script{
-          withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
-            sh "vagrant up"
+            withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
+              sh "vagrant up"
           }
         }
-      } 
+      }
     }
     stage("test"){
       steps{
@@ -36,8 +36,8 @@ pipeline {
     always{
       script{
         withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
-          junit testResults:"junit.xml", allowEmptyResults: true
           sh "vagrant destroy"
+          junit testResults:"junit.xml", allowEmptyResults: true
         }
       }
     }

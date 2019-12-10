@@ -25,6 +25,9 @@ import logging
 from operator import attrgetter
 from itertools import chain
 from collections import defaultdict
+import pydantic
+import importlib
+import base64
 
 from inmanta.ast import OptionalValueException, RuntimeException, NotFoundException
 from inmanta.execute.proxy import DynamicProxy, UnknownException
@@ -347,23 +350,13 @@ def equals(arg1: "any", arg2: "any", desc: "string"=None):
         else:
             raise AssertionError("%s != %s" % (arg1, arg2))
 
-
 @plugin("assert")
 def assert_function(expression: "bool", message: "string"=""):
     """
-        Raise assertion error is expression is false
+        Raise assertion error if expression is false
     """
     if not expression:
         raise AssertionError("Assertion error: " + message)
-
-
-@plugin
-def delay(x: "any") -> "any":
-    """
-        Delay evaluation
-    """
-    return x
-
 
 @plugin
 def get(ctx: Context, path: "string") -> "any":
@@ -384,11 +377,7 @@ def select(objects: "list", attr: "string") -> "list":
     """
         Return a list with the select attributes
     """
-    r = []
-    for obj in objects:
-        r.append(getattr(obj, attr))
-
-    return r
+    return [getattr(item, attr) for item in objects]
 
 
 @plugin
@@ -498,109 +487,11 @@ def first_of(context: Context, value: "list", type_name: "string") -> "any":
 
 
 @plugin
-def any(item_list: "list", expression: "expression") -> "bool":
-    """
-        This method returns true when at least on item evaluates expression
-        to true, otherwise it returns false
-
-        :param expression: An expression that accepts one arguments and
-            returns true or false
-    """
-    for item in item_list:
-        if expression(item):
-            return True
-    return False
-
-
-@plugin
-def all(item_list: "list", expression: "expression") -> "bool":
-    """
-        This method returns false when at least one item does not evaluate
-        expression to true, otherwise it returns true
-
-        :param expression: An expression that accepts one argument and
-            returns true or false
-    """
-    for item in item_list:
-        if not expression(item):
-            return False
-    return True
-
-
-@plugin
 def count(item_list: "list") -> "number":
     """
         Returns the number of elements in this list
     """
     return len(item_list)
-
-
-@plugin
-def each(item_list: "list", expression: "expression") -> "list":
-    """
-        Iterate over this list executing the expression for each item.
-
-        :param expression: An expression that accepts one arguments and
-            is evaluated for each item. The returns value of the expression
-            is placed in a new list
-    """
-    new_list = []
-
-    for item in item_list:
-        value = expression(item)
-        new_list.append(value)
-
-    return new_list
-
-
-@plugin
-def order_by(item_list: "list", expression: "expression"=None, comparator: "expression"=None) -> "list":
-    """
-        This operation orders a list using the object returned by
-        expression and optionally using the comparator function to determine
-        the order.
-
-        :param expression: The expression that selects the attributes of the
-            items in the source list that are used to determine the order
-            of the returned list.
-
-        :param comparator: An optional expression that compares two items.
-    """
-    expression_cache = {}
-
-    def get_from_cache(item):
-        """
-            Function that is used to retrieve cache results
-        """
-        if item in expression_cache:
-            return expression_cache[item]
-        else:
-            data = expression(item)
-            expression_cache[item] = data
-            return data
-
-    def sort_cmp(item_a, item_b):
-        """
-            A function that uses the optional expressions to sort item_a list
-        """
-        if expression is not None:
-            a_data = get_from_cache(item_a)
-            b_data = get_from_cache(item_b)
-        else:
-            a_data = item_a
-            b_data = item_b
-
-        if comparator is not None:
-            return comparator(a_data, b_data)
-        else:
-            if a_data > b_data:
-                return 1
-            elif b_data > a_data:
-                return -1
-            return 0
-
-    # sort
-    return sorted(item_list, sort_cmp)
 
 
 @plugin
@@ -615,102 +506,6 @@ def unique(item_list: "list") -> "bool":
         seen.add(item)
 
     return True
-
-
-@plugin
-def select_attr(item_list: "list", attr: "string") -> "list":
-    """
-        This query method projects the list onto a new list by transforming
-        the list as defined in the expression.
-    """
-    new_list = []
-
-    for item in item_list:
-        new_list.append(lambda x: getattr(x, attr))
-
-    return new_list
-
-
-@plugin
-def select_many(item_list: "list", expression: "expression",
-                selector_expression: "expression"=None) -> "list":
-    """
-        This query method is similar to the select query but it merges
-        the results into one list.
-
-        :param expresion: An expression that returns the item that is to be
-            included in the resulting list. If that item is a list itself
-            it is merged into the result list. The first argument of the
-            expression is the item in the source sequence.
-
-        :param selector_expression: This optional arguments allows to
-            provide an expression that projects the result of the first
-            expression. This selector expression is equivalent to what the
-            select method expects. If the returned item of expression is
-            not a list this expression is not applied.
-    """
-    new_list = []
-
-    for item in item_list:
-        result = expression(item)
-
-        if not hasattr(result, "__iter__"):
-            new_list.append(result)
-        else:
-            if selector_expression:
-                for result_item in result:
-                    new_list.append(selector_expression(result_item))
-            else:
-                new_list.extend(result)
-
-    return new_list
-
-
-@plugin
-def where(item_list: "list", expression: "expression") -> "list":
-    """
-        This query method selects the items in the list that evaluate the
-        expression to true.
-
-        :param expression: An expression that returns true or false
-            to determine if an item from the list is included. The first
-            argument of the expression is the item that is to be evaluated.
-            The second optional argument is the index of the item in the
-            list.
-    """
-    new_list = []
-    for index in range(len(item_list)):
-        item = item_list[index]
-
-        if expression(item):
-            new_list.append(item)
-
-    return new_list
-
-
-@plugin
-def where_compare(item_list: "list", expr_list: "list") -> "list":
-    """
-        This query selects items in a list but uses the tupples in expr_list
-        to select the items.
-
-        :param expr_list: A list of tupples where the first item is the attr
-            name and the second item in the tupple is the value
-    """
-    new_list = []
-
-    new_expr_list = []
-    for i in range(0, len(expr_list), 2):
-        new_expr_list.append((expr_list[i], expr_list[i + 1]))
-
-    for index in range(len(item_list)):
-        item = item_list[index]
-
-        for attr, value in new_expr_list:
-            if getattr(item, attr) == value:
-                new_list.append(item)
-
-    return new_list
 
 
 @plugin
@@ -788,8 +583,8 @@ class FileMarker(str):
 
         To pass file references from other modules, you can copy paste this class into your own module.
         The matching in the file handler is:
-        
-            if "FileMarker" in content.__class__.__name__ 
+
+            if "FileMarker" in content.__class__.__name__
 
     """
     def __new__(cls, filename):
@@ -803,7 +598,7 @@ def file(ctx: Context, path: "string") -> "string":
         Return the textual contents of the given file
     """
     filename = determine_path(ctx, 'files', path)
-    
+
     if filename is None:
         raise Exception("%s does not exist" % path)
 
@@ -833,12 +628,15 @@ def familyof(member: "std::OS", family: "string") -> "bool":
 
     return False
 
+fact_cache={}
 
 @plugin
 def getfact(context: Context, resource: "any", fact_name: "string", default_value: "any"=None) -> "any":
     """
         Retrieve a fact of the given resource
     """
+    global fact_cache
+
     resource_id = resources.to_id(resource)
     if resource_id is None:
         raise Exception("Facts can only be retreived from resources.")
@@ -856,13 +654,30 @@ def getfact(context: Context, resource: "any", fact_name: "string", default_valu
         return fact_value
     # End special case
 
-    fact_value = None
     try:
         client = context.get_client()
 
         env = Config.get("config", "environment", None)
         if env is None:
             raise Exception("The environment of this model should be configured in config>environment")
+
+        # load cache
+        if not fact_cache:
+            def call():
+                return client.list_params(tid=env,)
+
+            result = context.run_sync(call)
+            if result.code == 200:
+                fact_values = result.result["parameters"]
+                for fact_value in fact_values:
+                    fact_cache.setdefault(fact_value["resource_id"],{})[fact_value["name"]] = fact_value["value"]
+
+        # attempt cache hit
+        if resource_id in  fact_cache:
+            if fact_name in fact_cache[resource_id]:
+                return fact_cache[resource_id][fact_name]
+
+        fact_value = None
 
         def call():
             return client.get_param(tid=env, id=fact_name, resource_id=resource_id)
@@ -1063,7 +878,7 @@ def contains(dct: "dict", key: "string") -> "bool":
     return key in dct
 
 
-@plugin("getattr")
+@plugin("getattr", allow_unknown=True)
 def getattribute(entity: "std::Entity", attribute_name: "string", default_value: "any"=None, no_unknown: "bool"=True) -> "any":
     """
         Return the value of the given attribute. If the attribute does not exist, return the default value.
@@ -1087,12 +902,14 @@ def invert(value: "bool") -> "bool":
     """
     return not value
 
+
 @plugin
 def to_number(value: "any") -> "number":
     """
         Convert a value to a number
     """
     return int(value)
+
 
 @plugin
 def list_files(ctx: Context, path: "string") -> "list":
@@ -1101,3 +918,84 @@ def list_files(ctx: Context, path: "string") -> "list":
     """
     path = determine_path(ctx, 'files', path)
     return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+
+
+@plugin(allow_unknown=True)
+def is_unknown(value: "any") -> "bool":
+    return isinstance(value, Unknown)
+
+
+@plugin
+def validate_type(fq_type_name: "string", value: "any", validation_parameters: "dict" = None) -> "bool":
+    """
+        Check whether `value` satisfies the constraints of type `fq_type_name`. When the given type (fq_type_name)
+        requires validation_parameters, they can be provided using the optional `validation_parameters` argument.
+
+        The following types require validation_parameters:
+
+            * pydantic.condecimal:
+                gt: Decimal = None
+                ge: Decimal = None
+                lt: Decimal = None
+                le: Decimal = None
+                max_digits: int = None
+                decimal_places: int = None
+                multiple_of: Decimal = None
+            * pydantic.confloat and pydantic.conint:
+                gt: float = None
+                ge: float = None
+                lt: float = None
+                le: float = None
+                multiple_of: float = None,
+            * pydantic.constr:
+                min_length: int = None
+                max_length: int = None
+                curtail_length: int = None (Only verify the regex on the first curtail_length characters)
+                regex: str = None          (The regex is verified via Pattern.match())
+            * pydantic.stricturl:
+                min_length: int = 1
+                max_length: int = 2 ** 16
+                tld_required: bool = True
+                allowed_schemes: Optional[Set[str]] = None
+
+        Example usage:
+
+            * Define a vlan_id type which represent a valid vlan ID (0-4,095):
+
+              typedef vlan_id as number matching std::validate_type("pydantic.conint", self, {"ge": 0, "le": 4095})
+
+
+    """
+    if not (fq_type_name.startswith("pydantic.") or
+            fq_type_name.startswith("datetime.") or
+            fq_type_name.startswith("ipaddress.") or
+            fq_type_name.startswith("uuid.")):
+        return False
+    module_name, type_name = fq_type_name.split(".", 1)
+    module = importlib.import_module(module_name)
+    t = getattr(module, type_name)
+    # Construct pydantic model
+    if validation_parameters is not None:
+        model = pydantic.create_model(fq_type_name, value=(t(**validation_parameters), ...))
+    else:
+        model = pydantic.create_model(fq_type_name, value=(t, ...))
+    # Do validation
+    try:
+        model(value=value)
+    except pydantic.ValidationError:
+        return False
+
+    return True
+
+
+@plugin
+def is_base64_encoded(s: "string") -> "bool":
+    """
+        Check whether the given string is base64 encoded.
+    """
+    try:
+        encoded_str = s.encode("utf-8")
+        base64.b64decode(encoded_str, validate=True)
+    except Exception:
+        return False
+    return True
