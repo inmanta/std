@@ -99,3 +99,22 @@ std::ConfigFile(host=host,
 
     ctx_dryrun2 = project.dryrun(file1)
     assert not ctx_dryrun2.changes
+
+
+def test_list_files(project):
+    project.add_mock_file("files", "testfile1", "test test test")
+    project.add_mock_file("files", "testfile2", "test test test")
+
+    project.compile(
+        """
+        import unittest
+
+        for file in std::list_files("unittest"):
+            std::source("unittest/{{file}}")
+            std::print(file)
+        end
+        """
+    )
+
+    out = project.get_stdout()
+    assert out.splitlines() == ["testfile1", "testfile2"]
