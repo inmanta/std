@@ -6,7 +6,7 @@ def test_select_attr(project):
     end
 
     implement Container using std::none
-    
+
     entity Out:
         string[] fields
     end

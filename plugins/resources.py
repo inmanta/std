@@ -18,9 +18,7 @@
 
 import hashlib
 import logging
-import os
 import re
-import urllib
 
 from inmanta import data
 from inmanta.agent.handler import CRUDHandler, HandlerContext, ResourceHandler, ResourcePurged, provider
@@ -139,7 +137,7 @@ class AgentConfig(PurgeableResource):
         try:
             if not obj.autostart:
                 raise IgnoreResourceException()
-        except Exception as e:
+        except Exception:
             # When this attribute is not set, also ignore it
             raise IgnoreResourceException()
         return obj.autostart
