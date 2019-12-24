@@ -18,18 +18,22 @@
 
 
 def test_is_unknown_should_be_false(project):
-    project.compile("""
+    project.compile(
+        """
     value = "value"
     std::print(std::is_unknown(value))
-    """)
+    """
+    )
 
     assert project.get_stdout() == "False\n"
 
 
 def test_is_unknown_should_be_true(project):
-    project.compile("""
+    project.compile(
+        """
     env_name = std::environment_name()
     std::print(std::is_unknown(env_name))
-    """)
+    """
+    )
 
     assert project.get_stdout() == "True\n"

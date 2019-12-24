@@ -21,11 +21,13 @@ def test_resources(project):
     """
         Test compiling a simple model that uses std
     """
-    project.compile("""
+    project.compile(
+        """
 import unittest
 
 host = std::Host(name="server", os=std::linux)
 file = std::ConfigFile(host=host, path="/tmp/test", content="1234")
-        """)
+        """
+    )
 
     assert len(project.resources) == 1

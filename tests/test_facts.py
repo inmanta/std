@@ -22,12 +22,14 @@ def test_get_facts(project):
         Test mocking out facts during unit tests
     """
     project.add_fact("std::File[test,path=/etc/motd]", "mode", 755)
-    project.compile("""
+    project.compile(
+        """
     import unittest
     h = std::Host(name="test", os=std::linux)
     f = std::File(host=h, path="/etc/motd", content="", owner="root", group="root")
     f.mode=std::getfact(f, "mode")
-    """)
+    """
+    )
 
     f = project.get_resource("std::File")
     assert f.permissions == 755

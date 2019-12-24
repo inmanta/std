@@ -15,10 +15,11 @@
 
     Contact: code@inmanta.com
 """
-import inmanta
-import os
-import pytest
 import getpass
+import os
+
+import inmanta
+import pytest
 
 
 def test_file(project, tmpdir):
@@ -406,9 +407,9 @@ class YumMock(object):
 
     def is_installed(self):
         return (
-            self._io.run(self._yum_path, ["-q", "list", "installed", self._package_name])[
-                2
-            ]
+            self._io.run(
+                self._yum_path, ["-q", "list", "installed", self._package_name]
+            )[2]
             == 0
         )
 

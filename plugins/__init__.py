@@ -16,40 +16,38 @@
     Contact: code@inmanta.com
 """
 
+import base64
 import hashlib
+import importlib
+import logging
 import os
 import random
 import re
 import time
-import logging
-from operator import attrgetter
-from itertools import chain
 from collections import defaultdict
-import pydantic
-import importlib
-import base64
-
-from inmanta.ast import OptionalValueException, RuntimeException, NotFoundException
-from inmanta.execute.proxy import DynamicProxy, UnknownException
-from inmanta.execute.util import Unknown, NoneValue
-from inmanta.export import dependency_manager
-from inmanta.plugins import plugin, Context
-from inmanta.export import unknown_parameters
-from inmanta import resources
-from inmanta.module import Project
-from inmanta.config import Config
-
-
 from copy import copy
-from inmanta.ast import NotFoundException
+from itertools import chain
+from operator import attrgetter
+
+import jinja2
+import pydantic
+from inmanta import resources
+from inmanta.ast import NotFoundException, OptionalValueException, RuntimeException
+from inmanta.config import Config
+from inmanta.execute.proxy import DynamicProxy, UnknownException
+from inmanta.execute.util import NoneValue, Unknown
+from inmanta.export import dependency_manager, unknown_parameters
+from inmanta.module import Project
+from inmanta.plugins import Context, plugin
 from jinja2 import Environment, FileSystemLoader, PrefixLoader
 from jinja2.exceptions import UndefinedError
 from jinja2.runtime import Undefined
-import jinja2
 
 
 @plugin
-def unique_file(prefix: "string", seed: "string", suffix: "string", length: "number"=20) -> "string":
+def unique_file(
+    prefix: "string", seed: "string", suffix: "string", length: "number" = 20
+) -> "string":
     return prefix + hashlib.md5(seed.encode("utf-8")).hexdigest() + suffix
 
 
@@ -59,7 +57,6 @@ engine_cache = None
 
 
 class JinjaDynamicProxy(DynamicProxy):
-
     def __init__(self, instance):
         super(JinjaDynamicProxy, self).__init__(instance)
 
@@ -95,21 +92,28 @@ class JinjaDynamicProxy(DynamicProxy):
                 value = instance.get_attribute(attribute).get_value()
                 return JinjaDynamicProxy.return_value(value)
             except (OptionalValueException, NotFoundException):
-                return Undefined("variable %s not set on %s" % (attribute, instance), instance, attribute)
+                return Undefined(
+                    "variable %s not set on %s" % (attribute, instance),
+                    instance,
+                    attribute,
+                )
         else:
             # A native python object such as a dict
             return getattr(instance, attribute)
 
 
 class SequenceProxy(JinjaDynamicProxy):
-
     def __init__(self, iterator):
         JinjaDynamicProxy.__init__(self, iterator)
 
     def __getitem__(self, key):
         instance = self._get_instance()
         if isinstance(key, str):
-            raise RuntimeException(self, "can not get a attribute %s, %s is a list" % (key, self._get_instance()))
+            raise RuntimeException(
+                self,
+                "can not get a attribute %s, %s is a list"
+                % (key, self._get_instance()),
+            )
 
         return JinjaDynamicProxy.return_value(instance[key])
 
@@ -156,7 +160,6 @@ class IteratorProxy(JinjaDynamicProxy):
 
 
 class ResolverContext(jinja2.runtime.Context):
-
     def resolve(self, key):
         resolver = self.parent["{{resolver"]
         try:
@@ -165,7 +168,9 @@ class ResolverContext(jinja2.runtime.Context):
         except NotFoundException:
             return super(ResolverContext, self).resolve(key)
         except OptionalValueException as e:
-            return self.environment.undefined("variable %s not set on %s" % (resolver, key), resolver, key, e)
+            return self.environment.undefined(
+                "variable %s not set on %s" % (resolver, key), resolver, key, e
+            )
 
 
 def _get_template_engine(ctx):
@@ -177,7 +182,9 @@ def _get_template_engine(ctx):
         return engine_cache
 
     loader_map = {}
-    loader_map[""] = FileSystemLoader(os.path.join(Project.get().project_path, "templates"))
+    loader_map[""] = FileSystemLoader(
+        os.path.join(Project.get().project_path, "templates")
+    )
     for name, module in Project.get().modules.items():
         template_dir = os.path.join(module._path, "templates")
         if os.path.isdir(template_dir):
@@ -189,10 +196,13 @@ def _get_template_engine(ctx):
 
     # register all plugins as filters
     for name, cls in ctx.get_compiler().get_plugins().items():
+
         def curywrapper(func):
             def safewrapper(*args):
                 return JinjaDynamicProxy.return_value(func(*args))
+
             return safewrapper
+
         env.filters[name.replace("::", ".")] = curywrapper(cls)
 
     engine_cache = env
@@ -231,7 +241,10 @@ def dir_before_file(model, resources):
     per_host = defaultdict(list)
     per_host_dirs = defaultdict(list)
     for _id, resource in resources.items():
-        if resource.id.get_entity_type() == "std::File" or resource.id.get_entity_type() == "std::Directory":
+        if (
+            resource.id.get_entity_type() == "std::File"
+            or resource.id.get_entity_type() == "std::Directory"
+        ):
             per_host[resource.model.host].append(resource)
 
         if resource.id.get_entity_type() == "std::Directory":
@@ -241,7 +254,10 @@ def dir_before_file(model, resources):
     for host, files in per_host.items():
         for hfile in files:
             for pdir in per_host_dirs[host]:
-                if hfile.path != pdir.path and hfile.path[:len(pdir.path)] == pdir.path:
+                if (
+                    hfile.path != pdir.path
+                    and hfile.path[: len(pdir.path)] == pdir.path
+                ):
                     # Make the File resource require the directory
                     hfile.requires.add(pdir)
 
@@ -257,7 +273,7 @@ def get_passwords(pw_file):
                     i = line.index("=")
 
                     try:
-                        records[line[:i].strip()] = line[i + 1:].strip()
+                        records[line[:i].strip()] = line[i + 1 :].strip()
                     except ValueError:
                         pass
 
@@ -271,7 +287,9 @@ def save_passwords(pw_file, records):
 
 
 @plugin
-def generate_password(context: Context, pw_id: "string", length: "number"=20) -> "string":
+def generate_password(
+    context: Context, pw_id: "string", length: "number" = 20
+) -> "string":
     """
     Generate a new random password and store it in the data directory of the
     project. On next invocations the stored password will be used.
@@ -340,7 +358,7 @@ def replace(string: "string", old: "string", new: "string") -> "string":
 
 
 @plugin
-def equals(arg1: "any", arg2: "any", desc: "string"=None):
+def equals(arg1: "any", arg2: "any", desc: "string" = None):
     """
         Compare arg1 and arg2
     """
@@ -350,13 +368,15 @@ def equals(arg1: "any", arg2: "any", desc: "string"=None):
         else:
             raise AssertionError("%s != %s" % (arg1, arg2))
 
+
 @plugin("assert")
-def assert_function(expression: "bool", message: "string"=""):
+def assert_function(expression: "bool", message: "string" = ""):
     """
         Raise assertion error if expression is false
     """
     if not expression:
         raise AssertionError("Assertion error: " + message)
+
 
 @plugin
 def get(ctx: Context, path: "string") -> "any":
@@ -404,7 +424,7 @@ def key_sort(items: "list", key: "any") -> "list":
 
 
 @plugin
-def timestamp(dummy: "any"=None) -> "number":
+def timestamp(dummy: "any" = None) -> "number":
     """
         Return an integer with the current unix timestamp
 
@@ -428,7 +448,7 @@ def type(obj: "any") -> "any":
 
 
 @plugin
-def sequence(i: "number", start: "number"=0, offset: "number"=0) -> "list":
+def sequence(i: "number", start: "number" = 0, offset: "number" = 0) -> "list":
     """
         Return a sequence of i numbers, starting from zero or start if supplied.
     """
@@ -468,7 +488,13 @@ def isset(value: "any") -> "bool":
 
 @plugin
 def objid(value: "any") -> "string":
-    return str((value._get_instance(), str(id(value._get_instance())), value._get_instance().__class__))
+    return str(
+        (
+            value._get_instance(),
+            str(id(value._get_instance())),
+            value._get_instance().__class__,
+        )
+    )
 
 
 @plugin
@@ -538,8 +564,7 @@ def determine_path(ctx, module_dir, path):
     if parts[0] == "":
         module_path = Project.get().project_path
     elif parts[0] not in modules:
-        raise Exception("Module %s does not exist for path %s" %
-                        (parts[0], path))
+        raise Exception("Module %s does not exist for path %s" % (parts[0], path))
     else:
         module_path = modules[parts[0]]._path
 
@@ -558,7 +583,7 @@ def get_file_content(ctx, module_dir, path):
     if not os.path.isfile(filename):
         raise Exception("%s isn't a valid file (%s)" % (path, filename))
 
-    file_fd = open(filename, 'r')
+    file_fd = open(filename, "r")
     if file_fd is None:
         raise Exception("Unable to open file %s" % filename)
 
@@ -573,7 +598,8 @@ def source(ctx: Context, path: "string") -> "string":
     """
         Return the textual contents of the given file
     """
-    return get_file_content(ctx, 'files', path)
+    return get_file_content(ctx, "files", path)
+
 
 class FileMarker(str):
     """
@@ -587,17 +613,19 @@ class FileMarker(str):
             if "FileMarker" in content.__class__.__name__
 
     """
+
     def __new__(cls, filename):
         obj = str.__new__(cls, "imp-module-source:file://" + filename)
         obj.filename = filename
         return obj
+
 
 @plugin
 def file(ctx: Context, path: "string") -> "string":
     """
         Return the textual contents of the given file
     """
-    filename = determine_path(ctx, 'files', path)
+    filename = determine_path(ctx, "files", path)
 
     if filename is None:
         raise Exception("%s does not exist" % path)
@@ -628,10 +656,14 @@ def familyof(member: "std::OS", family: "string") -> "bool":
 
     return False
 
-fact_cache={}
+
+fact_cache = {}
+
 
 @plugin
-def getfact(context: Context, resource: "any", fact_name: "string", default_value: "any"=None) -> "any":
+def getfact(
+    context: Context, resource: "any", fact_name: "string", default_value: "any" = None
+) -> "any":
     """
         Retrieve a fact of the given resource
     """
@@ -643,11 +675,16 @@ def getfact(context: Context, resource: "any", fact_name: "string", default_valu
 
     # Special case for unit testing and mocking
     if hasattr(context.compiler, "refs") and "facts" in context.compiler.refs:
-        if resource_id in context.compiler.refs["facts"] and fact_name in context.compiler.refs["facts"][resource_id]:
+        if (
+            resource_id in context.compiler.refs["facts"]
+            and fact_name in context.compiler.refs["facts"][resource_id]
+        ):
             return context.compiler.refs["facts"][resource_id][fact_name]
 
         fact_value = Unknown(source=resource)
-        unknown_parameters.append({"resource": resource_id, "parameter": fact_name, "source": "fact"})
+        unknown_parameters.append(
+            {"resource": resource_id, "parameter": fact_name, "source": "fact"}
+        )
 
         if default_value is not None:
             return default_value
@@ -659,10 +696,13 @@ def getfact(context: Context, resource: "any", fact_name: "string", default_valu
 
         env = Config.get("config", "environment", None)
         if env is None:
-            raise Exception("The environment of this model should be configured in config>environment")
+            raise Exception(
+                "The environment of this model should be configured in config>environment"
+            )
 
         # load cache
         if not fact_cache:
+
             def call():
                 return client.list_params(tid=env,)
 
@@ -670,10 +710,12 @@ def getfact(context: Context, resource: "any", fact_name: "string", default_valu
             if result.code == 200:
                 fact_values = result.result["parameters"]
                 for fact_value in fact_values:
-                    fact_cache.setdefault(fact_value["resource_id"],{})[fact_value["name"]] = fact_value["value"]
+                    fact_cache.setdefault(fact_value["resource_id"], {})[
+                        fact_value["name"]
+                    ] = fact_value["value"]
 
         # attempt cache hit
-        if resource_id in  fact_cache:
+        if resource_id in fact_cache:
             if fact_name in fact_cache[resource_id]:
                 return fact_cache[resource_id][fact_name]
 
@@ -687,15 +729,24 @@ def getfact(context: Context, resource: "any", fact_name: "string", default_valu
         if result.code == 200:
             fact_value = result.result["parameter"]["value"]
         else:
-            logging.getLogger(__name__).info("Param %s of resource %s is unknown", fact_name, resource_id)
+            logging.getLogger(__name__).info(
+                "Param %s of resource %s is unknown", fact_name, resource_id
+            )
             fact_value = Unknown(source=resource)
-            unknown_parameters.append({"resource": resource_id, "parameter": fact_name, "source": "fact"})
+            unknown_parameters.append(
+                {"resource": resource_id, "parameter": fact_name, "source": "fact"}
+            )
 
     except ConnectionRefusedError:
-        logging.getLogger(__name__).warning("Param %s of resource %s is unknown because connection to server was refused",
-                                            fact_name, resource_id)
+        logging.getLogger(__name__).warning(
+            "Param %s of resource %s is unknown because connection to server was refused",
+            fact_name,
+            resource_id,
+        )
         fact_value = Unknown(source=resource)
-        unknown_parameters.append({"resource": resource_id, "parameter": fact_name, "source": "fact"})
+        unknown_parameters.append(
+            {"resource": resource_id, "parameter": fact_name, "source": "fact"}
+        )
 
     if isinstance(fact_value, Unknown) and default_value is not None:
         return default_value
@@ -711,7 +762,9 @@ def environment() -> "string":
     env = str(Config.get("config", "environment", None))
 
     if env is None:
-        raise Exception("The environment of this model should be configured in config>environment")
+        raise Exception(
+            "The environment of this model should be configured in config>environment"
+        )
 
     return str(env)
 
@@ -725,6 +778,7 @@ def environment_name(ctx: Context) -> "string":
 
     def call():
         return ctx.get_client().get_environment(id=env)
+
     result = ctx.run_sync(call)
     if result.code != 200:
         return Unknown(source=env)
@@ -764,7 +818,7 @@ def server_ca() -> "string":
     if not os.path.isfile(filename):
         raise Exception("%s isn't a valid file" % filename)
 
-    file_fd = open(filename, 'r')
+    file_fd = open(filename, "r")
     if file_fd is None:
         raise Exception("Unable to open file %s" % filename)
 
@@ -790,10 +844,14 @@ def server_token(context: Context, client_types: "string[]" = ["agent"]) -> "str
 
         env = Config.get("config", "environment", None)
         if env is None:
-            raise Exception("The environment of this model should be configured in config>environment")
+            raise Exception(
+                "The environment of this model should be configured in config>environment"
+            )
 
         def call():
-            return client.create_token(tid=env, client_types=list(client_types), idempotent=True)
+            return client.create_token(
+                tid=env, client_types=list(client_types), idempotent=True
+            )
 
         result = context.run_sync(call)
 
@@ -815,7 +873,7 @@ def server_port() -> "number":
 
 
 @plugin
-def get_env(name: "string", default_value: "string"=None) -> "string":
+def get_env(name: "string", default_value: "string" = None) -> "string":
     env = os.environ
     if name in env:
         return env[name]
@@ -826,7 +884,7 @@ def get_env(name: "string", default_value: "string"=None) -> "string":
 
 
 @plugin
-def get_env_int(name: "string", default_value: "number"=None) -> "number":
+def get_env_int(name: "string", default_value: "number" = None) -> "number":
     env = os.environ
     if name in env:
         return int(env[name])
@@ -879,7 +937,12 @@ def contains(dct: "dict", key: "string") -> "bool":
 
 
 @plugin("getattr", allow_unknown=True)
-def getattribute(entity: "std::Entity", attribute_name: "string", default_value: "any"=None, no_unknown: "bool"=True) -> "any":
+def getattribute(
+    entity: "std::Entity",
+    attribute_name: "string",
+    default_value: "any" = None,
+    no_unknown: "bool" = True,
+) -> "any":
     """
         Return the value of the given attribute. If the attribute does not exist, return the default value.
 
@@ -916,7 +979,7 @@ def list_files(ctx: Context, path: "string") -> "list":
     """
         List files in a directory
     """
-    path = determine_path(ctx, 'files', path)
+    path = determine_path(ctx, "files", path)
     return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
 
@@ -926,7 +989,9 @@ def is_unknown(value: "any") -> "bool":
 
 
 @plugin
-def validate_type(fq_type_name: "string", value: "any", validation_parameters: "dict" = None) -> "bool":
+def validate_type(
+    fq_type_name: "string", value: "any", validation_parameters: "dict" = None
+) -> "bool":
     """
         Check whether `value` satisfies the constraints of type `fq_type_name`. When the given type (fq_type_name)
         requires validation_parameters, they can be provided using the optional `validation_parameters` argument.
@@ -966,17 +1031,21 @@ def validate_type(fq_type_name: "string", value: "any", validation_parameters: "
 
 
     """
-    if not (fq_type_name.startswith("pydantic.") or
-            fq_type_name.startswith("datetime.") or
-            fq_type_name.startswith("ipaddress.") or
-            fq_type_name.startswith("uuid.")):
+    if not (
+        fq_type_name.startswith("pydantic.")
+        or fq_type_name.startswith("datetime.")
+        or fq_type_name.startswith("ipaddress.")
+        or fq_type_name.startswith("uuid.")
+    ):
         return False
     module_name, type_name = fq_type_name.split(".", 1)
     module = importlib.import_module(module_name)
     t = getattr(module, type_name)
     # Construct pydantic model
     if validation_parameters is not None:
-        model = pydantic.create_model(fq_type_name, value=(t(**validation_parameters), ...))
+        model = pydantic.create_model(
+            fq_type_name, value=(t(**validation_parameters), ...)
+        )
     else:
         model = pydantic.create_model(fq_type_name, value=(t, ...))
     # Do validation
