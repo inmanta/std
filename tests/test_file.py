@@ -97,7 +97,6 @@ def test_file_purge(project, tmpdir, current_state_purged):
 def test_list_files(project):
     project.add_mock_file("files", "testfile1", "test test test")
     project.add_mock_file("files", "testfile2", "test test test")
-    project.add_mock_file("files", "testfile", "test test test")
 
     project.compile(
         """
@@ -110,5 +109,6 @@ def test_list_files(project):
         """
     )
 
-    out = project.get_stdout()
-    assert out.splitlines() == ["testfile1", "testfile2", "testfile"]
+    out = project.get_stdout().splitlines()
+    assert "testfile1" in out
+    assert "testfile2" in out
