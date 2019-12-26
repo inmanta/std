@@ -4,8 +4,8 @@ pipeline {
     pollSCM '* * * * *'
   }
   options { disableConcurrentBuilds() }
-  environment {
-        PIP_INDEX_URL='https://artifacts.internal.inmanta.com/inmanta/dev'
+  parameters {
+    string(name: 'pypi_index', defaultValue: 'https://pypi.org/simple', description: 'Changes the index used to install pytest-inmanta (And only pytest-inmanta)')
   }
   stages {
     stage("setup"){
@@ -18,10 +18,27 @@ pipeline {
         }
       }
     }
-    stage("test"){
+    stage("code linting"){
       steps{
-        flake8 plugins tests
-        pytest tests -v
+        script{
+            flake8 plugins tests
+        }
+    }
+    stage("tests"){
+      steps{
+        script{
+          uuid=$(uuidgen)
+          docker build . -t test-module-std-${uuid}
+          docker run -t -d --rm --privileged --build-arg PYPI_INDEX=${pypi_index} -v /sys/fs/cgroup:/sys/fs/cgroup:ro test-module-std-${uuid} > docker_id
+          docker exec -ti $(cat docker_id) env/bin/pytest tests
+        }
+      }
+    }
+    post {
+      always {
+        script {
+          [ -f docker_id ] && docker stop $(cat docker_id) && rm docker_id
+        }
       }
     }
   }

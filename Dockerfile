@@ -31,6 +31,9 @@ RUN env/bin/pip install -r requirements.txt
 COPY requirements.dev.txt requirements.dev.txt
 RUN env/bin/pip install -r requirements.dev.txt
 
+ARG PYPI_INDEX="https://pypi.org/simple"
+RUN env/bin/pip install -U pytest-inmanta -i ${PYPI_INDEX}
+
 COPY module.yml module.yml
 COPY model model
 COPY plugins plugins
