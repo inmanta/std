@@ -43,7 +43,9 @@ pipeline {
   post {
     always {
       script {
+        sh'''
         [ -f docker_id ] && docker stop $(cat docker_id) && rm docker_id
+        '''
       }
     }
   }
