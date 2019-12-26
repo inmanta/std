@@ -11,18 +11,19 @@ pipeline {
     stage("setup"){
       steps{
         script{
-            python3 -m venv ${WORKSPACE}/env
-            ${WORKSPACE}/env/bin/pip install -r requirements.txt
-            ${WORKSPACE}/env/bin/pip install -r requirements.dev.txt
-            ${WORKSPACE}/env/bin/pip install pytest-inmanta -i ${PIP_INDEX_URL}
+          python3 -m venv ${WORKSPACE}/env
+          ${WORKSPACE}/env/bin/pip install -r requirements.txt
+          ${WORKSPACE}/env/bin/pip install -r requirements.dev.txt
+          ${WORKSPACE}/env/bin/pip install pytest-inmanta -i ${PIP_INDEX_URL}
         }
       }
     }
     stage("code linting"){
       steps{
         script{
-            flake8 plugins tests
+          flake8 plugins tests
         }
+      }
     }
     stage("tests"){
       steps{
@@ -34,11 +35,11 @@ pipeline {
         }
       }
     }
-    post {
-      always {
-        script {
-          [ -f docker_id ] && docker stop $(cat docker_id) && rm docker_id
-        }
+  }
+  post {
+    always {
+      script {
+        [ -f docker_id ] && docker stop $(cat docker_id) && rm docker_id
       }
     }
   }
