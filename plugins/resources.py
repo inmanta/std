@@ -16,17 +16,15 @@
     Contact: code@inmanta.com
 """
 
+import hashlib
 import logging
-import os
 import re
-import urllib
 
 from inmanta import data
-from inmanta.agent.handler import provider, ResourceHandler, HandlerContext, CRUDHandler, ResourcePurged
+from inmanta.agent.handler import CRUDHandler, HandlerContext, ResourceHandler, ResourcePurged, provider
 from inmanta.execute.util import Unknown
-from inmanta.resources import Resource, PurgeableResource, resource, ResourceNotFoundExcpetion, IgnoreResourceException
+from inmanta.resources import IgnoreResourceException, PurgeableResource, Resource, ResourceNotFoundExcpetion, resource
 
-import hashlib
 
 def hash_file(content):
     """
@@ -36,6 +34,7 @@ def hash_file(content):
     sha1sum.update(content)
 
     return sha1sum.hexdigest()
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -60,14 +59,20 @@ def store_file(exporter, obj):
     if isinstance(content, Unknown):
         return content
 
-    if "FileMarker" in content.__class__.__name__ :
-        with open(content.filename,"rb") as fd:
+    if "FileMarker" in content.__class__.__name__:
+        with open(content.filename, "rb") as fd:
             content = fd.read()
 
     if len(obj.prefix_content) > 0:
-        content = generate_content(obj.prefix_content, obj.content_seperator) + obj.content_seperator + content
+        content = (
+            generate_content(obj.prefix_content, obj.content_seperator)
+            + obj.content_seperator
+            + content
+        )
     if len(obj.suffix_content) > 0:
-        content += obj.content_seperator + generate_content(obj.suffix_content, obj.content_seperator)
+        content += obj.content_seperator + generate_content(
+            obj.suffix_content, obj.content_seperator
+        )
 
     return exporter.upload_file(content)
 
@@ -77,6 +82,7 @@ class Service(Resource):
     """
         This class represents a service on a system.
     """
+
     fields = ("onboot", "state", "name", "reload")
 
 
@@ -85,6 +91,7 @@ class File(PurgeableResource):
     """
         A file on a filesystem
     """
+
     fields = ("path", "owner", "hash", "group", "permissions", "reload")
     map = {"hash": store_file, "permissions": lambda y, x: int(x.mode)}
 
@@ -94,6 +101,7 @@ class Directory(PurgeableResource):
     """
         A directory on a filesystem
     """
+
     fields = ("path", "owner", "group", "permissions", "reload")
     map = {"permissions": lambda y, x: int(x.mode)}
 
@@ -103,6 +111,7 @@ class Package(Resource):
     """
         A software package installed on an operating system.
     """
+
     fields = ("name", "state", "reload")
 
 
@@ -111,6 +120,7 @@ class Symlink(PurgeableResource):
     """
         A symbolic link on the filesystem
     """
+
     fields = ("source", "target", "reload")
 
 
@@ -119,6 +129,7 @@ class AgentConfig(PurgeableResource):
     """
         A resource that can modify the agentmap for autostarted agents
     """
+
     fields = ("agentname", "uri", "autostart")
 
     @staticmethod
@@ -126,7 +137,7 @@ class AgentConfig(PurgeableResource):
         try:
             if not obj.autostart:
                 raise IgnoreResourceException()
-        except Exception as e:
+        except Exception:
             # When this attribute is not set, also ignore it
             raise IgnoreResourceException()
         return obj.autostart
@@ -137,6 +148,7 @@ class PosixFileProvider(CRUDHandler):
     """
         This handler can deploy files on a unix system
     """
+
     def read_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
         if not self._io.file_exists(resource.path):
             raise ResourcePurged()
@@ -154,11 +166,15 @@ class PosixFileProvider(CRUDHandler):
 
     def create_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
         if self._io.file_exists(resource.path):
-            raise Exception(f"Cannot create file {resource.path}, because it already exists.")
+            raise Exception(
+                f"Cannot create file {resource.path}, because it already exists."
+            )
 
         data = self.get_file(resource.hash)
         if hash_file(data) != resource.hash:
-            raise Exception("File hash was %s expected %s" % (resource.hash, hash_file(data)))
+            raise Exception(
+                "File hash was %s expected %s" % (resource.hash, hash_file(data))
+            )
 
         self._io.put(resource.path, data)
         self._io.chmod(resource.path, str(resource.permissions))
@@ -170,14 +186,20 @@ class PosixFileProvider(CRUDHandler):
             self._io.remove(resource.path)
             ctx.set_purged()
 
-    def update_resource(self, ctx: HandlerContext, changes: dict, resource: PurgeableResource) -> None:
+    def update_resource(
+        self, ctx: HandlerContext, changes: dict, resource: PurgeableResource
+    ) -> None:
         if not self._io.file_exists(resource.path):
-            raise Exception(f"Cannot update file {resource.path} because it doesn't exist")
+            raise Exception(
+                f"Cannot update file {resource.path} because it doesn't exist"
+            )
 
         if "hash" in changes:
             data = self.get_file(resource.hash)
             if hash_file(data) != resource.hash:
-                raise Exception("File hash was %s expected %s" % (resource.hash, hash_file(data)))
+                raise Exception(
+                    "File hash was %s expected %s" % (resource.hash, hash_file(data))
+                )
             self._io.put(resource.path, data)
 
         if "permissions" in changes:
@@ -193,6 +215,7 @@ class SystemdService(ResourceHandler):
     """
         A handler for services on systems that use systemd
     """
+
     def __init__(self, agent, io=None):
         super().__init__(agent, io)
 
@@ -210,13 +233,27 @@ class SystemdService(ResourceHandler):
     def check_resource(self, ctx, resource):
         current = resource.clone()
 
-        exists = self._io.run(self._systemd_path, ["status", "%s.service" % resource.name])[0]
+        exists = self._io.run(
+            self._systemd_path, ["status", "%s.service" % resource.name]
+        )[0]
 
-        if re.search('Loaded: error', exists):
-            raise ResourceNotFoundExcpetion("The %s service does not exist" % resource.name)
+        if re.search("Loaded: error", exists):
+            raise ResourceNotFoundExcpetion(
+                "The %s service does not exist" % resource.name
+            )
 
-        running = self._io.run(self._systemd_path, ["is-active", "%s.service" % resource.name])[2] == 0
-        enabled = self._io.run(self._systemd_path, ["is-enabled", "%s.service" % resource.name])[2] == 0
+        running = (
+            self._io.run(
+                self._systemd_path, ["is-active", "%s.service" % resource.name]
+            )[2]
+            == 0
+        )
+        enabled = (
+            self._io.run(
+                self._systemd_path, ["is-enabled", "%s.service" % resource.name]
+            )[2]
+            == 0
+        )
 
         if running:
             current.state = "running"
@@ -237,7 +274,9 @@ class SystemdService(ResourceHandler):
             Reload this resource
         """
         ctx.info("Reloading service with reload-or-restart")
-        self._io.run(self._systemd_path, ["reload-or-restart", "%s.service" % resource.name])
+        self._io.run(
+            self._systemd_path, ["reload-or-restart", "%s.service" % resource.name]
+        )
 
     def do_changes(self, ctx, resource, changes):
         updated = False
@@ -247,10 +286,14 @@ class SystemdService(ResourceHandler):
                 action = "stop"
 
             # start or stop the service
-            result = self._io.run(self._systemd_path, [action, "%s.service" % resource.name])
+            result = self._io.run(
+                self._systemd_path, [action, "%s.service" % resource.name]
+            )
 
             if re.search("^Failed", result[1]):
-                raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
+                raise Exception(
+                    "Unable to %s %s: %s" % (action, resource.name, result[1])
+                )
 
             updated = True
 
@@ -260,11 +303,15 @@ class SystemdService(ResourceHandler):
             if not changes["onboot"]["desired"]:
                 action = "disable"
 
-            result = self._io.run(self._systemd_path, [action, "%s.service" % resource.name])
+            result = self._io.run(
+                self._systemd_path, [action, "%s.service" % resource.name]
+            )
             updated = True
 
             if re.search("^Failed", result[1]):
-                raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
+                raise Exception(
+                    "Unable to %s %s: %s" % (action, resource.name, result[1])
+                )
 
         if updated:
             ctx.set_updated()
@@ -275,17 +322,22 @@ class ServiceService(ResourceHandler):
     """
         A handler for services on systems that use service
     """
+
     def available(self, resource):
-        return (self._io.file_exists("/sbin/chkconfig") and self._io.file_exists("/sbin/service") and
-                not self._io.file_exists("/usr/bin/systemctl"))
+        return (
+            self._io.file_exists("/sbin/chkconfig")
+            and self._io.file_exists("/sbin/service")
+            and not self._io.file_exists("/usr/bin/systemctl")
+        )
 
     def check_resource(self, ctx, resource):
         current = resource.clone()
         exists = self._io.run("/sbin/chkconfig", ["--list", resource.name])[0]
 
-        if re.search('error reading information on service', exists):
-            raise ResourceNotFoundExcpetion("The %s service does not exist" % resource.name)
-
+        if re.search("error reading information on service", exists):
+            raise ResourceNotFoundExcpetion(
+                "The %s service does not exist" % resource.name
+            )
 
         raw_enabled = self._io.run("/sbin/chkconfig", ["--list", resource.name])[0]
         enabled = ":on" in raw_enabled
@@ -324,7 +376,9 @@ class ServiceService(ResourceHandler):
             result = self._io.run("/sbin/service", [resource.name, action])
 
             if re.search("^Failed", result[1]):
-                raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
+                raise Exception(
+                    "Unable to %s %s: %s" % (action, resource.name, result[1])
+                )
 
             updated = True
 
@@ -334,13 +388,17 @@ class ServiceService(ResourceHandler):
             if not changes["onboot"]["desired"]:
                 action = "off"
 
-            ctx.debug("Performing /sbin/chkconfig %(args)s", args=[resource.name, action])
+            ctx.debug(
+                "Performing /sbin/chkconfig %(args)s", args=[resource.name, action]
+            )
 
             result = self._io.run("/sbin/chkconfig", [resource.name, action])
             updated = True
 
             if re.search("^Failed", result[1]):
-                raise Exception("Unable to %s %s: %s" % (action, resource.name, result[1]))
+                raise Exception(
+                    "Unable to %s %s: %s" % (action, resource.name, result[1])
+                )
 
         if updated:
             ctx.set_updated()
@@ -351,9 +409,13 @@ class YumPackage(ResourceHandler):
     """
         A Package handler that uses yum
     """
+
     def available(self, resource):
-        return (self._io.file_exists("/usr/bin/rpm") or self._io.file_exists("/bin/rpm")) \
-            and (self._io.file_exists("/usr/bin/yum") or self._io.file_exists("/usr/bin/dnf"))
+        return (
+            self._io.file_exists("/usr/bin/rpm") or self._io.file_exists("/bin/rpm")
+        ) and (
+            self._io.file_exists("/usr/bin/yum") or self._io.file_exists("/usr/bin/dnf")
+        )
 
     def _parse_fields(self, lines):
         props = {}
@@ -406,8 +468,12 @@ class YumPackage(ResourceHandler):
         yum_output = self._run_yum(["check-update", resource.name])
         lines = yum_output[0].split("\n")
 
-        data = {"state": state, "version": output["Version"],
-                "release": output["Release"], "update": None}
+        data = {
+            "state": state,
+            "version": output["Version"],
+            "release": output["Release"],
+            "update": None,
+        }
 
         if len(lines) > 0:
             parts = re.search(r"""([^\s]+)\s+([^\s]+)\s+([^\s]+)""", lines[0])
@@ -431,7 +497,11 @@ class YumPackage(ResourceHandler):
             if state["state"] != "installed":
                 changes["state"] = (state["state"], "installed")
 
-        if "update" in state and state["update"] is not None and resource.state == "latest":
+        if (
+            "update" in state
+            and state["update"] is not None
+            and resource.state == "latest"
+        ):
             changes["version"] = ((state["version"], state["release"]), state["update"])
 
         return changes
@@ -465,6 +535,7 @@ class DirectoryHandler(CRUDHandler):
 
         TODO: add recursive operations
     """
+
     def read_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
         if not self._io.file_exists(resource.path):
             raise ResourcePurged()
@@ -483,7 +554,9 @@ class DirectoryHandler(CRUDHandler):
         self._io.rmdir(resource.path)
         ctx.set_purged()
 
-    def update_resource(self, ctx: HandlerContext, changes: dict, resource: PurgeableResource) -> None:
+    def update_resource(
+        self, ctx: HandlerContext, changes: dict, resource: PurgeableResource
+    ) -> None:
         if "permissions" in changes:
             mode = str(resource.permissions)
             self._io.chmod(resource.path, mode)
@@ -497,6 +570,7 @@ class SymlinkProvider(CRUDHandler):
     """
         This handler can deploy symlinks on unix systems
     """
+
     def available(self, resource):
         return self._io.file_exists("/usr/bin/ln") or self._io.file_exists("/bin/ln")
 
@@ -504,7 +578,10 @@ class SymlinkProvider(CRUDHandler):
         if not self._io.file_exists(resource.target):
             raise ResourcePurged()
         elif not self._io.is_symlink(resource.target):
-            raise Exception("The target of resource %s already exists but is not a symlink." % resource)
+            raise Exception(
+                "The target of resource %s already exists but is not a symlink."
+                % resource
+            )
         else:
             resource.source = self._io.readlink(resource.target)
 
@@ -516,7 +593,9 @@ class SymlinkProvider(CRUDHandler):
         self._io.remove(resource.target)
         ctx.set_purged()
 
-    def update_resource(self, ctx: HandlerContext, changes: dict, resource: PurgeableResource) -> None:
+    def update_resource(
+        self, ctx: HandlerContext, changes: dict, resource: PurgeableResource
+    ) -> None:
         self._io.remove(resource.target)
         self._io.symlink(resource.source, resource.target)
         ctx.set_updated()
@@ -526,14 +605,20 @@ class SymlinkProvider(CRUDHandler):
 class AgentConfigHandler(CRUDHandler):
     def _get_map(self) -> dict:
         def call():
-            return self.get_client().get_setting(tid=self._agent.environment, id=data.AUTOSTART_AGENT_MAP)
+            return self.get_client().get_setting(
+                tid=self._agent.environment, id=data.AUTOSTART_AGENT_MAP
+            )
 
         value = self.run_sync(call)
         return value.result["value"]
 
     def _set_map(self, agent_config: dict) -> None:
         def call():
-            return self.get_client().set_setting(tid=self._agent.environment, id=data.AUTOSTART_AGENT_MAP, value=agent_config)
+            return self.get_client().set_setting(
+                tid=self._agent.environment,
+                id=data.AUTOSTART_AGENT_MAP,
+                value=agent_config,
+            )
 
         return self.run_sync(call)
 
@@ -556,7 +641,9 @@ class AgentConfigHandler(CRUDHandler):
         del agent_config[resource.agentname]
         self._set_map(agent_config)
 
-    def update_resource(self, ctx: HandlerContext, changes: dict, resource: AgentConfig) -> None:
+    def update_resource(
+        self, ctx: HandlerContext, changes: dict, resource: AgentConfig
+    ) -> None:
         agent_config = ctx.get("map")
         agent_config[resource.agentname] = resource.uri
         self._set_map(agent_config)

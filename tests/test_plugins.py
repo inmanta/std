@@ -1,13 +1,12 @@
-
-
 def test_select_attr(project):
-    project.compile("""
+    project.compile(
+        """
     entity Container:
         string field
     end
 
     implement Container using std::none
-    
+
     entity Out:
         string[] fields
     end
@@ -27,6 +26,7 @@ def test_select_attr(project):
 
     Out(fields = std::select(c.containers,"field"))
 
-    """)
+    """
+    )
 
     assert sorted(project.get_instances("__config__::Out")[0].fields) == ["A", "B", "C"]

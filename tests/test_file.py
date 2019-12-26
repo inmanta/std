@@ -1,6 +1,7 @@
-import pytest
 import getpass
 import os
+
+import pytest
 from inmanta.const import ResourceState
 
 
@@ -15,16 +16,12 @@ def test_file_read(project, tmpdir):
     test_path_1 = str(tmpdir.join("file1"))
 
     project.compile(
-        """
-import unittest
+        f"""
+        import unittest
 
-host = std::Host(name="server", os=std::linux)
-std::ConfigFile(host=host, path="%(path1)s", content=std::file("unittest/testfile"), owner="%(user)s", group="%(user)s")
-"""
-        % {
-            "path1": test_path_1,
-            "user": user,
-        }
+        host = std::Host(name="server", os=std::linux)
+        std::ConfigFile(host=host, path="{test_path_1}", content=std::file("unittest/testfile"), owner="{user}", group="{user}")
+        """
     )
 
     assert not os.path.exists(test_path_1)
@@ -59,27 +56,23 @@ def test_file_purge(project, tmpdir, current_state_purged):
     if current_state_purged:
         assert not os.path.exists(test_path_1)
     else:
-        with open(test_path_1, 'w+') as f:
+        with open(test_path_1, "w+") as f:
             f.write("test test test")
         os.chmod(test_path_1, 0o644)
         assert os.path.exists(test_path_1)
 
     project.compile(
-        """
-import unittest
+        f"""
+        import unittest
 
-host = std::Host(name="server", os=std::linux)
-std::ConfigFile(host=host, 
-                path="%(path1)s", 
-                content=std::file("unittest/testfile"), 
-                owner="%(user)s", 
-                group="%(user)s",
-                purged=true)
-"""
-        % {
-            "path1": test_path_1,
-            "user": user,
-        }
+        host = std::Host(name="server", os=std::linux)
+        std::ConfigFile(host=host,
+                        path="{test_path_1}",
+                        content=std::file("unittest/testfile"),
+                        owner="{user}",
+                        group="{user}",
+                        purged=true)
+        """
     )
 
     file1 = project.get_resource("std::ConfigFile", path=test_path_1)

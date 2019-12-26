@@ -18,39 +18,45 @@
 
 
 def test_get_attribute(project):
-    project.compile("""
+    project.compile(
+        """
     entity Item:
         string name
     end
     implement Item using std::none
     item1 = Item(name="ItemName")
     std::print(std::getattr(item1, 'name'))
-    """)
+    """
+    )
 
     assert project.get_stdout() == "ItemName\n"
 
 
 def test_getattr_default_value(project):
-    project.compile("""
+    project.compile(
+        """
     entity Item:
         string name
     end
     implement Item using std::none
     item1 = Item(name="Name")
     std::print(std::getattr(item1, 'id', 'id1'))
-        """)
+        """
+    )
 
     assert project.get_stdout() == "id1\n"
 
 
 def test_getattr_no_default(project):
-    project.compile("""
+    project.compile(
+        """
     entity Item:
         string name
     end
     implement Item using std::none
     item1 = Item(name="Name")
     std::print(std::getattr(item1, 'id'))
-        """)
+        """
+    )
 
     assert project.get_stdout() == "None\n"
