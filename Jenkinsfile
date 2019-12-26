@@ -2,45 +2,27 @@ pipeline {
   agent any
   triggers {
     pollSCM '* * * * *'
-    cron("H H(2-5) * * *")
   }
   options { disableConcurrentBuilds() }
   environment {
-        OS_AUTH_URL              = credentials('jenkins_on_openstack_url')
-        OS_FLOATING_IP_POOL_NAME = credentials('jenkins_on_openstack_floating_ip_pool_name')
-        OS_NETWORK               = credentials('jenkins_on_openstack_network')
+        PIP_INDEX_URL='https://artifacts.internal.inmanta.com/inmanta/dev'
   }
   stages {
     stage("setup"){
       steps{
         script{
-            withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
-              sh "vagrant up"
-          }
+            python3 -m venv ${WORKSPACE}/env
+            ${WORKSPACE}/env/bin/pip install -r requirements.txt
+            ${WORKSPACE}/env/bin/pip install -r requirements.dev.txt
+            ${WORKSPACE}/env/bin/pip install pytest-inmanta -i ${PIP_INDEX_URL}
         }
       }
     }
     stage("test"){
       steps{
-        script{
-          withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
-            sh "vagrant ssh -c 'cd std; /home/centos/venv/bin/python3 -m pytest tests -s --junitxml=junit.xml'"
-            sh "vagrant ssh-config >ssh.conf"
-            sh "scp -F ssh.conf default:std/junit.xml ."
-          }
-        }
+        flake8 plugins tests
+        pytest tests -v
       }
     }
   }
-  post{
-    always{
-      script{
-        withCredentials([usernamePassword(credentialsId: 'jenkins_on_openstack', passwordVariable: 'OS_PASSWORD', usernameVariable: 'OS_USERNAME')]) {
-          sh "vagrant destroy"
-          junit testResults:"junit.xml", allowEmptyResults: true
-        }
-      }
-    }
-  }
-
 }
