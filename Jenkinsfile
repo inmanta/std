@@ -35,9 +35,9 @@ pipeline {
         script{
           sh '''
           uuid=$(uuidgen)
-          docker build . -t test-module-std-${uuid}
-          docker run -t -d --rm --privileged --build-arg PYPI_INDEX=${pypi_index} -v /sys/fs/cgroup:/sys/fs/cgroup:ro test-module-std-${uuid} > docker_id
-          docker exec -ti $(cat docker_id) env/bin/pytest tests
+          sudo docker build . -t test-module-std-${uuid}
+          sudo docker run -t -d --rm --privileged --build-arg PYPI_INDEX=${pypi_index} -v /sys/fs/cgroup:/sys/fs/cgroup:ro test-module-std-${uuid} > docker_id
+          sudo docker exec -ti $(cat docker_id) env/bin/pytest tests
           '''
         }
       }
@@ -48,7 +48,7 @@ pipeline {
       script {
         if (fileExists('docker_id')) {
           sh'''
-          docker stop $(cat docker_id) && rm docker_id
+          sudo docker stop $(cat docker_id) && rm docker_id
           '''
         }
       }
