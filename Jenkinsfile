@@ -34,10 +34,9 @@ pipeline {
       steps{
         script{
           sh '''
-          uuid=$(uuidgen)
           sudo docker build . -t test-module-std-${GIT_BRANCH#*/} --build-arg PYPI_INDEX=${pypi_index}
           sudo docker run -t -d --rm --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro test-module-std-${GIT_BRANCH#*/} > docker_id
-          sudo docker exec -ti $(cat docker_id) env/bin/pytest tests
+          sudo docker exec -t $(cat docker_id) env/bin/pytest tests
           '''
         }
       }
