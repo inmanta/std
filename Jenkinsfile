@@ -24,7 +24,9 @@ pipeline {
     stage("code linting"){
       steps{
         script{
-          flake8 plugins tests
+          sh'''
+          ${WORKSPACE}/env/bin/flake8 plugins tests
+          '''
         }
       }
     }
