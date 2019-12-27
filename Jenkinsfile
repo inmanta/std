@@ -36,8 +36,10 @@ pipeline {
           sh '''
           sudo docker build . -t test-module-std-${GIT_BRANCH#*/} --build-arg PYPI_INDEX=${pypi_index}
           sudo docker run -d --rm --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro test-module-std-${GIT_BRANCH#*/} > docker_id
-          sudo docker exec $(cat docker_id) env/bin/pytest tests -v
+          sudo docker exec $(cat docker_id) env/bin/pytest tests -v --junitxml=junit.xml
+          sudo docker cp $(cat docker_id):/module/std/junit.xml junit
           '''
+          junit 'junit.xml'
         }
       }
     }
