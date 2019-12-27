@@ -6,7 +6,7 @@ pipeline {
   }
   options { disableConcurrentBuilds() }
   parameters {
-    string(name: 'pypi_index', defaultValue: 'https://pypi.org/simple', description: 'Changes the index used to install pytest-inmanta (And only pytest-inmanta)')
+    string(name: 'pypi_index', defaultValue: 'https://artifacts.internal.inmanta.com/inmanta/stable', description: 'Changes the index used to install pytest-inmanta (And only pytest-inmanta)')
   }
   stages {
     stage("setup"){
