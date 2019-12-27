@@ -2,6 +2,7 @@ pipeline {
   agent any
   triggers {
     pollSCM '* * * * *'
+    cron(BRANCH_NAME == "master" ? "H H(2-5) * * *")
   }
   options { disableConcurrentBuilds() }
   parameters {
@@ -16,7 +17,6 @@ pipeline {
           ${WORKSPACE}/env/bin/pip install --upgrade pip
           ${WORKSPACE}/env/bin/pip install -r requirements.txt
           ${WORKSPACE}/env/bin/pip install -r requirements.dev.txt
-          ${WORKSPACE}/env/bin/pip install pytest-inmanta -i ${PIP_INDEX_URL}
           '''
         }
       }
