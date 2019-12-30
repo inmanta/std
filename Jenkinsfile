@@ -53,7 +53,6 @@ pipeline {
       script {
         if (fileExists('docker_id')) {
           sh'''
-          sudo docker image rm test-module-std-${BRANCH_NAME_LOWER}
           sudo docker stop $(cat docker_id) && rm docker_id
           '''
         }
