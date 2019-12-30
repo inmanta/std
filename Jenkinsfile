@@ -31,10 +31,10 @@ pipeline {
       }
     }
     stage("tests"){
+      environment {
+        BRANCH_NAME_LOWER = GIT_BRANCH.toLowerCase()
+      }
       steps{
-        environment {
-          BRANCH_NAME_LOWER = GIT_BRANCH.toLowerCase()
-        }
         script{
           sh '''
           sudo docker build . -t test-module-std-${BRANCH_NAME_LOWER} --build-arg PYTEST_INMANTA_DEV=${pytest_inmanta_dev}
