@@ -109,5 +109,5 @@ def test_list_files(project):
         """
     )
 
-    out = project.get_stdout()
-    assert out.splitlines() == ["testfile1", "testfile2"]
+    out = sorted(project.get_stdout().splitlines())
+    assert ["testfile1", "testfile2"] == out

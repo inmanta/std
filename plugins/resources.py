@@ -21,9 +21,21 @@ import logging
 import re
 
 from inmanta import data
-from inmanta.agent.handler import CRUDHandler, HandlerContext, ResourceHandler, ResourcePurged, provider
+from inmanta.agent.handler import (
+    CRUDHandler,
+    HandlerContext,
+    ResourceHandler,
+    ResourcePurged,
+    provider,
+)
 from inmanta.execute.util import Unknown
-from inmanta.resources import IgnoreResourceException, PurgeableResource, Resource, ResourceNotFoundExcpetion, resource
+from inmanta.resources import (
+    IgnoreResourceException,
+    PurgeableResource,
+    Resource,
+    ResourceNotFoundExcpetion,
+    resource,
+)
 
 
 def hash_file(content):

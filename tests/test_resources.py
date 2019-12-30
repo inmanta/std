@@ -144,7 +144,7 @@ def test_directory_purge(project, tmpdir, current_state_purged):
 import unittest
 
 host = std::Host(name="server", os=std::linux)
-std::Directory(host=host, path="{test_path_1}", owner="{user}", group="{user}", mode=775, purged=true)
+std::Directory(host=host, path="{test_path_1}", owner="{user}", group="{user}", mode=755, purged=true)
         """
     )
 
@@ -294,7 +294,7 @@ ExecStart=/bin/sleep 12345
 
 [Install]
 WantedBy=default.target
-""",
+""".encode(),
         )
         self._io.run(self._systemd_path, ["daemon-reload"])
 
@@ -321,7 +321,7 @@ WantedBy=default.target
 
 @pytest.fixture
 def systemd(project):
-    systemd = SystemdMock(project.io(run_as_root=True))
+    systemd = SystemdMock(project.io(run_as_root=False))
     systemd.setup()
 
     yield systemd
@@ -344,7 +344,7 @@ svc = std::Service(host=host, name="test", state="running", onboot=true)
     )
 
     svc = project.get_resource("std::Service", name="test")
-    ctx = project.deploy(svc, run_as_root=True)
+    ctx = project.deploy(svc, run_as_root=False)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert ctx.change == inmanta.const.Change.updated
 
@@ -361,7 +361,7 @@ svc = std::Service(host=host, name="test", state="stopped", onboot=true)
     )
 
     svc = project.get_resource("std::Service", name="test")
-    ctx = project.deploy(svc, run_as_root=True)
+    ctx = project.deploy(svc, run_as_root=False)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert ctx.change == inmanta.const.Change.updated
 
@@ -378,7 +378,7 @@ svc = std::Service(host=host, name="test", state="stopped", onboot=false)
     )
 
     svc = project.get_resource("std::Service", name="test")
-    ctx = project.deploy(svc, run_as_root=True)
+    ctx = project.deploy(svc, run_as_root=False)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert ctx.change == inmanta.const.Change.updated
 
@@ -416,7 +416,7 @@ class YumMock(object):
 
 @pytest.fixture
 def yum(project):
-    yum = YumMock(project.io(run_as_root=True))
+    yum = YumMock(project.io(run_as_root=False))
     yum.setup()
 
     yield yum
@@ -437,7 +437,7 @@ svc = std::Package(host=host, name="wget", state="installed")
     )
 
     svc = project.get_resource("std::Package", name="wget")
-    ctx = project.deploy(svc, run_as_root=True)
+    ctx = project.deploy(svc, run_as_root=False)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert ctx.change == inmanta.const.Change.created
 
@@ -453,7 +453,7 @@ svc = std::Package(host=host, name="wget", state="installed")
     )
 
     svc = project.get_resource("std::Package", name="wget")
-    ctx = project.deploy(svc, run_as_root=True)
+    ctx = project.deploy(svc, run_as_root=False)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert ctx.change == inmanta.const.Change.nochange
 
@@ -469,7 +469,7 @@ svc = std::Package(host=host, name="wget", state="removed")
     )
 
     svc = project.get_resource("std::Package", name="wget")
-    ctx = project.deploy(svc, run_as_root=True)
+    ctx = project.deploy(svc, run_as_root=False)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert ctx.change == inmanta.const.Change.purged
 
