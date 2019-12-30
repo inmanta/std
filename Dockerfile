@@ -31,8 +31,8 @@ RUN env/bin/pip install -r requirements.txt
 COPY requirements.dev.txt requirements.dev.txt
 RUN env/bin/pip install -r requirements.dev.txt
 
-ARG PYPI_INDEX="https://pypi.org/simple"
-RUN env/bin/pip install -U pytest-inmanta -i ${PYPI_INDEX}
+ARG PYTEST_INMANTA_DEV
+RUN if [ "${PYTEST_INMANTA_DEV}" = true ] ; then env/bin/pip install --pre -U pytest-inmanta -i https://artifacts.internal.inmanta.com/inmanta/dev ; fi
 
 COPY module.yml module.yml
 COPY model model
