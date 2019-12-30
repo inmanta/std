@@ -33,9 +33,9 @@ pipeline {
     stage("tests"){
       steps{
         script{
+          def branch_name_lower = GIT_BRANCH.toLowerCase()
           sh '''
-          branch = awk "{print tolower($GIT_BRANCH)}"
-          sudo docker build . -t test-module-std-${branch} --build-arg PYTEST_INMANTA_DEV=${pytest_inmanta_dev}
+          sudo docker build . -t test-module-std-${branch_name_lower} --build-arg PYTEST_INMANTA_DEV=${pytest_inmanta_dev}
           sudo docker run -d --rm --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro test-module-std-${GIT_BRANCH#*/} > docker_id
           sudo docker exec $(cat docker_id) env/bin/pytest tests -v --junitxml=junit.xml
           sudo docker cp $(cat docker_id):/module/std/junit.xml junit.xml
