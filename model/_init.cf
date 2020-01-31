@@ -466,7 +466,7 @@ entity AgentConfig extends PurgeableResource:
                         * python: The python interpreter to use. The default value is python
                         * retries: The number of retries before giving up. The default number of retries 10
                         * retry_wait: The time to wait between retries for the remote target to become available. The default wait is 30s.
-                    EG: ssh://centos@centos-machine/?python=python3 (This would connect to a the centos machine and use python3 as it's interpreter)
+                   Example: ssh://centos@centos-machine/?python=python3 (This would connect to a the centos machine and use python3 as it's interpreter)
     """
     bool? autostart
     string agentname
