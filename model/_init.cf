@@ -395,9 +395,14 @@ macos = OS(name = "macos", family = unix)
 entity OS:
     """
         Defines an operating system
+
+        :attr name: The name of the operating system or family of operating systems
+        :attr version: A specific version
+        :attr python_cmd: Specifies what command should be used to launch the python interpreter on the other end
     """
     string name
     number version = 0
+    string? python_cmd = "python"
 end
 
 implement OS using std::none
@@ -457,6 +462,11 @@ entity AgentConfig extends PurgeableResource:
                    * ssh://[user@]hostname[:port] Login using ssh. When user is left out, root is assumed. For port, the system
                      default is used.
                    * host The actual hostname or ip to use. Altough this is not a valid host in uri form it is supported.
+                   * A query string can be used to set the properties:
+                        * python: The python interpreter to use. The default value is python
+                        * retries: The number of retries before giving up. The default number of retries 10
+                        * retry_wait: The time to wait between retries for the remote target to become available. The default wait is 30s.
+                   Example: ssh://centos@centos-machine/?python=python3 (This would connect to a the centos machine and use python3 as it's interpreter)
     """
     bool? autostart
     string agentname
