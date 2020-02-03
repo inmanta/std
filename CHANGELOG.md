@@ -1,3 +1,6 @@
+V1.4.0
+ - Added support for setting remote python command
+
 V1.2.0
  - Added the types printable_ascii and ascii_word
 
