@@ -379,20 +379,6 @@ def assert_function(expression: "bool", message: "string" = ""):
 
 
 @plugin
-def get(ctx: Context, path: "string") -> "any":
-    """
-        This function return the variable with given string path
-    """
-    parts = path.split("::")
-
-    module = parts[0:-1]
-    cls_name = parts[-1]
-
-    var = ctx.scope.get_variable(cls_name, module)
-    return var.value
-
-
-@plugin
 def select(objects: "list", attr: "string") -> "list":
     """
         Return a list with the select attributes
@@ -495,21 +481,6 @@ def objid(value: "any") -> "string":
             value._get_instance().__class__,
         )
     )
-
-
-@plugin
-def first_of(context: Context, value: "list", type_name: "string") -> "any":
-    """
-        Return the first in the list that has the given type
-    """
-    for item in value:
-        d = item.type().__definition__
-        name = "%s::%s" % (d.namespace, d.name)
-
-        if name == type_name:
-            return item
-
-    return None
 
 
 @plugin
