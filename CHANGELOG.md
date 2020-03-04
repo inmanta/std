@@ -1,3 +1,6 @@
+V1.4.1
+ - Removed first_of and get plugins
+
 V1.4.0
  - Added support for setting remote python command
 
