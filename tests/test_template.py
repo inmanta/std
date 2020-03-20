@@ -123,38 +123,40 @@ t3 = Item(name="t3", collection=c1)
 
 
 @pytest.fixture()
-def module_with_template(project):
-    module_init_cf = """
-    import std
+def cleanup_test_module(project):
+    yield
+    test_module_path = os.path.join(project._test_project_dir, "libs", "testmod")
+    if os.path.exists(test_module_path):
+        shutil.rmtree(test_module_path)
 
-    entity Test1:
-    string name
-    end
 
-    implementation tt for Test1:
-    content=std::template("./testtemplate.tmpl")
-    std::print(content)
-    end
+def test_template_current_dir(project, cleanup_test_module):
 
-    implement Test1 using tt
-
-    Test1(name="t1")
     """
+        Test the use of current dir in templates
+    """
+    module_init_cf = """
+        import std
+
+        entity Test1:
+        string name
+        end
+
+        implementation tt for Test1:
+        content=std::template("./testtemplate.tmpl")
+        std::print(content)
+        end
+
+        implement Test1 using tt
+
+        Test1(name="t1")
+        """
     project.create_module("testmod", initcf=module_init_cf, initpy="")
     template_dir = os.path.join(
         project._test_project_dir, "libs", "testmod", "templates"
     )
     with open(os.path.join(template_dir, "testtemplate.tmpl"), "w") as template_file:
         template_file.write("""{{name}}""")
-    yield
-    shutil.rmtree(os.path.join(project._test_project_dir, "libs", "testmod"))
-
-
-def test_template_current_dir(project, module_with_template):
-
-    """
-        Test the use of current dir in templates
-    """
 
     project.compile(
         """
@@ -165,26 +167,20 @@ import testmod
     assert project.get_stdout() == "t1\n"
 
 
-@pytest.fixture()
-def module_with_file(project):
+def test_files_current_dir(project, cleanup_test_module):
     module_init_cf = """
-        import std
+            import std
 
-        for file in std::list_files("./"):
-                std::source("./{{file}}")
-                std::print(file)
-            end
-        """
+            for file in std::list_files("./"):
+                    std::source("./{{file}}")
+                    std::print(file)
+                end
+            """
 
     project.create_module("testmod", initcf=module_init_cf, initpy="")
     files_dir = os.path.join(project._test_project_dir, "libs", "testmod", "files")
     with open(os.path.join(files_dir, "testfile1"), "w") as template_file:
         template_file.write("test test test")
-    yield
-    shutil.rmtree(os.path.join(project._test_project_dir, "libs", "testmod"))
-
-
-def test_files_current_dir(project, module_with_file):
     project.compile(
         """
         import testmod
