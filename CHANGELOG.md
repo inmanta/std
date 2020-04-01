@@ -1,3 +1,6 @@
+V1.6.0
+ - Added MutableString, MutableNumber and MutableBool types. 
+
 V1.5.0
  - Added support for using current module in template and file paths
  

@@ -477,3 +477,54 @@ end
 implement AgentConfig using std::none
 
 index AgentConfig(agentname)
+
+
+entity MutableString:
+"""
+Wrapper for string values, used to pass a string out of an if statement::
+
+    attr_a = std::MutableString()
+    if some_condition:
+        attr_a.value = "a"
+    else:
+        attr_a.value = "b"
+    end
+"""
+  string? value
+end
+
+implement MutableString using std::none
+
+
+entity MutableNumber:
+"""
+Wrapper for number values, used to pass a number out of an if statement::
+
+    attr_a = std::MutableNumber()
+    if some_condition:
+        attr_a.value = 3
+    else:
+        attr_a.value = 4
+    end
+"""
+  number? value
+end
+
+implement MutableNumber using std::none
+
+
+entity MutableBool:
+"""
+Wrapper for boolean values, used to pass a boolean out of an if statement::
+
+    attr_a = std::MutableBool()
+    if some_condition:
+        attr_a.value = True
+    else:
+        attr_a.value = Null
+    end
+"""
+  bool? value
+end
+
+implement MutableBool using std::none
