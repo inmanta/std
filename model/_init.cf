@@ -480,16 +480,30 @@ index AgentConfig(agentname)
 
 
 entity MutableString:
-"""
-Wrapper for string values, used to pass a string out of an if statement::
+    """
+        Wrapper for string values. It can be used to pass a string out of an if statement, or to
+        use relations to create a mutuable list of strings.
 
-    attr_a = std::MutableString()
-    if some_condition:
-        attr_a.value = "a"
-    else:
-        attr_a.value = "b"
-    end
-"""
+        :Example:
+
+        attr_a = std::MutableString()
+        if some_condition:
+            attr_a.value = "a"
+        else:
+            attr_a.value = "b"
+        end
+
+
+        :Example:
+        entity Test:
+        end
+
+        Test.string_list [0:] -- std::MutableString
+
+        a = Test()
+        a.string_list += std::MutableString(value="value1")
+        a.string_list += std::MutableString(value="value2")
+    """
   string? value
 end
 
@@ -497,16 +511,16 @@ implement MutableString using std::none
 
 
 entity MutableNumber:
-"""
-Wrapper for number values, used to pass a number out of an if statement::
+    """
+        Wrapper for number values, used to pass a number out of an if statement::
 
-    attr_a = std::MutableNumber()
-    if some_condition:
-        attr_a.value = 3
-    else:
-        attr_a.value = 4
-    end
-"""
+        attr_a = std::MutableNumber()
+        if some_condition:
+            attr_a.value = 3
+        else:
+            attr_a.value = 4
+        end
+    """
   number? value
 end
 
@@ -514,16 +528,16 @@ implement MutableNumber using std::none
 
 
 entity MutableBool:
-"""
-Wrapper for boolean values, used to pass a boolean out of an if statement::
+    """
+        Wrapper for boolean values, used to pass a boolean out of an if statement::
 
-    attr_a = std::MutableBool()
-    if some_condition:
-        attr_a.value = True
-    else:
-        attr_a.value = Null
-    end
-"""
+        attr_a = std::MutableBool()
+        if some_condition:
+            attr_a.value = True
+        else:
+            attr_a.value = Null
+        end
+    """
   bool? value
 end
 
