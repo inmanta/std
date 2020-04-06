@@ -322,7 +322,7 @@ end
 
 implement Package using reload, pkgHost
 
-Host host [1] -- [0:] Package packages
+Host.packages [0:] -- Package.host [1]
 
 index Package(host, name)
 
@@ -355,7 +355,7 @@ end
 
 implement DefaultDirectory using reload, dirHost
 
-Host host [1] -- [0:] Directory directories
+Host.directories [0:] -- Directory.host [1]
 
 index Directory(host, path)
 
@@ -376,7 +376,7 @@ end
 
 implement Symlink using std::reload, symHost
 
-Host host [1] -- [0:] Symlink symlinks
+Host.symlinks [0:] -- Symlink.host [1]
 
 implementation symHost for Symlink:
     self.requires = self.host.requires
@@ -414,7 +414,7 @@ Host.os [1] -- OS
     for this.
 """
 
-OS member [0:] -- [0:1] OS family
+OS.family [0:1] -- OS.member [0:]
 
 entity HostConfig:
     """
@@ -427,7 +427,7 @@ entity HostConfig:
     """
 end
 
-Host host [1] -- [1] HostConfig host_config
+Host.host_config [1] -- HostConfig.host [1]
 implement HostConfig using std::none
 
 
@@ -443,7 +443,7 @@ entity HostGroup:
     string name
 end
 
-std::Host hosts [0:] -- [0:] HostGroup host_groups
+Host.host_groups [0:] -- HostGroup.hosts [0:]
 
 implement HostGroup using std::none
 
