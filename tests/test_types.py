@@ -1,6 +1,7 @@
 import string
 
 import pytest
+
 from inmanta.ast import AttributeException
 
 
