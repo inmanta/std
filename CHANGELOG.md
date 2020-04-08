@@ -1,7 +1,9 @@
+V1.5.1
+ - Updated inmanta.resources import due to name clash.
+
 V1.5.0
  - Added support for using current module in template and file paths
  - Added MutableString, MutableNumber and MutableBool types.
- - Updated inmanta.resources import due to name clash.
 
 V1.4.1
  - Removed first_of and get plugins
