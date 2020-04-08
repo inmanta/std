@@ -31,6 +31,9 @@ from operator import attrgetter
 
 import jinja2
 import pydantic
+from jinja2 import Environment, FileSystemLoader, PrefixLoader
+from jinja2.exceptions import UndefinedError
+from jinja2.runtime import Undefined
 
 # don't bind to `resources` because this package has a submodule named resources that will bind to `resources` when imported
 import inmanta.resources
@@ -41,9 +44,6 @@ from inmanta.execute.util import NoneValue, Unknown
 from inmanta.export import dependency_manager, unknown_parameters
 from inmanta.module import Project
 from inmanta.plugins import Context, plugin
-from jinja2 import Environment, FileSystemLoader, PrefixLoader
-from jinja2.exceptions import UndefinedError
-from jinja2.runtime import Undefined
 
 
 @plugin
