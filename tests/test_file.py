@@ -2,7 +2,6 @@ import getpass
 import os
 
 import pytest
-
 from inmanta.const import ResourceState
 
 
