@@ -29,9 +29,10 @@ from copy import copy
 from itertools import chain
 from operator import attrgetter
 
+# don't bind to `resources` because this package has a submodule named resources that will bind to `resources` when imported
+import inmanta.resources
 import jinja2
 import pydantic
-from inmanta import resources
 from inmanta.ast import NotFoundException, OptionalValueException, RuntimeException
 from inmanta.config import Config
 from inmanta.execute.proxy import DynamicProxy, UnknownException
@@ -657,7 +658,7 @@ def getfact(
     """
     global fact_cache
 
-    resource_id = resources.to_id(resource)
+    resource_id = inmanta.resources.to_id(resource)
     if resource_id is None:
         raise Exception("Facts can only be retreived from resources.")
 
