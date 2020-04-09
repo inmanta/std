@@ -26,7 +26,6 @@ Strike through any lines that are not applicable (`~~line~~`) then check the box
 
 - [ ] Attached issue to pull request
 - [ ] Changelog entry
-- [ ] Proper dev version is set in `project.yml`
 - [ ] Version number is bumped to dev version
 - [ ] Code is clear and sufficiently documented
 - [ ] Sufficient test cases (reproduces the bug/tests the requested feature)
