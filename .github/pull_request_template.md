@@ -18,7 +18,7 @@ git push
 git push {tag} # push the tag as well
 ```
 
-The close the PR with a reference to the commit
+Then close the PR with a reference to the commit
 
 # Self Check:
 
