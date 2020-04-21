@@ -1,3 +1,6 @@
+V1.5.2
+ - Removed int typedef because it's a built-in type now (#81)
+
 V1.5.1
  - Updated inmanta.resources import due to name clash.
 
