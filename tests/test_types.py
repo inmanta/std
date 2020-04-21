@@ -51,8 +51,6 @@ from inmanta.ast import AttributeException
         ("std::positive_float", "-2.3", False),
         ("std::positive_int", "5", True),
         ("std::positive_int", "0", False),
-        ("std::int", "-2", True),
-        ("std::int", "-2.1", False),
         ("std::alfanum", '"Qwerty123"', True),
         ("std::alfanum", '"qwerty/123"', False),
         ("std::base64", '"dGVzdA=="', True),
