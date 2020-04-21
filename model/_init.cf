@@ -107,7 +107,7 @@ typedef negative_float as number matching std::validate_type("pydantic.NegativeF
 """
     A floating point number less than zero.
 """
-typedef negative_int as number matching std::validate_type("pydantic.NegativeInt", self)
+typedef negative_int as int matching std::validate_type("pydantic.NegativeInt", self)
 """
     A integer number less than zero.
 """
@@ -115,13 +115,9 @@ typedef positive_float as number matching std::validate_type("pydantic.PositiveF
 """
     A floating point number greater than zero.
 """
-typedef positive_int as number matching std::validate_type("pydantic.PositiveInt", self)
+typedef positive_int as int matching std::validate_type("pydantic.PositiveInt", self)
 """
     A integer number greater than zero.
-"""
-typedef int as number matching std::validate_type("pydantic.StrictInt", self)
-"""
-    An integer number.
 """
 typedef alfanum as string matching std::validate_type("pydantic.constr", self, {"regex": "^[a-zA-Z0-9]*$", "strict": true})
 """
