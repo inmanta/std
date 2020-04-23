@@ -467,13 +467,20 @@ class YumPackage(ResourceHandler):
         lines = yum_output[0].split("\n")
 
         output = self._parse_fields(lines[1:])
+        repo_keyword = (
+            "Repo"
+            if "Repo" in output
+            else "Repository"
+            if "Repository" in output
+            else None
+        )
 
-        if "Repo" not in output:
+        if not repo_keyword:
             return {"state": "removed"}
 
         state = "removed"
 
-        if output["Repo"] == "installed" or output["Repo"] == "@System":
+        if output[repo_keyword] == "installed" or output[repo_keyword] == "@System":
             state = "installed"
 
         # check if there is an update

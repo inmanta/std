@@ -1,3 +1,6 @@
+V1.5.2
+- Fixed yum package installed check on CentOS 8
+
 V1.5.1
  - Updated inmanta.resources import due to name clash.
 
