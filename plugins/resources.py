@@ -467,6 +467,9 @@ class YumPackage(ResourceHandler):
         lines = yum_output[0].split("\n")
 
         output = self._parse_fields(lines[1:])
+        # to decide if the package is installed or not, the "Repo" field can be used
+        # from the yum info output (for e.g., CentOS 7)
+        # the dnf info output (for e.g., CentOS 8) doesn't have this field, "Repository" can be used instead
         repo_keyword = (
             "Repo"
             if "Repo" in output
