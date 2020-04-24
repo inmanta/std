@@ -467,13 +467,23 @@ class YumPackage(ResourceHandler):
         lines = yum_output[0].split("\n")
 
         output = self._parse_fields(lines[1:])
+        # to decide if the package is installed or not, the "Repo" field can be used
+        # from the yum info output (for e.g., CentOS 7)
+        # the dnf info output (for e.g., CentOS 8) doesn't have this field, "Repository" can be used instead
+        repo_keyword = (
+            "Repo"
+            if "Repo" in output
+            else "Repository"
+            if "Repository" in output
+            else None
+        )
 
-        if "Repo" not in output:
+        if not repo_keyword:
             return {"state": "removed"}
 
         state = "removed"
 
-        if output["Repo"] == "installed" or output["Repo"] == "@System":
+        if output[repo_keyword] == "installed" or output[repo_keyword] == "@System":
             state = "installed"
 
         # check if there is an update

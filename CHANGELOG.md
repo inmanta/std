@@ -1,3 +1,6 @@
+V1.5.3
+- Fixed yum package installed check on CentOS 8
+
 V1.5.2
  - Removed int typedef because it's a built-in type now (#81)
 
