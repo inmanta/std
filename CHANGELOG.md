@@ -1,3 +1,6 @@
+V2.0.0
+- Disallow "internal" agentname in AgentConfig (#88)
+
 V1.5.3
 - Fixed yum package installed check on CentOS 8
 

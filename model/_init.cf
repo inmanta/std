@@ -443,6 +443,12 @@ Host.host_groups [0:] -- HostGroup.hosts [0:]
 
 implement HostGroup using std::none
 
+
+typedef config_agent as string matching self != "internal"
+"""
+    Type for configurable agents.
+"""
+
 entity AgentConfig extends PurgeableResource:
     """
         Control agent settings. Currently these settings are only applied to autostarted agents
@@ -465,7 +471,7 @@ entity AgentConfig extends PurgeableResource:
                    Example: ssh://centos@centos-machine/?python=python3 (This would connect to a the centos machine and use python3 as it's interpreter)
     """
     bool? autostart
-    string agentname
+    config_agent agentname
     string agent="internal"
     string uri="local:"
 end
