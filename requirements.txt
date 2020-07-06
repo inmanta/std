@@ -1,3 +1,9 @@
 Jinja2==2.11.2
 email_validator==1.1.1
 pydantic==1.5.1
+
+# Transitive dependencies
+dataclasses==0.7
+dnspython==1.16.0
+idna==2.10
+MarkupSafe==1.1.1
