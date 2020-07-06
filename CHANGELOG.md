@@ -1,3 +1,6 @@
+V2.0.1
+- Pin transitive dependencies
+
 V2.0.0
 - Disallow "internal" agentname in AgentConfig (#88)
 
