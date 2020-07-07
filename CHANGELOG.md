@@ -1,3 +1,6 @@
+V2.0.2
+- Pin dependencies using ~=
+
 V2.0.1
 - Pin transitive dependencies
 
