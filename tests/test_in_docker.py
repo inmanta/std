@@ -1,10 +1,7 @@
-import logging
 import os
 import subprocess
 
 import pytest
-
-LOGGER = logging.getLogger(__name__)
 
 
 @pytest.mark.skipif(
@@ -12,7 +9,7 @@ LOGGER = logging.getLogger(__name__)
     reason="Only run when test infra environment variable is set to true",
 )
 def test_docker(docker_container):
-    LOGGER.debug(f"Running tests in container {docker_container}")
+    print(f"Running tests in container {docker_container}")
     subprocess.check_output(
         [
             "sudo",
