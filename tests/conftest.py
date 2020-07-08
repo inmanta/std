@@ -1,13 +1,13 @@
-import logging
 import os
 import subprocess
 
 import pytest
 
-LOGGER = logging.getLogger(__name__)
-
 collect_ignore = []
 if os.getenv("INMANTA_TEST_INFRA_SETUP", "false").lower() == "true":
+    # If the INMANTA_TEST_INFRA_SETUP is on, ignore the tests when running outside of docker except the "test_in_docker" one.
+    # That test executes the rest of the tests inside a docker container
+    # (and skips itself, because the environment variable will be off in the container).
     test_dir = os.path.dirname(os.path.realpath(__file__))
     test_modules = [
         module for module in os.listdir(test_dir) if "test_in_docker" not in module
@@ -23,9 +23,9 @@ def docker_container(monkeypatch):
         .decode("utf-8")
         .strip()
     )
-    LOGGER.debug(f"Running std tests on branch {current_branch_name}")
-    pytest_inmanta_dev = os.getenv("PYTEST_INMANTA_DEV")
-    LOGGER.debug(f"Using the dev index for pytest-inmanta: {pytest_inmanta_dev}")
+    print(f"Running std tests on branch {current_branch_name}")
+    pytest_inmanta_dev = os.getenv("PYTEST_INMANTA_DEV", "false")
+    print(f"Using the dev index for pytest-inmanta: {pytest_inmanta_dev}")
     subprocess.check_output(
         [
             "sudo",
@@ -55,20 +55,13 @@ def docker_container(monkeypatch):
         .decode("utf-8")
         .strip()
     )
-    LOGGER.debug(f"Started container with id {docker_id}")
+    print(f"Started container with id {docker_id}")
     yield docker_id
 
     subprocess.check_output(
         ["sudo", "docker", "cp", f"{docker_id}:/module/std/junit.xml", "junit.xml"]
     )
     no_clean = os.getenv("INMANTA_NO_CLEAN", "false").lower() == "true"
-    LOGGER.debug(f"Skipping cleanup: {no_clean}")
+    print(f"Skipping cleanup: {no_clean}")
     if not no_clean:
         subprocess.check_output(["sudo", "docker", "stop", f"{docker_id}"])
-        try:
-            subprocess.check_output(
-                ["sudo", "docker", "rm", f"{docker_id}"], stderr=subprocess.STDOUT
-            )
-        except subprocess.CalledProcessError as e:
-            if "No such container" not in e.stdout.decode("utf-8"):
-                raise e
