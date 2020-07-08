@@ -10,7 +10,7 @@ import pytest
 )
 def test_docker(docker_container):
     print(f"Running tests in container {docker_container}")
-    subprocess.check_output(
+    subprocess.run(
         [
             "sudo",
             "docker",
