@@ -48,7 +48,7 @@ def docker_container(monkeypatch):
                 "--rm",
                 "--privileged",
                 "-v",
-                f"/sys/fs/cgroup:/sys/fs/cgroup:ro",
+                "/sys/fs/cgroup:/sys/fs/cgroup:ro",
                 f"test-module-std-{current_branch_name}",
             ]
         )
