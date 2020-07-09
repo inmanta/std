@@ -37,7 +37,8 @@ def docker_container(monkeypatch):
             f"test-module-std-{current_branch_name}",
             "--build-arg",
             f"PYTEST_INMANTA_DEV={pytest_inmanta_dev}",
-        ]
+        ],
+        check=True,
     )
     docker_id = (
         subprocess.run(
@@ -54,6 +55,7 @@ def docker_container(monkeypatch):
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            check=True,
         )
         .stdout.decode("utf-8")
         .strip()
@@ -62,9 +64,10 @@ def docker_container(monkeypatch):
     yield docker_id
 
     subprocess.run(
-        ["sudo", "docker", "cp", f"{docker_id}:/module/std/junit.xml", "junit.xml"]
+        ["sudo", "docker", "cp", f"{docker_id}:/module/std/junit.xml", "junit.xml"],
+        check=True,
     )
     no_clean = os.getenv("INMANTA_NO_CLEAN", "false").lower() == "true"
     print(f"Skipping cleanup: {no_clean}")
     if not no_clean:
-        subprocess.run(["sudo", "docker", "stop", f"{docker_id}"])
+        subprocess.run(["sudo", "docker", "stop", f"{docker_id}"], check=True)
