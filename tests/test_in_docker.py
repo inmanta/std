@@ -20,5 +20,6 @@ def test_docker(docker_container):
             "tests/",
             "-v",
             "--junitxml=junit.xml",
-        ]
+        ],
+        check=True,
     )

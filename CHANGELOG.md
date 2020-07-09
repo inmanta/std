@@ -1,3 +1,6 @@
+V2.0.3
+- Add fixtures to run tests in docker container
+
 V2.0.2
 - Pin dependencies using ~=
 
