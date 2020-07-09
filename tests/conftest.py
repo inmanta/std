@@ -22,6 +22,7 @@ def docker_container(monkeypatch):
         subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
         .decode("utf-8")
         .strip()
+        .lower()
     )
     print(f"Running std tests on branch {current_branch_name}")
     pytest_inmanta_dev = os.getenv("PYTEST_INMANTA_DEV", "false")
@@ -51,7 +52,8 @@ def docker_container(monkeypatch):
                 "/sys/fs/cgroup:/sys/fs/cgroup:ro",
                 f"test-module-std-{current_branch_name}",
             ],
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
         .stdout.decode("utf-8")
         .strip()
