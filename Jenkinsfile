@@ -47,7 +47,22 @@ pipeline {
         }
       }
     }
-
+    stage("Run tests on centos7"){
+      steps{
+        script{
+          run_tests_in_container('7')
+          junit 'junit-centos7.xml'
+        }
+      }
+    }
+    stage("Run tests on centos8"){
+      steps{
+        script{
+          run_tests_in_container('8')
+          junit 'junit-centos8.xml'
+        }
+      }
+    }
   }
   post {
     always {
