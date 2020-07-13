@@ -5,7 +5,9 @@ def run_tests_in_container(centos_version) {
   container_id_file = "docker_id_centos${centos_version}"
   sh (
     script: """
-      sudo docker build . -t ${container_name} --build-arg PYTEST_INMANTA_DEV=\${pytest_inmanta_dev}
+      sudo docker build . -t ${container_name} \
+                          --build-arg PYTEST_INMANTA_DEV=\${pytest_inmanta_dev} \
+                          -f dockerfiles/Dockerfile-centos${centos_version}
       sudo docker run -d --rm --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro ${container_name} > ${container_id_file}
       sudo docker exec \$(cat ${container_id_file}) env/bin/pytest tests -v --junitxml=junit.xml
       sudo docker cp \$(cat ${container_id_file}):/module/std/junit.xml junit-centos${centos_version}.xml
