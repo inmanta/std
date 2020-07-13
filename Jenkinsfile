@@ -47,29 +47,16 @@ pipeline {
         }
       }
     }
-    stage("Run tests on centos7"){
-      steps{
-        script{
-          run_tests_in_container('7')
-          junit 'junit-centos7.xml'
-        }
-      }
-    }
-    stage("Run tests on centos8"){
-      steps{
-        script{
-          run_tests_in_container('8')
-          junit 'junit-centos8.xml'
-        }
-      }
-    }
+
   }
   post {
     always {
       script {
         sh'''
-          for container_id_file in ./docker_id_centos*; do
-            sudo docker stop $(cat ${container_id_file}) && rm ${container_id_file}
+          for container_id_file in docker_id_centos7 docker_id_centos8; do
+            if [ -e ${container_id_file} ]; then
+              sudo docker stop $(cat ${container_id_file}) && rm ${container_id_file}
+            fi
           done
         '''
       }
