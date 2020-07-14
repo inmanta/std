@@ -5,3 +5,4 @@
 .env
 .vscode
 .pytest_cache
+junit.xml
