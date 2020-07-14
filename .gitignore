@@ -6,3 +6,4 @@
 .vscode
 .pytest_cache
 junit.xml
+junit_docker.xml
