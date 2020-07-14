@@ -28,6 +28,7 @@ pipeline {
       steps{
         script{
           sh '''
+          rm -rf "${WORKSPACE}/env"
           python3 -m venv ${WORKSPACE}/env
           ${WORKSPACE}/env/bin/pip install -U pip
           ${WORKSPACE}/env/bin/pip install -r requirements.txt
