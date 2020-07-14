@@ -64,7 +64,13 @@ def docker_container(monkeypatch):
     yield docker_id
 
     subprocess.run(
-        ["sudo", "docker", "cp", f"{docker_id}:/module/std/junit.xml", "junit_docker.xml"],
+        [
+            "sudo",
+            "docker",
+            "cp",
+            f"{docker_id}:/module/std/junit.xml",
+            "junit_docker.xml",
+        ],
         check=True,
     )
     no_clean = os.getenv("INMANTA_NO_CLEAN", "false").lower() == "true"
