@@ -1,5 +1,6 @@
 import os
 import subprocess
+import uuid
 
 import pytest
 
@@ -17,16 +18,16 @@ if os.getenv("INMANTA_TEST_INFRA_SETUP", "false").lower() == "true":
 
 
 @pytest.fixture
-def docker_container(monkeypatch):
-    current_branch_name = (
-        subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
-        .decode("utf-8")
-        .strip()
-        .lower()
-    )
-    print(f"Running std tests on branch {current_branch_name}")
+def docker_container():
+    _run_tests_in_docker(7)
+    _run_tests_in_docker(8)
+
+
+def _run_tests_in_docker(centos_version: int) -> None:
     pytest_inmanta_dev = os.getenv("PYTEST_INMANTA_DEV", "false")
     print(f"Using the dev index for pytest-inmanta: {pytest_inmanta_dev}")
+    image_name = f"test-module-std-{uuid.uuid4()}"
+    print(f"Building docker image with name: {image_name}")
     subprocess.run(
         [
             "sudo",
@@ -34,9 +35,11 @@ def docker_container(monkeypatch):
             "build",
             ".",
             "-t",
-            f"test-module-std-{current_branch_name}",
+            image_name,
             "--build-arg",
             f"PYTEST_INMANTA_DEV={pytest_inmanta_dev}",
+            "-f",
+            f"./dockerfiles/Dockerfile-centos{centos_version}",
         ],
         check=True,
     )
@@ -51,7 +54,7 @@ def docker_container(monkeypatch):
                 "--privileged",
                 "-v",
                 "/sys/fs/cgroup:/sys/fs/cgroup:ro",
-                f"test-module-std-{current_branch_name}",
+                image_name,
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

@@ -1,14 +1,12 @@
 def run_tests_in_container(centos_version) {
-  // Docker can only have lower case in it's build tags
-  branch_name_lower = env.GIT_BRANCH.toLowerCase()
-  container_name = "test-module-std-centos${centos_version}-${branch_name_lower}"
+  image_name = "test-module-std-" + UUID.randomUUID().toString()
   container_id_file = "docker_id_centos${centos_version}"
   sh (
     script: """
-      sudo docker build . -t ${container_name} \
+      sudo docker build . -t ${image_name} \
                           --build-arg PYTEST_INMANTA_DEV=\${pytest_inmanta_dev} \
                           -f dockerfiles/Dockerfile-centos${centos_version}
-      sudo docker run -d --rm --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro ${container_name} > ${container_id_file}
+      sudo docker run -d --rm --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro ${image_name} > ${container_id_file}
       sudo docker exec \$(cat ${container_id_file}) env/bin/pytest tests -v --junitxml=junit.xml
       sudo docker cp \$(cat ${container_id_file}):/module/std/junit.xml junit-centos${centos_version}.xml
     """,
