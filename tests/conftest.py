@@ -17,13 +17,9 @@ if os.getenv("INMANTA_TEST_INFRA_SETUP", "false").lower() == "true":
     collect_ignore += test_modules
 
 
-@pytest.fixture
-def docker_container():
-    _run_tests_in_docker(7)
-    _run_tests_in_docker(8)
-
-
-def _run_tests_in_docker(centos_version: int) -> None:
+@pytest.fixture(scope="function", params=[7, 8])
+def docker_container(request) -> None:
+    centos_version = request.param
     pytest_inmanta_dev = os.getenv("PYTEST_INMANTA_DEV", "false")
     print(f"Using the dev index for pytest-inmanta: {pytest_inmanta_dev}")
     image_name = f"test-module-std-{uuid.uuid4()}"
