@@ -12,7 +12,12 @@ rm -f /lib/systemd/system/basic.target.wants/*;\
 rm -f /lib/systemd/system/anaconda.target.wants/*;
 VOLUME [ "/sys/fs/cgroup" ]
 
-RUN yum install -y python3
+RUN yum install -y python3 glibc-locale-source
+
+RUN localedef -i en_US -f UTF-8 en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US.UTF-8
 
 RUN mkdir -p /module/std
 WORKDIR /module/std
