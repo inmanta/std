@@ -20,6 +20,7 @@ if os.getenv("INMANTA_TEST_INFRA_SETUP", "false").lower() == "true":
 
     collect_ignore += test_modules
 
+
 def merge_to_junit_xml(filename: str, suite: str) -> None:
     junit_docker = Path("junit_docker.xml")
     if junit_docker.exists():
@@ -38,6 +39,7 @@ def merge_to_junit_xml(filename: str, suite: str) -> None:
 
     tree.write(junit_docker)
     os.remove(filename)
+
 
 @pytest.fixture(scope="function", params=[7, 8])
 def docker_container(request: SubRequest) -> Generator[str, None, None]:
@@ -86,13 +88,7 @@ def docker_container(request: SubRequest) -> Generator[str, None, None]:
 
     junit_file = f"junit_centos_{centos_version}.xml"
     subprocess.run(
-        [
-            "sudo",
-            "docker",
-            "cp",
-            f"{docker_id}:/module/std/junit.xml",
-            junit_file,
-        ],
+        ["sudo", "docker", "cp", f"{docker_id}:/module/std/junit.xml", junit_file,],
         check=True,
     )
     merge_to_junit_xml(junit_file, f"centos-{centos_version}")
