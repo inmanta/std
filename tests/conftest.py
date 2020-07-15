@@ -45,9 +45,12 @@ def merge_to_junit_xml(filename: str, suite: str) -> None:
     tree.write(junit_docker)
     os.remove(filename)
 
+
 def fix_classname(testsuite: ElementTree.Element, suite: str) -> None:
     for element in testsuite:
-        element.attrib["classname"] = element.attrib["classname"].replace("tests.", f"{suite}.")
+        element.attrib["classname"] = element.attrib["classname"].replace(
+            "tests.", f"{suite}."
+        )
 
 
 @pytest.fixture(scope="function", params=[7, 8])
