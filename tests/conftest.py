@@ -88,7 +88,7 @@ def docker_container(request: SubRequest) -> Generator[str, None, None]:
 
     junit_file = f"junit_centos_{centos_version}.xml"
     subprocess.run(
-        ["sudo", "docker", "cp", f"{docker_id}:/module/std/junit.xml", junit_file,],
+        ["sudo", "docker", "cp", f"{docker_id}:/module/std/junit.xml", junit_file],
         check=True,
     )
     merge_to_junit_xml(junit_file, f"centos-{centos_version}")
