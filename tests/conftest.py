@@ -1,7 +1,9 @@
 import os
 import subprocess
 import uuid
+from pathlib import Path
 from typing import Generator
+from xml.etree import ElementTree
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -18,6 +20,24 @@ if os.getenv("INMANTA_TEST_INFRA_SETUP", "false").lower() == "true":
 
     collect_ignore += test_modules
 
+def merge_to_junit_xml(filename: str, suite: str) -> None:
+    junit_docker = Path("junit_docker.xml")
+    if junit_docker.exists():
+        tree = ElementTree.parse(junit_docker)
+        root = tree.getroot()
+
+        x_tree = ElementTree.parse(filename)
+        x_root = x_tree.getroot()
+        x_root[0].attrib["name"] = suite
+        root.append(x_root[0])
+
+    else:
+        tree = ElementTree.parse(filename)
+        root = tree.getroot()
+        root[0].attrib["name"] = suite
+
+    tree.write(junit_docker)
+    os.remove(filename)
 
 @pytest.fixture(scope="function", params=[7, 8])
 def docker_container(request: SubRequest) -> Generator[str, None, None]:
@@ -64,16 +84,18 @@ def docker_container(request: SubRequest) -> Generator[str, None, None]:
     print(f"Started container with id {docker_id}")
     yield docker_id
 
+    junit_file = f"junit_centos_{centos_version}.xml"
     subprocess.run(
         [
             "sudo",
             "docker",
             "cp",
             f"{docker_id}:/module/std/junit.xml",
-            f"junit_centos_{centos_version}.xml",
+            junit_file,
         ],
         check=True,
     )
+    merge_to_junit_xml(junit_file, f"centos-{centos_version}")
     no_clean = os.getenv("INMANTA_NO_CLEAN", "false").lower() == "true"
     print(f"Skipping cleanup: {no_clean}")
     if not no_clean:
