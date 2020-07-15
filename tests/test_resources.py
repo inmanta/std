@@ -18,8 +18,9 @@
 import getpass
 import os
 
-import inmanta
 import pytest
+
+import inmanta
 
 
 def test_file(project, tmpdir):

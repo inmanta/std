@@ -5,5 +5,5 @@
 .env
 .vscode
 .pytest_cache
-junit.xml
-junit_docker.xml
+env_vars
+junit*
