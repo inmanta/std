@@ -1,3 +1,6 @@
+V2.0.4
+- Add support to run the tests on centos8
+
 V2.0.3
 - Add fixtures to run tests in docker container
 
