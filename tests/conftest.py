@@ -26,19 +26,28 @@ def merge_to_junit_xml(filename: str, suite: str) -> None:
     if junit_docker.exists():
         tree = ElementTree.parse(junit_docker)
         root = tree.getroot()
+        for testsuite in root:
+            if testsuite.get("name", None) == suite:
+                root.remove(testsuite)
 
         x_tree = ElementTree.parse(filename)
         x_root = x_tree.getroot()
         x_root[0].attrib["name"] = suite
+        fix_classname(x_root[0], suite)
         root.append(x_root[0])
 
     else:
         tree = ElementTree.parse(filename)
         root = tree.getroot()
         root[0].attrib["name"] = suite
+        fix_classname(root[0], suite)
 
     tree.write(junit_docker)
     os.remove(filename)
+
+def fix_classname(testsuite: ElementTree.Element, suite: str) -> None:
+    for element in testsuite:
+        element.attrib["classname"] = element.attrib["classname"].replace("tests.", f"{suite}.")
 
 
 @pytest.fixture(scope="function", params=[7, 8])
