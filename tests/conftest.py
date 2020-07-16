@@ -22,6 +22,15 @@ if os.getenv("INMANTA_TEST_INFRA_SETUP", "false").lower() == "true":
 
 
 def merge_to_junit_xml(filename: str, suite: str) -> None:
+    """
+    Takes a junit-xml filename or path to said file.
+    From this file it extracts the testsuite node and adds it to the junit_docker.xml file,
+    in the process it adds a name to the testsuite (the suite param) and
+    changes the classname from tests.* to {suite}.*
+    Finaly, it removes the original file.
+    This is because jenkins was not handleing multiple junit files being exposed well.
+    The classnames are changed so that the tests are grouped by what container they ran in.
+    """
     junit_docker = Path("junit_docker.xml")
     if junit_docker.exists():
         tree = ElementTree.parse(junit_docker)
