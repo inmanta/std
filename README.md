@@ -26,6 +26,3 @@ The test results can be found in the `junit_docker.xml` file (outside the contai
 
 The cleanup behavior can be changed by the `INMANTA_NO_CLEAN` environment variable,
 when set to `true`, the container is not stopped after the tests.
-
-The `PYTEST_INMANTA_DEV` environment variable changes the index used to install pytest-inmanta to the inmanta dev index,
-when set to `true`.

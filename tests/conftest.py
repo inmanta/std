@@ -65,25 +65,24 @@ def fix_classname(testsuite: ElementTree.Element, suite: str) -> None:
 @pytest.fixture(scope="function", params=[7, 8])
 def docker_container(request: SubRequest) -> Generator[str, None, None]:
     centos_version = request.param
-    pytest_inmanta_dev = os.getenv("PYTEST_INMANTA_DEV", "false")
-    print(f"Using the dev index for pytest-inmanta: {pytest_inmanta_dev}")
-    image_name = f"test-module-std-{uuid.uuid4()}"
+    image_name = f"test-module-std-centos{centos_version}"
+    docker_build_cmd = ["sudo", "docker", "build", ".", "-t", image_name]
+
+    pip_index_url = os.environ.get("PIP_INDEX_URL", None)
+    if pip_index_url is not None:
+        docker_build_cmd.append("--build-arg")
+        docker_build_cmd.append(f"PIP_INDEX_URL={pip_index_url}")
+    pip_pre = os.environ.get("PIP_PRE", None)
+    if pip_pre is not None:
+        docker_build_cmd.append("--build-arg")
+        docker_build_cmd.append(f"PIP_PRE={pip_pre}")
+
+    docker_build_cmd.append("-f")
+    docker_build_cmd.append(f"./dockerfiles/centos{centos_version}.Dockerfile")
+    print(docker_build_cmd)
+
     print(f"Building docker image with name: {image_name}")
-    subprocess.run(
-        [
-            "sudo",
-            "docker",
-            "build",
-            ".",
-            "-t",
-            image_name,
-            "--build-arg",
-            f"PYTEST_INMANTA_DEV={pytest_inmanta_dev}",
-            "-f",
-            f"./dockerfiles/centos{centos_version}.Dockerfile",
-        ],
-        check=True,
-    )
+    subprocess.run(docker_build_cmd, check=True)
     docker_id = (
         subprocess.run(
             [
