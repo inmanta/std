@@ -101,7 +101,7 @@ class JinjaDynamicProxy(DynamicProxy):
                 )
         else:
             # A native python object such as a dict
-            return getattr(instance, attribute)
+            return JinjaDynamicProxy.return_value(getattr(instance, attribute))
 
 
 class SequenceProxy(JinjaDynamicProxy):
@@ -142,7 +142,7 @@ class CallProxy(JinjaDynamicProxy):
     def __call__(self, *args, **kwargs):
         instance = self._get_instance()
 
-        return instance(*args, **kwargs)
+        return JinjaDynamicProxy.return_value(instance(*args, **kwargs))
 
 
 class IteratorProxy(JinjaDynamicProxy):
