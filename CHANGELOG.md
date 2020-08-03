@@ -1,3 +1,6 @@
+V2.0.5
+- Pass PIP_INDEX_URL and PIP_PRE to the docker containers that run the tests.
+
 V2.0.4
 - Add support to run the tests on centos8
 

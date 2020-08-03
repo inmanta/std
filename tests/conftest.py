@@ -1,6 +1,5 @@
 import os
 import subprocess
-import uuid
 from pathlib import Path
 from typing import Generator
 from xml.etree import ElementTree
