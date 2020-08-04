@@ -90,7 +90,8 @@ def docker_container(request: SubRequest) -> Generator[str, None, None]:
             stderr=subprocess.PIPE,
             check=True,
         )
-    except subprocess.CalledProcessError: # If the container does not exists
+    # Thrown if the container does not exists
+    except subprocess.CalledProcessError:
         pass
 
     docker_build_cmd = ["sudo", "docker", "build", ".", "-t", image_name]
