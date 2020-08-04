@@ -1,3 +1,6 @@
+V2.0.5
+- Fixed dict value null conversion to None in Jinja template (#97)
+
 V2.0.4
 - Add support to run the tests on centos8
 

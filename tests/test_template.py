@@ -189,3 +189,26 @@ def test_files_current_dir(project, cleanup_test_module):
 
     out = project.get_stdout().splitlines()
     assert ["testfile1"] == out
+
+
+def test_97_template_dict_null(project):
+    """
+        Use a dict with null
+    """
+    project.add_mock_file(
+        "templates",
+        "test.j2",
+        """
+{{ value.get("test") }}
+        """,
+    )
+
+    project.compile(
+        """
+import unittest
+value = {"test": null}
+std::print(std::template("unittest/test.j2"))
+        """
+    )
+
+    assert "None\n" in project.get_stdout()
