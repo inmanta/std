@@ -131,7 +131,6 @@ def cleanup_test_module(project):
 
 
 def test_template_current_dir(project, cleanup_test_module):
-
     """
         Test the use of current dir in templates
     """
