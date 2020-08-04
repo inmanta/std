@@ -1,6 +1,9 @@
 FROM centos:7
 ENV container docker
 
+ARG PIP_INDEX_URL
+ARG PIP_PRE
+
 RUN (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == \
 systemd-tmpfiles-setup.service ] || rm -f $i; done); \
 rm -f /lib/systemd/system/multi-user.target.wants/*;\
@@ -30,9 +33,6 @@ RUN env/bin/pip install -r requirements.txt
 
 COPY requirements.dev.txt requirements.dev.txt
 RUN env/bin/pip install -r requirements.dev.txt
-
-ARG PYTEST_INMANTA_DEV
-RUN if [ "${PYTEST_INMANTA_DEV}" = true ] ; then env/bin/pip install --pre -U pytest-inmanta -i https://artifacts.internal.inmanta.com/inmanta/dev ; fi
 
 COPY module.yml module.yml
 COPY model model
