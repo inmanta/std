@@ -85,7 +85,7 @@ def docker_container(request: SubRequest) -> Generator[str, None, None]:
 
     try:
         subprocess.run(
-            ["docker", "stop", image_name],
+            ["sudo", "docker", "stop", image_name],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=True,
