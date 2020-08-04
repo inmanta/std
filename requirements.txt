@@ -1,8 +1,8 @@
 Jinja2~=2.11
 email_validator~=1.1
-pydantic~=1.5
+pydantic~=1.6
 
 dataclasses~=0.7;python_version<'3.7'
-dnspython~=1.16
+dnspython~=2.0
 idna~=2.10
 MarkupSafe~=1.1
