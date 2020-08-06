@@ -82,8 +82,19 @@ def fix_classname(testsuite: ElementTree.Element, suite: str) -> None:
 def docker_container(request: SubRequest) -> Generator[str, None, None]:
     centos_version = request.param
     image_name = f"test-module-std-centos{centos_version}"
-    docker_build_cmd = ["sudo", "docker", "build", ".", "-t", image_name]
 
+    try:
+        subprocess.run(
+            ["sudo", "docker", "stop", image_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
+    # Thrown if the container does not exists
+    except subprocess.CalledProcessError:
+        pass
+
+    docker_build_cmd = ["sudo", "docker", "build", ".", "-t", image_name]
     pip_index_url = os.environ.get("PIP_INDEX_URL", None)
     if pip_index_url is not None:
         docker_build_cmd.append("--build-arg")
