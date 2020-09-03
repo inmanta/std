@@ -1,3 +1,6 @@
+V2.0.6
+- Ensure a do_reload() doesn't start a service (#147)
+
 V2.0.5
 - Pass PIP_INDEX_URL and PIP_PRE to the docker containers that run the tests.
 - Fixed dict value null conversion to None in Jinja template (#97)

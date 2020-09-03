@@ -21,6 +21,7 @@ import os
 import pytest
 
 import inmanta
+from inmanta.agent.handler import HandlerContext
 
 
 def test_file(project, tmpdir):
@@ -383,6 +384,33 @@ svc = std::Service(host=host, name="test", state="stopped", onboot=false)
     assert ctx.status == inmanta.const.ResourceState.deployed
     assert ctx.change == inmanta.const.Change.updated
 
+    assert not systemd.is_enabled()
+    assert not systemd.is_active()
+
+
+def test_issue_147(project, systemd):
+    """
+        A reload of a service should not start the service if it's not running.
+    """
+    project.compile(
+        """
+import unittest
+
+host = std::Host(name="server", os=std::linux)
+svc = std::Service(host=host, name="test", state="stopped", onboot=false)
+"""
+    )
+    svc = project.get_resource("std::Service", name="test")
+    project.deploy(svc, run_as_root=False)
+    assert not systemd.is_enabled()
+    assert not systemd.is_active()
+
+    # Execute reload
+    handler = project.get_handler(svc, run_as_root=False)
+    handler_ctx = HandlerContext(svc)
+    handler.do_reload(handler_ctx, svc)
+
+    # Reload should not have started the service
     assert not systemd.is_enabled()
     assert not systemd.is_active()
 
