@@ -40,7 +40,7 @@ from inmanta.resources import (
 
 def hash_file(content):
     """
-        Create a hash from the given content
+    Create a hash from the given content
     """
     sha1sum = hashlib.new("sha1")
     sha1sum.update(content)
@@ -53,7 +53,7 @@ LOGGER = logging.getLogger(__name__)
 
 def generate_content(content_list, seperator):
     """
-        Generate a sorted list of content to prefix or suffix a file
+    Generate a sorted list of content to prefix or suffix a file
     """
     sort_list = []
     for content in content_list:
@@ -92,7 +92,7 @@ def store_file(exporter, obj):
 @resource("std::Service", agent="host.name", id_attribute="name")
 class Service(Resource):
     """
-        This class represents a service on a system.
+    This class represents a service on a system.
     """
 
     fields = ("onboot", "state", "name", "reload")
@@ -101,7 +101,7 @@ class Service(Resource):
 @resource("std::File", agent="host.name", id_attribute="path")
 class File(PurgeableResource):
     """
-        A file on a filesystem
+    A file on a filesystem
     """
 
     fields = ("path", "owner", "hash", "group", "permissions", "reload")
@@ -111,7 +111,7 @@ class File(PurgeableResource):
 @resource("std::Directory", agent="host.name", id_attribute="path")
 class Directory(PurgeableResource):
     """
-        A directory on a filesystem
+    A directory on a filesystem
     """
 
     fields = ("path", "owner", "group", "permissions", "reload")
@@ -121,7 +121,7 @@ class Directory(PurgeableResource):
 @resource("std::Package", agent="host.name", id_attribute="name")
 class Package(Resource):
     """
-        A software package installed on an operating system.
+    A software package installed on an operating system.
     """
 
     fields = ("name", "state", "reload")
@@ -130,7 +130,7 @@ class Package(Resource):
 @resource("std::Symlink", agent="host.name", id_attribute="target")
 class Symlink(PurgeableResource):
     """
-        A symbolic link on the filesystem
+    A symbolic link on the filesystem
     """
 
     fields = ("source", "target", "reload")
@@ -139,7 +139,7 @@ class Symlink(PurgeableResource):
 @resource("std::AgentConfig", agent="agent", id_attribute="agentname")
 class AgentConfig(PurgeableResource):
     """
-        A resource that can modify the agentmap for autostarted agents
+    A resource that can modify the agentmap for autostarted agents
     """
 
     fields = ("agentname", "uri", "autostart")
@@ -158,7 +158,7 @@ class AgentConfig(PurgeableResource):
 @provider("std::File", name="posix_file")
 class PosixFileProvider(CRUDHandler):
     """
-        This handler can deploy files on a unix system
+    This handler can deploy files on a unix system
     """
 
     def read_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
@@ -225,7 +225,7 @@ class PosixFileProvider(CRUDHandler):
 @provider("std::Service", name="systemd")
 class SystemdService(ResourceHandler):
     """
-        A handler for services on systems that use systemd
+    A handler for services on systems that use systemd
     """
 
     def __init__(self, agent, io=None):
@@ -277,13 +277,13 @@ class SystemdService(ResourceHandler):
 
     def can_reload(self):
         """
-            Can this handler reload?
+        Can this handler reload?
         """
         return True
 
     def do_reload(self, ctx, resource):
         """
-            Reload this resource
+        Reload this resource
         """
         if resource.state == "stopped":
             return
@@ -334,7 +334,7 @@ class SystemdService(ResourceHandler):
 @provider("std::Service", name="redhat_service")
 class ServiceService(ResourceHandler):
     """
-        A handler for services on systems that use service
+    A handler for services on systems that use service
     """
 
     def available(self, resource):
@@ -367,13 +367,13 @@ class ServiceService(ResourceHandler):
 
     def can_reload(self):
         """
-            Can this handler reload?
+        Can this handler reload?
         """
         return True
 
     def do_reload(self, ctx, resource):
         """
-            Reload this resource
+        Reload this resource
         """
         (o, e, ret) = self._io.run("/sbin/service", [resource.name, "reload"])
         if ret != 0:
@@ -421,7 +421,7 @@ class ServiceService(ResourceHandler):
 @provider("std::Package", name="yum")
 class YumPackage(ResourceHandler):
     """
-        A Package handler that uses yum
+    A Package handler that uses yum
     """
 
     def available(self, resource):
@@ -555,9 +555,9 @@ class YumPackage(ResourceHandler):
 @provider("std::Directory", name="posix_directory")
 class DirectoryHandler(CRUDHandler):
     """
-        A handler for creating directories
+    A handler for creating directories
 
-        TODO: add recursive operations
+    TODO: add recursive operations
     """
 
     def read_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
@@ -592,7 +592,7 @@ class DirectoryHandler(CRUDHandler):
 @provider("std::Symlink", name="posix_symlink")
 class SymlinkProvider(CRUDHandler):
     """
-        This handler can deploy symlinks on unix systems
+    This handler can deploy symlinks on unix systems
     """
 
     def available(self, resource):
