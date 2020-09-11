@@ -23,7 +23,7 @@ import pytest
 
 def test_is_defined(project):
     """
-        Test the use of is defined
+    Test the use of is defined
     """
     project.add_mock_file(
         "templates",
@@ -66,7 +66,7 @@ Test1(name="t3",other=Test1(name="t31",other=Test1(name="t32")))
 
 def test_template(project):
     """
-        Test the evaluation of a template
+    Test the evaluation of a template
     """
     project.add_mock_file("templates", "test.tmpl", "{{ value }}")
     project.compile(
@@ -81,7 +81,7 @@ std::print(std::template("unittest/test.tmpl"))
 
 def test_plugin_with_list(project):
     """
-        Test the use of is defined
+    Test the use of is defined
     """
     project.add_mock_file(
         "templates",
@@ -132,7 +132,7 @@ def cleanup_test_module(project):
 
 def test_template_current_dir(project, cleanup_test_module):
     """
-        Test the use of current dir in templates
+    Test the use of current dir in templates
     """
     module_init_cf = """
         import std
@@ -192,7 +192,7 @@ def test_files_current_dir(project, cleanup_test_module):
 
 def test_97_template_dict_null(project):
     """
-        Use a dict with null
+    Use a dict with null
     """
     project.add_mock_file(
         "templates",

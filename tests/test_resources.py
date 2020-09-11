@@ -26,7 +26,7 @@ from inmanta.agent.handler import HandlerContext
 
 def test_file(project, tmpdir):
     """
-        Test deploying a file
+    Test deploying a file
     """
     user = getpass.getuser()
 
@@ -225,7 +225,7 @@ std::Symlink(host=host, source="/dev/random", target="%s")
 @pytest.mark.parametrize("current_state_purged", [True, False])
 def test_symlink_purge(project, tmpdir, current_state_purged):
     """
-        Test removing a symlink
+    Test removing a symlink
     """
     test_path_1 = str(tmpdir.join("sym1"))
 
@@ -333,7 +333,7 @@ def systemd(project):
 
 def test_systemd_service(project, systemd):
     """
-        Test deploying systemd
+    Test deploying systemd
     """
     # TODO: test reload
     project.compile(
@@ -390,7 +390,7 @@ svc = std::Service(host=host, name="test", state="stopped", onboot=false)
 
 def test_issue_147(project, systemd):
     """
-        A reload of a service should not start the service if it's not running.
+    A reload of a service should not start the service if it's not running.
     """
     project.compile(
         """

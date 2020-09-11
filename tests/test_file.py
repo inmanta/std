@@ -25,7 +25,7 @@ from inmanta.const import ResourceState
 
 def test_file_read(project, tmpdir):
     """
-        Test deploying a file
+    Test deploying a file
     """
     user = getpass.getuser()
 
