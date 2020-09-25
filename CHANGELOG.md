@@ -1,3 +1,6 @@
+V2.0.7
+- Add non_empty_string type (#153)
+
 V2.0.6
 - Ensure a do_reload() doesn't start a service (#147)
 
