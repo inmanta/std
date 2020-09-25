@@ -140,6 +140,11 @@ typedef ascii_word as string matching std::validate_type(
     A string consisting of only printable non-whitespace ascii characters: from ! to ~
 """
 
+typedef non_empty_string as string matching /^(.*\S.*)$/
+"""
+    A string that contains at least one non-whitespace character
+"""
+
 implementation none for Entity:
     """
         An empty implementation that can be used as a safe default.
@@ -488,7 +493,7 @@ use relations to create a mutuable set of strings.
 
 :Example:
 .. code-block:: inmanta
-        
+
     attr_a = std::MutableString()
     if some_condition:
         attr_a.value = "a"
