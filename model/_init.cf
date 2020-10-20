@@ -572,3 +572,24 @@ Wrapper for boolean values, used to pass a boolean out of an if statement.
 end
 
 implement MutableBool using std::none
+
+
+entity Packages:
+    """ Defined the state for multiple packages at once
+
+        :param name: A list of package names
+        :param state: The state of the package
+    """
+    string[] name
+    std::package_state state="installed"
+end
+
+Packages.host [1] -- std::Host
+
+implement Packages using pkgs
+
+implementation pkgs for Packages:
+    for pkg in name:
+      std::Package(host=self.host, name=pkg, state=self.state, requires=self.requires, provides=self.provides)
+    end
+end
