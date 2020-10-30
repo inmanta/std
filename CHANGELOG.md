@@ -1,3 +1,6 @@
+V2.1.0
+- Add std::Packages to define multiple packages in a list
+
 V2.0.7
 - Add non_empty_string type (#153)
 
