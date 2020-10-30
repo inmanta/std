@@ -34,7 +34,8 @@ file = std::ConfigFile(host=host, path="/tmp/test", content="1234")
 
 
 def test_packages(project):
-    """ Test if the package correctly creates multiple package resources and correctly sets the deps
+    """
+    Test if the package correctly creates multiple package resources and correctly sets the deps
     """
     project.compile(
         """
