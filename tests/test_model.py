@@ -31,3 +31,42 @@ file = std::ConfigFile(host=host, path="/tmp/test", content="1234")
     )
 
     assert len(project.resources) == 1
+
+
+def test_packages(project):
+    """ Test if the package correctly creates multiple package resources and correctly sets the deps
+    """
+    project.compile(
+        """
+import unittest
+
+host = std::Host(name="server", os=std::linux)
+before = std::ConfigFile(host=host, path="/before", content="1234")
+after = std::ConfigFile(host=host, path="/after", content="1234")
+
+std::Packages(
+    host=host,
+    name=["vim", "emacs"],
+    requires=before,
+    provides=after
+)
+        """
+    )
+
+    assert len(project.resources) == 4
+    vim = project.get_resource("std::Package", name="vim")
+    assert vim
+
+    emacs = project.get_resource("std::Package", name="emacs")
+    assert emacs
+
+    before = project.get_resource("std::ConfigFile", path="/before")
+    assert before
+    after = project.get_resource("std::ConfigFile", path="/after")
+    assert after
+
+    assert before.id in vim.requires
+    assert before.id in emacs.requires
+
+    assert vim.id in after.requires
+    assert emacs.id in after.requires
