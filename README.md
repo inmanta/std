@@ -8,9 +8,17 @@ Some of the tests run against systemd, which testing against on developers own s
 Instead this module has a docker file to run the tests in, so that they are nice and isolated:
 
 ```bash
-docker build . -t test-module-std
-docker run -d --rm --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro --name std-tests test-module-std
+# Testing for cento7
+docker build . -f dockerfiles/centos7.Dockerfile -t test-module-std-centos7
+docker run -d --rm --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro --name std-tests test-module-std-centos7
 docker exec std-tests env/bin/pytest tests -v
+docker stop std-tests
+
+# Testing for centos8
+docker build . -f dockerfiles/centos8.Dockerfile -t test-module-std-centos8
+docker run -d --rm --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro --name std-tests test-module-std-centos8
+docker exec std-tests env/bin/pytest tests -v
+docker stop std-tests
 ```
 
 Stopping the container (`docker stop std-tests`) will also clean up the volumes.
