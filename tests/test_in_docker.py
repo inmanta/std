@@ -27,7 +27,7 @@ import pytest
 )
 def test_docker(docker_container):
     print(f"Running tests in container {docker_container}")
-    process = subprocess.Popen(
+    process = subprocess.run(
         [
             "sudo",
             "docker",
@@ -38,13 +38,5 @@ def test_docker(docker_container):
             "-v",
             "--junitxml=junit.xml",
         ],
-        stderr=subprocess.STDOUT,
-        stdout=subprocess.PIPE,
+        check=True,
     )
-    with process.stdout:
-        for line in iter(process.stdout):
-            print(line.decode("utf-8").strip())
-
-    exitcode = process.wait()
-
-    assert exitcode == 0, f"The process ended up with a bad return code: {exitcode}"
