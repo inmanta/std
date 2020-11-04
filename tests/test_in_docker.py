@@ -43,7 +43,7 @@ def test_docker(docker_container):
     )
     with process.stdout:
         for line in iter(process.stdout):
-            print(line.decode('utf-8').strip())
+            print(line.decode("utf-8").strip())
 
     exitcode = process.wait()
 
