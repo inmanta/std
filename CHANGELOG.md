@@ -1,3 +1,6 @@
+V2.1.1
+- Use inmanta-dev-dependencies package
+
 V2.1.0
 - Add std::Packages to define multiple packages in a list
 
