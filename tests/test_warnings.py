@@ -32,9 +32,9 @@ def log_does_not_contain(caplog, loggerpart, level, msg):
 @pytest.mark.parametrize(
     "plugin_call,config_option",
     [
-        ("std::server_token()", 'compiler_rest_transport.token'),
-        ("std::server_ca()", "compiler_rest_transport.ssl-ca-cert-file")
-    ]
+        ("std::server_token()", "compiler_rest_transport.token"),
+        ("std::server_ca()", "compiler_rest_transport.ssl-ca-cert-file"),
+    ],
 )
 def test_no_warnings(project, caplog, plugin_call, config_option):
     with caplog.at_level(logging.DEBUG):
@@ -43,7 +43,11 @@ def test_no_warnings(project, caplog, plugin_call, config_option):
             std::print({plugin_call})
         """
         )
-    assert log_does_not_contain(caplog, "inmanta.config", logging.WARNING,
-                                f"Inconsistent default value for option {config_option}: defined as None, got")
+    assert log_does_not_contain(
+        caplog,
+        "inmanta.config",
+        logging.WARNING,
+        f"Inconsistent default value for option {config_option}: defined as None, got",
+    )
 
     assert project.get_stdout() == "\n"
