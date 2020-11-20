@@ -1,4 +1,7 @@
 V2.1.1
+- Fix inconsistent default value warning (#214)
+
+V2.1.1
 - Use inmanta-dev-dependencies package
 
 V2.1.0
