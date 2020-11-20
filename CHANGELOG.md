@@ -1,3 +1,6 @@
+V2.1.2
+- Added DictProxy to allow accessing dict items from templates (#20)
+
 V2.1.1
 - Use inmanta-dev-dependencies package
 

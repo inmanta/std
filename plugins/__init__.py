@@ -79,6 +79,9 @@ class JinjaDynamicProxy(DynamicProxy):
         if isinstance(value, DynamicProxy):
             return value
 
+        if isinstance(value, dict):
+            return DictProxy(value)
+
         if hasattr(value, "__len__"):
             return SequenceProxy(value)
 
@@ -102,6 +105,23 @@ class JinjaDynamicProxy(DynamicProxy):
         else:
             # A native python object such as a dict
             return JinjaDynamicProxy.return_value(getattr(instance, attribute))
+
+
+class DictProxy(JinjaDynamicProxy):
+    def __init__(self, mydict):
+        DynamicProxy.__init__(self, mydict)
+
+    def __getitem__(self, key):
+        instance = self._get_instance()
+        if not isinstance(key, str):
+            raise RuntimeException(self, "Expected string key, but got %s, %s is a dict" % (key, self._get_instance()))
+
+        return DynamicProxy.return_value(instance[key])
+
+    def __iter__(self):
+        instance = self._get_instance()
+
+        return IteratorProxy(instance.__iter__())
 
 
 class SequenceProxy(JinjaDynamicProxy):
