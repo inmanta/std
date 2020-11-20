@@ -1,5 +1,8 @@
-V2.1.2
+V2.1.3
 - Added DictProxy to allow accessing dict items from templates (#20)
+
+V2.1.2
+- Fix inconsistent default value warning (#214)
 
 V2.1.1
 - Use inmanta-dev-dependencies package

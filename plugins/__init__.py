@@ -821,11 +821,9 @@ def is_set(obj: "any", attribute: "string") -> "bool":
 
 @plugin
 def server_ca() -> "string":
-    filename = Config.get("compiler_rest_transport", "ssl_ca_cert_file", "")
-    if filename == "":
+    filename = Config.get("compiler_rest_transport", "ssl_ca_cert_file", None)
+    if not filename:
         return ""
-    if filename is None:
-        raise Exception("%s does not exist" % filename)
 
     if not os.path.isfile(filename):
         raise Exception("%s isn't a valid file" % filename)
@@ -845,8 +843,8 @@ def server_ssl() -> "bool":
 
 @plugin
 def server_token(context: Context, client_types: "string[]" = ["agent"]) -> "string":
-    token = Config.get("compiler_rest_transport", "token", "")
-    if token == "":
+    token = Config.get("compiler_rest_transport", "token", None)
+    if not token:
         return ""
 
     # Request a new token for this agent
