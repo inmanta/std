@@ -23,9 +23,8 @@ import pytest
 def log_does_not_contain(caplog, loggerpart, level, msg):
     for record in caplog.get_records("call"):
         logger_name, log_level, message = record.name, record.levelno, record.message
-        if msg in message:
-            if loggerpart in logger_name and level == log_level:
-                return False
+        if msg in message and loggerpart in logger_name and level == log_level:
+            return False
     return True
 
 
