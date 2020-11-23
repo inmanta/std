@@ -114,7 +114,11 @@ class DictProxy(JinjaDynamicProxy):
     def __getitem__(self, key):
         instance = self._get_instance()
         if not isinstance(key, str):
-            raise RuntimeException(self, "Expected string key, but got %s, %s is a dict" % (key, self._get_instance()))
+            raise RuntimeException(
+                self,
+                "Expected string key, but got %s, %s is a dict"
+                % (key, self._get_instance()),
+            )
 
         return DynamicProxy.return_value(instance[key])
 

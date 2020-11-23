@@ -17,6 +17,7 @@
 """
 import os
 import shutil
+from typing import Dict
 
 import pytest
 
@@ -248,8 +249,7 @@ std::print(std::template("unittest/test.j2"))
         """
     )
 
-    expected_out: str = (
-        """
+    expected_out: str = """
 key-value pairs 1:
 x: 42
 y: 43
@@ -266,6 +266,5 @@ key-value-pairs 3
 x: 42
 y: 43
 z: 44
-        """
-    )
+    """
     assert expected_out.strip() in project.get_stdout()
