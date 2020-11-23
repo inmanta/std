@@ -17,6 +17,7 @@
 """
 import os
 import shutil
+from typing import Dict
 
 import pytest
 
@@ -211,3 +212,59 @@ std::print(std::template("unittest/test.j2"))
     )
 
     assert "None\n" in project.get_stdout()
+
+
+def test_20_template_dict_items(project):
+    """
+    Iterate over and get dict values from template.
+    """
+    project.add_mock_file(
+        "templates",
+        "test.j2",
+        """
+key-value pairs 1:
+{% for key in mydict -%}
+    {{ key }}: {{ mydict[key] }}
+{% endfor %}
+
+key-value pairs 2:
+{% for key in mydict -%}
+    {{ key }}: {{ mydict.get(key) }}
+{% endfor %}
+
+key-value-pairs 3
+{% for key, value in mydict.items() -%}
+    {{ key }}: {{ value }}
+{% endfor %}
+        """,
+    )
+
+    mydict: Dict[str, int] = {"x": 42, "y": 43, "z": 44}
+    project.compile(
+        f"""
+import unittest
+
+mydict = {mydict}
+std::print(std::template("unittest/test.j2"))
+        """
+    )
+
+    expected_out: str = """
+key-value pairs 1:
+x: 42
+y: 43
+z: 44
+
+
+key-value pairs 2:
+x: 42
+y: 43
+z: 44
+
+
+key-value-pairs 3
+x: 42
+y: 43
+z: 44
+    """
+    assert expected_out.strip() in project.get_stdout()

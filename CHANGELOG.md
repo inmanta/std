@@ -1,3 +1,6 @@
+V2.1.3
+- Added DictProxy to allow accessing dict items from templates (#20)
+
 V2.1.2
 - Fix inconsistent default value warning (#214)
 
