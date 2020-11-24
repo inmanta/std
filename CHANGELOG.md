@@ -1,3 +1,6 @@
+V2.1.4
+- Added `__len__` to `DictProxy` to allow `{{ mydict | length }}` in templates (#218)
+
 V2.1.3
 - Added DictProxy to allow accessing dict items from templates (#20)
 
