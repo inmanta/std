@@ -268,3 +268,19 @@ y: 43
 z: 44
     """
     assert expected_out.strip() in project.get_stdout()
+
+
+def test_218_template_dict_len(project):
+    project.add_mock_file("templates", "test.j2", "{{ mydict | length }}")
+
+    mydict: Dict[str, int] = {"x": 42, "y": 43, "z": 44}
+    project.compile(
+        f"""
+import unittest
+
+mydict = {mydict}
+std::print(std::template("unittest/test.j2"))
+        """
+    )
+
+    assert project.get_stdout().strip() == str(len(mydict))

@@ -122,6 +122,9 @@ class DictProxy(JinjaDynamicProxy):
 
         return DynamicProxy.return_value(instance[key])
 
+    def __len__(self):
+        return len(self._get_instance())
+
     def __iter__(self):
         instance = self._get_instance()
 
