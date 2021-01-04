@@ -4,5 +4,5 @@ pydantic~=1.7
 
 dataclasses~=0.7;python_version<'3.7'
 dnspython~=2.0
-idna~=2.10
+idna~=3.0
 MarkupSafe~=1.1
