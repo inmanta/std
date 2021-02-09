@@ -44,7 +44,7 @@ entity Test1:
 string name
 end
 
-Test1 prev [0:1] -- [0:1] Test1 other
+Test1.other [0:1] -- [0:1] Test1.prev
 
 implementation tt for Test1:
 content=std::template("unittest/testtemplate.tmpl")
