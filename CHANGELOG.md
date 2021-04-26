@@ -1,3 +1,6 @@
+V2.1.5 
+- Improved testing: ensure inmanta version inside and outside the docker container is the same
+
 V2.1.4
 - Added `__len__` to `DictProxy` to allow `{{ mydict | length }}` in templates (#218)
 
