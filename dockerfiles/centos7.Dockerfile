@@ -28,11 +28,11 @@ WORKDIR /module/std
 RUN python3 -m venv env
 RUN env/bin/pip install -U pip
 
+COPY requirements.freeze requirements.freeze
 COPY requirements.txt requirements.txt
-RUN env/bin/pip install -r requirements.txt
-
 COPY requirements.dev.txt requirements.dev.txt
-RUN env/bin/pip install -r requirements.dev.txt
+
+RUN env/bin/pip install -r requirements.txt -r requirements.dev.txt -r requirements.freeze
 
 COPY module.yml module.yml
 COPY model model
