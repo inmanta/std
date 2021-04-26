@@ -79,14 +79,14 @@ def fix_classname(testsuite: ElementTree.Element, suite: str) -> None:
         )
 
 
-def pytest_lock_file() -> None:
+def pip_lock_file() -> None:
     """ get all versions of pytest into a freeze file, to make the environment inside docker the same as outside """
     with open("requirements.freeze", "w") as ff:
         subprocess.check_call([sys.executable, "-m", "pip", "freeze"], stdout=ff)
     yield
 
 @pytest.fixture(scope="function", params=[7, 8])
-def docker_container(pytest_lock_file, request: SubRequest) -> Generator[str, None, None]:
+def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None, None]:
     centos_version = request.param
     image_name = f"test-module-std-centos{centos_version}"
 
