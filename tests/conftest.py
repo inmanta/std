@@ -87,6 +87,7 @@ def pip_lock_file() -> None:
     with open("requirements.freeze.tmp", "w") as ff:
         subprocess.check_call(["grep", "inmanta", "requirements.freeze.all"], stdout=ff)
     # pip freeze can produce lines with @ that refer to folders outside the container
+    # see also https://github.com/pypa/pip/issues/8174
     with open("requirements.freeze", "w") as ff:
         subprocess.check_call(["grep", "-v", "@", "requirements.freeze.tmp"], stdout=ff)
     yield
