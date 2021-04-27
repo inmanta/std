@@ -1,4 +1,7 @@
-V2.1.5 
+V2.1.6
+- Un-pin transitive dependencies in requirements.txt for improved backward compatibility
+
+V2.1.5
 - Improved testing: ensure inmanta version inside and outside the docker container is the same
 
 V2.1.4
