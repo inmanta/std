@@ -83,7 +83,7 @@ def fix_classname(testsuite: ElementTree.Element, suite: str) -> None:
 def pip_lock_file() -> None:
     """ get all versions of inmanta packages into a freeze file, to make the environment inside docker like the one outside """
     with open("requirements.freeze.all", "w") as ff:
-        subprocess.check_call([sys.executable, "-m", "pip", "list", "freeze"], stdout=ff)
+        subprocess.check_call([sys.executable, "-m", "pip", "freeze"], stdout=ff)
     with open("requirements.freeze.tmp", "w") as ff:
         subprocess.check_call(["grep", "inmanta", "requirements.freeze.all"], stdout=ff)
     # pip freeze can produce lines with @ that refer to folders outside the container

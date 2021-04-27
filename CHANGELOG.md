@@ -1,3 +1,6 @@
+V2.1.7
+- Improved testing: handle pip freeze bug: https://github.com/pypa/pip/issues/8174 
+
 V2.1.6
 - Un-pin transitive dependencies in requirements.txt for improved backward compatibility
 
