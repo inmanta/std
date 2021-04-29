@@ -1,3 +1,6 @@
+V2.1.8
+- Improved testing: prevent too many packages from being installed in the testing container
+
 V2.1.7
 - Improved testing: handle pip freeze bug: https://github.com/pypa/pip/issues/8174 
 

@@ -32,7 +32,7 @@ COPY requirements.txt requirements.txt
 COPY requirements.freeze requirements.freeze
 COPY requirements.dev.txt requirements.dev.txt
 
-RUN env/bin/pip install -r requirements.txt -r requirements.dev.txt -r requirements.freeze
+RUN env/bin/pip install -r requirements.txt -r requirements.dev.txt -c requirements.freeze
 
 COPY module.yml module.yml
 COPY model model
