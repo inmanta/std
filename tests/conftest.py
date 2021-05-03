@@ -90,7 +90,18 @@ def pip_lock_file() -> None:
     # see also https://github.com/pypa/pip/issues/8174
     # also ignore inmanta-dev-dependencies as this is pinned in the requirements.dev.txt
     with open("requirements.freeze", "w") as ff:
-        subprocess.check_call(["grep", "-v", "-e", "@", "-e", "inmanta-dev-dependencies", "requirements.freeze.tmp"], stdout=ff)
+        subprocess.check_call(
+            [
+                "grep",
+                "-v",
+                "-e",
+                "@",
+                "-e",
+                "inmanta-dev-dependencies",
+                "requirements.freeze.tmp",
+            ],
+            stdout=ff,
+        )
     yield
 
 
