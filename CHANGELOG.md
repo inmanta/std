@@ -1,3 +1,6 @@
+V2.1.9
+- Improved testing: prevent double-pinning of inmanta-dev-dependencies
+
 V2.1.8
 - Improved testing: prevent too many packages from being installed in the testing container
 
