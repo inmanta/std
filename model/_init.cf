@@ -174,7 +174,7 @@ entity PurgeableResource extends Resource:
                                configuration model.
     """
     bool purged=false
-    bool purge_on_delete=true
+    bool purge_on_delete=false
 end
 
 entity ManagedResource extends Resource:
