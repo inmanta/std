@@ -1,5 +1,5 @@
 V3.0.0
-- Set purge\_on\_delete to false by default
+- Set purge\_on\_delete to false by default (#268)
 
 V2.1.9
 - Improved testing: prevent double-pinning of inmanta-dev-dependencies
