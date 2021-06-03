@@ -32,6 +32,9 @@ RUN env/bin/pip install -U pip
 COPY requirements.freeze requirements.freeze
 COPY requirements.txt requirements.txt
 COPY requirements.dev.txt requirements.dev.txt
+RUN cat requirements.freeze
+RUN echo "$PIP_INDEX_URL"
+RUN echo "$PIP_PRE"
 
 RUN env/bin/pip install -r requirements.txt -r requirements.dev.txt -c requirements.freeze
 
