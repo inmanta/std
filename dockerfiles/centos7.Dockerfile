@@ -32,6 +32,8 @@ COPY requirements.freeze requirements.freeze
 COPY requirements.txt requirements.txt
 COPY requirements.dev.txt requirements.dev.txt
 RUN echo test
+RUN cat requirements.txt
+RUN cat requirements.dev.txt
 RUN cat requirements.freeze
 RUN env
 
