@@ -15,7 +15,6 @@ rm -f /lib/systemd/system/basic.target.wants/*;\
 rm -f /lib/systemd/system/anaconda.target.wants/*;
 VOLUME [ "/sys/fs/cgroup" ]
 
-RUN echo test
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
@@ -32,9 +31,9 @@ RUN env/bin/pip install -U pip
 COPY requirements.freeze requirements.freeze
 COPY requirements.txt requirements.txt
 COPY requirements.dev.txt requirements.dev.txt
+RUN echo test
 RUN cat requirements.freeze
-RUN echo "$PIP_INDEX_URL"
-RUN echo "$PIP_PRE"
+RUN env
 
 RUN env/bin/pip install -r requirements.txt -r requirements.dev.txt -c requirements.freeze
 
