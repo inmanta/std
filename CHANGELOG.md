@@ -1,3 +1,6 @@
+V3.0.1
+- Constrain Jinja2~=2.0 because of incompatibility with inmanta-core
+
 V3.0.0
 - Set purge\_on\_delete to false by default (#268)
 
@@ -8,7 +11,7 @@ V2.1.8
 - Improved testing: prevent too many packages from being installed in the testing container
 
 V2.1.7
-- Improved testing: handle pip freeze bug: https://github.com/pypa/pip/issues/8174 
+- Improved testing: handle pip freeze bug: https://github.com/pypa/pip/issues/8174
 
 V2.1.6
 - Un-pin transitive dependencies in requirements.txt for improved backward compatibility
