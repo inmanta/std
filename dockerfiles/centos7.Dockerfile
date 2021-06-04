@@ -31,13 +31,8 @@ RUN env/bin/pip install -U pip
 COPY requirements.freeze requirements.freeze
 COPY requirements.txt requirements.txt
 COPY requirements.dev.txt requirements.dev.txt
-RUN echo test
-RUN cat requirements.txt
-RUN cat requirements.dev.txt
-RUN cat requirements.freeze
-RUN env
 
-RUN env/bin/pip -v install -r requirements.txt -r requirements.dev.txt -c requirements.freeze
+RUN env/bin/pip install -r requirements.txt -r requirements.dev.txt -c requirements.freeze
 
 COPY module.yml module.yml
 COPY model model

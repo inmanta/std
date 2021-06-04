@@ -105,7 +105,7 @@ def pip_lock_file() -> None:
     yield
 
 
-@pytest.fixture(scope="function", params=[7])
+@pytest.fixture(scope="function", params=[7, 8])
 def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None, None]:
     centos_version = request.param
     image_name = f"test-module-std-centos{centos_version}"
