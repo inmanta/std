@@ -28,12 +28,13 @@ from collections import defaultdict
 from copy import copy
 from itertools import chain
 from operator import attrgetter
+from typing import Any
 
 import jinja2
 import pydantic
 from jinja2 import Environment, FileSystemLoader, PrefixLoader
 from jinja2.exceptions import UndefinedError
-from jinja2.runtime import Undefined
+from jinja2.runtime import Undefined, missing
 
 # don't bind to `resources` because this package has a submodule named resources that will bind to `resources` when imported
 import inmanta.resources
@@ -189,17 +190,15 @@ class IteratorProxy(JinjaDynamicProxy):
 
 
 class ResolverContext(jinja2.runtime.Context):
-    def resolve(self, key):
+    def resolve_or_missing(self, key: str) -> Any:
         resolver = self.parent["{{resolver"]
         try:
             raw = resolver.lookup(key)
             return JinjaDynamicProxy.return_value(raw.get_value())
         except NotFoundException:
-            return super(ResolverContext, self).resolve(key)
-        except OptionalValueException as e:
-            return self.environment.undefined(
-                "variable %s not set on %s" % (resolver, key), resolver, key, e
-            )
+            return super(ResolverContext, self).resolve_or_missing(key)
+        except OptionalValueException:
+            return missing
 
 
 def _get_template_engine(ctx):

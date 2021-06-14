@@ -1,3 +1,6 @@
+V3.0.2
+- Add support for Jinja2 version 3.0
+
 V3.0.1
 - Constrain Jinja2~=2.0 because of incompatibility with inmanta-core
 
