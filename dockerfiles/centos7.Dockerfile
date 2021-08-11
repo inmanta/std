@@ -20,7 +20,7 @@ ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 
-RUN yum install -y python3 python3-devel gcc
+RUN yum install -y python3
 
 RUN mkdir -p /module/std
 WORKDIR /module/std
@@ -32,7 +32,7 @@ COPY requirements.freeze requirements.freeze
 COPY requirements.txt requirements.txt
 COPY requirements.dev.txt requirements.dev.txt
 
-RUN env/bin/pip install -r requirements.txt -r requirements.dev.txt -c requirements.freeze
+RUN env/bin/pip install --only-binary asyncpg -r requirements.txt -r requirements.dev.txt -c requirements.freeze
 
 COPY module.yml module.yml
 COPY model model

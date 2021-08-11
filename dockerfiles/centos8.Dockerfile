@@ -15,7 +15,7 @@ rm -f /lib/systemd/system/basic.target.wants/*;\
 rm -f /lib/systemd/system/anaconda.target.wants/*;
 VOLUME [ "/sys/fs/cgroup" ]
 
-RUN yum install -y python3 python3-devel gcc glibc-locale-source
+RUN yum install -y python3 glibc-locale-source
 
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
@@ -32,7 +32,7 @@ COPY requirements.txt requirements.txt
 COPY requirements.freeze requirements.freeze
 COPY requirements.dev.txt requirements.dev.txt
 
-RUN env/bin/pip install -r requirements.txt -r requirements.dev.txt -c requirements.freeze
+RUN env/bin/pip install --only-binary asyncpg -r requirements.txt -r requirements.dev.txt -c requirements.freeze
 
 COPY module.yml module.yml
 COPY model model

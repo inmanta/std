@@ -1,5 +1,5 @@
 V3.0.3
-- Ensure gcc and python3-devel are installed in order to compile asyncpg dependency
+-  Improved testing: Ensure asyncpg is installed using a pre-compiled python package
 
 V3.0.2
 - Add support for Jinja2 version 3.0
