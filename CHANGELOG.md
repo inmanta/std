@@ -1,3 +1,6 @@
+V3.0.3
+-  Improved testing: Ensure asyncpg is installed using a pre-compiled python package
+
 V3.0.2
 - Add support for Jinja2 version 3.0
 
