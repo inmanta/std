@@ -1,3 +1,6 @@
+V2.1.10
+- Improved testing: Ensure asyncpg is installed using a pre-compiled python package
+
 V2.1.9
 - Improved testing: prevent double-pinning of inmanta-dev-dependencies
 
