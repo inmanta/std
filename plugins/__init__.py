@@ -59,6 +59,16 @@ tcache = {}
 engine_cache = None
 
 
+def inmanta_reset_state() -> None:
+    """
+    Reset the state kept by this module.
+    """
+    global tcache, engine_cache, fact_cache
+    tcache = {}
+    engine_cache = None
+    fact_cache = {}
+
+
 class JinjaDynamicProxy(DynamicProxy):
     def __init__(self, instance):
         super(JinjaDynamicProxy, self).__init__(instance)
