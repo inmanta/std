@@ -1,3 +1,6 @@
+V3.0.4
+- Added support for pytest-inmanta~=2.0
+
 V3.0.3
 -  Improved testing: Ensure asyncpg is installed using a pre-compiled python package
 
