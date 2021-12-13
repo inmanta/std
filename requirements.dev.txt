@@ -1,2 +1,2 @@
-inmanta-dev-dependencies[module]==1.69.0
+inmanta-dev-dependencies[module]==1.70.0
 wheel==0.37.0
