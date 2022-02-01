@@ -128,7 +128,7 @@ def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None,
         docker_build_cmd.append(f"PIP_PRE={pip_pre}")
 
     docker_build_cmd.append("-f")
-    docker_build_cmd.append(f"./dockerfiles/{docker_file}")
+    docker_build_cmd.append(f"./dockerfiles/{docker_file_name}.Dockerfile")
     print(docker_build_cmd)
 
     print(f"Building docker image with name: {image_name}")
