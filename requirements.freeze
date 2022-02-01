@@ -1,5 +1,0 @@
-inmanta-module-std==3.0.4.1
-# Editable Git install with no remote (inmanta-module-test==0.0.1)
-inmanta-sphinx==1.4.4
-pytest-inmanta==1.6.2
-pytest-inmanta-extensions==5.1.1
