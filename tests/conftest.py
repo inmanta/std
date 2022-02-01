@@ -15,11 +15,10 @@
 
     Contact: code@inmanta.com
 """
+import glob
 import os
 import subprocess
 import sys
-import glob
-
 from pathlib import Path
 from typing import Generator
 from xml.etree import ElementTree
@@ -109,7 +108,7 @@ def pip_lock_file() -> None:
 
 @pytest.fixture(scope="function", params=glob.glob("dockerfiles/*"))
 def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None, None]:
-    docker_file  = request.param
+    docker_file = request.param
     docker_file_name = os.path.basename(docker_file).split(".")[0]
     image_name = f"test-module-std-{docker_file_name}"
 
