@@ -1,4 +1,4 @@
-V3.0.5
+V3.0.6
 - replace centos8 by rocky8 in dockerfiles and tests
 
 V3.0.4
