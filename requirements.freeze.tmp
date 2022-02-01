@@ -1,0 +1,11 @@
+-e git+ssh://git@github.com/inmanta/inmanta.git@4ad96efe83ca93e4fcccfb5a4995af24b622913a#egg=inmanta
+-e git+ssh://git@github.com/inmanta/inmanta-core.git@ff77beee0f657e606d039903444e4815893e7705#egg=inmanta_core
+inmanta-dev-dependencies==1.76.0
+inmanta-module-dummy-module @ file:///tmp/tmps5gibhv2/inmanta_module_dummy_module-0.0.1-py3-none-any.whl
+inmanta-module-std==3.0.4.1
+# Editable Git install with no remote (inmanta-module-test==0.0.1)
+inmanta-sphinx==1.4.4
+-e git+https://github.com/inmanta/inmanta-ui.git@611a1360e5c193a64881683f5c41aadc91b7a6e2#egg=inmanta_ui
+-e git+https://github.com/inmanta/irt.git@a8feb1e037a028a777a70f42f26888c3f987f423#egg=irt
+pytest-inmanta==1.6.2
+pytest-inmanta-extensions==5.1.1
