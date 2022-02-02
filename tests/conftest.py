@@ -109,7 +109,11 @@ def pip_lock_file() -> None:
 @pytest.fixture(
     scope="function",
     params=glob.glob(
-        os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "dockerfiles", "*")
+        os.path.join(
+            os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+            "dockerfiles",
+            "*",
+        )
     ),
 )
 def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None, None]:
