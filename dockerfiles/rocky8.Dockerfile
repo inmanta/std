@@ -1,4 +1,4 @@
-FROM centos:8
+FROM rockylinux:8
 ENV container docker
 
 ARG PIP_INDEX_URL
