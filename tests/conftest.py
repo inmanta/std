@@ -15,6 +15,7 @@
 
     Contact: code@inmanta.com
 """
+import glob
 import os
 import subprocess
 import sys
@@ -105,10 +106,20 @@ def pip_lock_file() -> None:
     yield
 
 
-@pytest.fixture(scope="function", params=[7, 8])
+@pytest.fixture(
+    scope="function",
+    params=glob.glob(
+        os.path.join(
+            os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+            "dockerfiles",
+            "*",
+        )
+    ),
+)
 def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None, None]:
-    centos_version = request.param
-    image_name = f"test-module-std-centos{centos_version}"
+    docker_file = request.param
+    docker_file_name = os.path.basename(docker_file).split(".")[0]
+    image_name = f"test-module-std-{docker_file_name}"
 
     docker_build_cmd = ["sudo", "docker", "build", ".", "-t", image_name]
     pip_index_url = os.environ.get("PIP_INDEX_URL", None)
@@ -121,7 +132,7 @@ def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None,
         docker_build_cmd.append(f"PIP_PRE={pip_pre}")
 
     docker_build_cmd.append("-f")
-    docker_build_cmd.append(f"./dockerfiles/centos{centos_version}.Dockerfile")
+    docker_build_cmd.append(f"./dockerfiles/{os.path.basename(docker_file)}")
     print(docker_build_cmd)
 
     print(f"Building docker image with name: {image_name}")
@@ -148,12 +159,12 @@ def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None,
     print(f"Started container with id {docker_id}")
     yield docker_id
 
-    junit_file = f"junit_centos_{centos_version}.xml"
+    junit_file = f"junit_{docker_file_name}.xml"
     subprocess.run(
         ["sudo", "docker", "cp", f"{docker_id}:/module/std/junit.xml", junit_file],
         check=True,
     )
-    merge_to_junit_xml(junit_file, f"centos-{centos_version}")
+    merge_to_junit_xml(junit_file, f"{docker_file_name}")
     no_clean = os.getenv("INMANTA_NO_CLEAN", "false").lower() == "true"
     print(f"Skipping cleanup: {no_clean}")
     if not no_clean:

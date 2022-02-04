@@ -1,3 +1,6 @@
+V2.1.11
+- Improved testing: Replace centos8 by rocky8 in dockerfiles and tests
+
 V2.1.10
 - Improved testing: Ensure asyncpg is installed using a pre-compiled python package
 
