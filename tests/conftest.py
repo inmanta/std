@@ -99,6 +99,8 @@ def pip_lock_file() -> None:
                 "@",
                 "-e",
                 "inmanta-dev-dependencies",
+                "-e",
+                "inmanta-module-",
                 "requirements.freeze.tmp",
             ],
             stdout=ff,

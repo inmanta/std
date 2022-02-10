@@ -1,3 +1,6 @@
+V3.0.7
+- Added support to run the tests against the V2 version of this module.
+
 V3.0.6
 - replace centos8 by rocky8 in dockerfiles and tests
 
