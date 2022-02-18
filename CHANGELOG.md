@@ -1,4 +1,7 @@
 V2.1.11
+- Constrained MarkupSafe dependency to compatible range
+
+V2.1.11
 - Improved testing: Replace centos8 by rocky8 in dockerfiles and tests
 
 V2.1.10
@@ -11,7 +14,7 @@ V2.1.8
 - Improved testing: prevent too many packages from being installed in the testing container
 
 V2.1.7
-- Improved testing: handle pip freeze bug: https://github.com/pypa/pip/issues/8174 
+- Improved testing: handle pip freeze bug: https://github.com/pypa/pip/issues/8174
 
 V2.1.6
 - Un-pin transitive dependencies in requirements.txt for improved backward compatibility
