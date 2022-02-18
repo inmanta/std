@@ -3,3 +3,6 @@ email_validator~=1.1
 pydantic~=1.8
 
 dataclasses~=0.7;python_version<'3.7'
+
+# Dependency of Jinja2, later versions not compatible with Jinja2~=2.11
+MarkupSafe~=2.0.0
