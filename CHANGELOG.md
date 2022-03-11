@@ -1,3 +1,6 @@
+V3.0.8
+- Select the correct docker container for test runs with INMANTA\_TEST\_INFRA\_SETUP=true based on the version of the venv running the tests.
+
 V3.0.7
 - Added support to run the tests against the V2 version of this module.
 

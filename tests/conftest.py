@@ -15,12 +15,11 @@
 
     Contact: code@inmanta.com
 """
-import glob
 import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Generator
+from typing import Generator, List
 from xml.etree import ElementTree
 
 import pytest
@@ -108,16 +107,23 @@ def pip_lock_file() -> None:
     yield
 
 
-@pytest.fixture(
-    scope="function",
-    params=glob.glob(
-        os.path.join(
-            os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
-            "dockerfiles",
-            "*",
+def _get_dockerfiles_for_test() -> List[str]:
+    """
+    Return the list of docker files that should be used to run the tests against.
+    """
+    project_root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    dockerfiles_dir = os.path.join(project_root_dir, "dockerfiles")
+    if sys.version_info[0:2] == (3, 6):
+        return [os.path.join(dockerfiles_dir, "centos7.Dockerfile")]
+    elif sys.version_info[0:2] == (3, 9):
+        return [os.path.join(dockerfiles_dir, "rocky8.Dockerfile")]
+    else:
+        raise Exception(
+            "Running the tests with INMANTA_TEST_INFRA_SETUP=true is only support using a python3.6 or python3.9 venv"
         )
-    ),
-)
+
+
+@pytest.fixture(scope="function", params=_get_dockerfiles_for_test())
 def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None, None]:
     docker_file = request.param
     docker_file_name = os.path.basename(docker_file).split(".")[0]
