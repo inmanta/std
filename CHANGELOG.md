@@ -1,3 +1,6 @@
+V3.0.9
+- Have dependabot track 3.6 incompatible versions.
+
 V3.0.8
 - Select the correct docker container for test runs with INMANTA\_TEST\_INFRA\_SETUP=true based on the version of the venv running the tests.
 
