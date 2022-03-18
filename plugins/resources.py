@@ -286,6 +286,8 @@ class SystemdService(ResourceHandler):
             Reload this resource
         """
         ctx.info("Reloading service with reload-or-restart")
+        if resource.state == "stopped":
+            return
         self._io.run(
             self._systemd_path, ["reload-or-restart", "%s.service" % resource.name]
         )
