@@ -1,3 +1,6 @@
+V3.0.11
+- Don't reload services when they are stopped
+
 V3.0.9
 - Have dependabot track 3.6 incompatible versions.
 
