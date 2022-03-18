@@ -73,6 +73,11 @@ from inmanta.ast import AttributeException
         ("std::alfanum", '"qwerty/123"', False),
         ("std::base64", '"dGVzdA=="', True),
         ("std::base64", '"dGVzdA="', False),
+        ("std::non_empty_string", '""', False),
+        ("std::non_empty_string", '"a"', True),
+        ("std::non_empty_string", '"a "', True),
+        ("std::non_empty_string", '"  a  "', True),
+        ("std::non_empty_string", '"    "', False),
     ],
 )
 def test_attribute_types(project, attr_type, value, is_valid):

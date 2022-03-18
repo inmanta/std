@@ -28,12 +28,13 @@ from collections import defaultdict
 from copy import copy
 from itertools import chain
 from operator import attrgetter
+from typing import Any
 
 import jinja2
 import pydantic
 from jinja2 import Environment, FileSystemLoader, PrefixLoader
 from jinja2.exceptions import UndefinedError
-from jinja2.runtime import Undefined
+from jinja2.runtime import Undefined, missing
 
 # don't bind to `resources` because this package has a submodule named resources that will bind to `resources` when imported
 import inmanta.resources
@@ -58,6 +59,16 @@ tcache = {}
 engine_cache = None
 
 
+def inmanta_reset_state() -> None:
+    """
+    Reset the state kept by this module.
+    """
+    global tcache, engine_cache, fact_cache
+    tcache = {}
+    engine_cache = None
+    fact_cache = {}
+
+
 class JinjaDynamicProxy(DynamicProxy):
     def __init__(self, instance):
         super(JinjaDynamicProxy, self).__init__(instance)
@@ -78,6 +89,9 @@ class JinjaDynamicProxy(DynamicProxy):
 
         if isinstance(value, DynamicProxy):
             return value
+
+        if isinstance(value, dict):
+            return DictProxy(value)
 
         if hasattr(value, "__len__"):
             return SequenceProxy(value)
@@ -102,6 +116,30 @@ class JinjaDynamicProxy(DynamicProxy):
         else:
             # A native python object such as a dict
             return JinjaDynamicProxy.return_value(getattr(instance, attribute))
+
+
+class DictProxy(JinjaDynamicProxy):
+    def __init__(self, mydict):
+        DynamicProxy.__init__(self, mydict)
+
+    def __getitem__(self, key):
+        instance = self._get_instance()
+        if not isinstance(key, str):
+            raise RuntimeException(
+                self,
+                "Expected string key, but got %s, %s is a dict"
+                % (key, self._get_instance()),
+            )
+
+        return DynamicProxy.return_value(instance[key])
+
+    def __len__(self):
+        return len(self._get_instance())
+
+    def __iter__(self):
+        instance = self._get_instance()
+
+        return IteratorProxy(instance.__iter__())
 
 
 class SequenceProxy(JinjaDynamicProxy):
@@ -133,7 +171,7 @@ class SequenceProxy(JinjaDynamicProxy):
 
 class CallProxy(JinjaDynamicProxy):
     """
-        Proxy a value that implements a __call__ function
+    Proxy a value that implements a __call__ function
     """
 
     def __init__(self, instance):
@@ -147,7 +185,7 @@ class CallProxy(JinjaDynamicProxy):
 
 class IteratorProxy(JinjaDynamicProxy):
     """
-        Proxy an iterator call
+    Proxy an iterator call
     """
 
     def __init__(self, iterator):
@@ -162,22 +200,20 @@ class IteratorProxy(JinjaDynamicProxy):
 
 
 class ResolverContext(jinja2.runtime.Context):
-    def resolve(self, key):
+    def resolve_or_missing(self, key: str) -> Any:
         resolver = self.parent["{{resolver"]
         try:
             raw = resolver.lookup(key)
             return JinjaDynamicProxy.return_value(raw.get_value())
         except NotFoundException:
-            return super(ResolverContext, self).resolve(key)
-        except OptionalValueException as e:
-            return self.environment.undefined(
-                "variable %s not set on %s" % (resolver, key), resolver, key, e
-            )
+            return super(ResolverContext, self).resolve_or_missing(key)
+        except OptionalValueException:
+            return missing
 
 
 def _get_template_engine(ctx):
     """
-        Initialize the template engine environment
+    Initialize the template engine environment
     """
     global engine_cache
     if engine_cache is not None:
@@ -230,8 +266,8 @@ def _extend_path(ctx: Context, path: str):
 @plugin("template")
 def template(ctx: Context, path: "string"):
     """
-        Execute the template in path in the current context. This function will
-        generate a new statement that has dependencies on the used variables.
+    Execute the template in path in the current context. This function will
+    generate a new statement that has dependencies on the used variables.
     """
     jinja_env = _get_template_engine(ctx)
     template_path = _extend_path(ctx, path)
@@ -253,7 +289,7 @@ def template(ctx: Context, path: "string"):
 @dependency_manager
 def dir_before_file(model, resources):
     """
-        If a file is defined on a host, then make the file depend on its parent directory
+    If a file is defined on a host, then make the file depend on its parent directory
     """
     # loop over all resources to find files and dirs
     per_host = defaultdict(list)
@@ -343,9 +379,9 @@ def generate_password(
 @plugin
 def password(context: Context, pw_id: "string") -> "string":
     """
-        Retrieve the given password from a password file. It raises an exception when a password is not found
+    Retrieve the given password from a password file. It raises an exception when a password is not found
 
-        :param pw_id: The id of the password to identify it.
+    :param pw_id: The id of the password to identify it.
     """
     data_dir = context.get_data_dir()
     pw_file = os.path.join(data_dir, "passwordfile.txt")
@@ -365,7 +401,7 @@ def password(context: Context, pw_id: "string") -> "string":
 @plugin("print")
 def printf(message: "any"):
     """
-        Print the given message to stdout
+    Print the given message to stdout
     """
     print(message)
 
@@ -378,7 +414,7 @@ def replace(string: "string", old: "string", new: "string") -> "string":
 @plugin
 def equals(arg1: "any", arg2: "any", desc: "string" = None):
     """
-        Compare arg1 and arg2
+    Compare arg1 and arg2
     """
     if arg1 != arg2:
         if desc is not None:
@@ -390,7 +426,7 @@ def equals(arg1: "any", arg2: "any", desc: "string" = None):
 @plugin("assert")
 def assert_function(expression: "bool", message: "string" = ""):
     """
-        Raise assertion error if expression is false
+    Raise assertion error if expression is false
     """
     if not expression:
         raise AssertionError("Assertion error: " + message)
@@ -399,7 +435,7 @@ def assert_function(expression: "bool", message: "string" = ""):
 @plugin
 def select(objects: "list", attr: "string") -> "list":
     """
-        Return a list with the select attributes
+    Return a list with the select attributes
     """
     return [getattr(item, attr) for item in objects]
 
@@ -407,7 +443,7 @@ def select(objects: "list", attr: "string") -> "list":
 @plugin
 def item(objects: "list", index: "number") -> "list":
     """
-        Return a list that selects the item at index from each of the sublists
+    Return a list that selects the item at index from each of the sublists
     """
     r = []
     for obj in objects:
@@ -419,7 +455,7 @@ def item(objects: "list", index: "number") -> "list":
 @plugin
 def key_sort(items: "list", key: "any") -> "list":
     """
-        Sort an array of object on key
+    Sort an array of object on key
     """
     if isinstance(key, tuple):
         return sorted(items, key=attrgetter(*key))
@@ -430,9 +466,9 @@ def key_sort(items: "list", key: "any") -> "list":
 @plugin
 def timestamp(dummy: "any" = None) -> "number":
     """
-        Return an integer with the current unix timestamp
+    Return an integer with the current unix timestamp
 
-        :param any: A dummy argument to be able to use this function as a filter
+    :param any: A dummy argument to be able to use this function as a filter
     """
     return int(time.time())
 
@@ -440,7 +476,7 @@ def timestamp(dummy: "any" = None) -> "number":
 @plugin
 def capitalize(string: "string") -> "string":
     """
-        Capitalize the given string
+    Capitalize the given string
     """
     return string.capitalize()
 
@@ -454,7 +490,7 @@ def type(obj: "any") -> "any":
 @plugin
 def sequence(i: "number", start: "number" = 0, offset: "number" = 0) -> "list":
     """
-        Return a sequence of i numbers, starting from zero or start if supplied.
+    Return a sequence of i numbers, starting from zero or start if supplied.
     """
     return list(range(start, int(i) + start - offset))
 
@@ -462,7 +498,7 @@ def sequence(i: "number", start: "number" = 0, offset: "number" = 0) -> "list":
 @plugin
 def inlineif(conditional: "bool", a: "any", b: "any") -> "any":
     """
-        An inline if
+    An inline if
     """
     if conditional:
         return a
@@ -472,7 +508,7 @@ def inlineif(conditional: "bool", a: "any", b: "any") -> "any":
 @plugin
 def at(objects: "list", index: "number") -> "any":
     """
-        Get the item at index
+    Get the item at index
     """
     return objects[int(index)]
 
@@ -485,7 +521,7 @@ def attr(obj: "any", attr: "string") -> "any":
 @plugin
 def isset(value: "any") -> "bool":
     """
-        Returns true if a value has been set
+    Returns true if a value has been set
     """
     return value is not None
 
@@ -504,7 +540,7 @@ def objid(value: "any") -> "string":
 @plugin
 def count(item_list: "list") -> "number":
     """
-        Returns the number of elements in this list
+    Returns the number of elements in this list
     """
     return len(item_list)
 
@@ -512,7 +548,7 @@ def count(item_list: "list") -> "number":
 @plugin
 def unique(item_list: "list") -> "bool":
     """
-        Returns true if all items in this sequence are unique
+    Returns true if all items in this sequence are unique
     """
     seen = set()
     for item in item_list:
@@ -526,7 +562,7 @@ def unique(item_list: "list") -> "bool":
 @plugin
 def flatten(item_list: "list") -> "list":
     """
-        Flatten this list
+    Flatten this list
     """
     return list(chain.from_iterable(item_list))
 
@@ -534,17 +570,17 @@ def flatten(item_list: "list") -> "list":
 @plugin
 def split(string_list: "string", delim: "string") -> "list":
     """
-        Split the given string into a list
+    Split the given string into a list
 
-        :param string_list: The list to split into parts
-        :param delim: The delimeter to split the text by
+    :param string_list: The list to split into parts
+    :param delim: The delimeter to split the text by
     """
     return string_list.split(delim)
 
 
 def determine_path(ctx, module_dir, path):
     """
-        Determine the real path based on the given path
+    Determine the real path based on the given path
     """
     path = _extend_path(ctx, path)
     parts = path.split(os.path.sep)
@@ -563,7 +599,7 @@ def determine_path(ctx, module_dir, path):
 
 def get_file_content(ctx, module_dir, path):
     """
-        Get the contents of a file
+    Get the contents of a file
     """
     filename = determine_path(ctx, module_dir, path)
 
@@ -586,21 +622,21 @@ def get_file_content(ctx, module_dir, path):
 @plugin
 def source(ctx: Context, path: "string") -> "string":
     """
-        Return the textual contents of the given file
+    Return the textual contents of the given file
     """
     return get_file_content(ctx, "files", path)
 
 
 class FileMarker(str):
     """
-        Marker class to indicate that this string is actually a reference to a file on disk.
+    Marker class to indicate that this string is actually a reference to a file on disk.
 
-        This mechanism is backward compatible with the old in-band mechanism.
+    This mechanism is backward compatible with the old in-band mechanism.
 
-        To pass file references from other modules, you can copy paste this class into your own module.
-        The matching in the file handler is:
+    To pass file references from other modules, you can copy paste this class into your own module.
+    The matching in the file handler is:
 
-            if "FileMarker" in content.__class__.__name__
+        if "FileMarker" in content.__class__.__name__
 
     """
 
@@ -613,7 +649,7 @@ class FileMarker(str):
 @plugin
 def file(ctx: Context, path: "string") -> "string":
     """
-        Return the textual contents of the given file
+    Return the textual contents of the given file
     """
     filename = determine_path(ctx, "files", path)
 
@@ -629,7 +665,7 @@ def file(ctx: Context, path: "string") -> "string":
 @plugin
 def familyof(member: "std::OS", family: "string") -> "bool":
     """
-        Determine if member is a member of the given operating system family
+    Determine if member is a member of the given operating system family
     """
     if member.name == family:
         return True
@@ -655,7 +691,7 @@ def getfact(
     context: Context, resource: "any", fact_name: "string", default_value: "any" = None
 ) -> "any":
     """
-        Retrieve a fact of the given resource
+    Retrieve a fact of the given resource
     """
     global fact_cache
 
@@ -694,7 +730,9 @@ def getfact(
         if not fact_cache:
 
             def call():
-                return client.list_params(tid=env,)
+                return client.list_params(
+                    tid=env,
+                )
 
             result = context.run_sync(call)
             if result.code == 200:
@@ -747,7 +785,7 @@ def getfact(
 @plugin
 def environment() -> "string":
     """
-        Return the environment id
+    Return the environment id
     """
     env = str(Config.get("config", "environment", None))
 
@@ -762,7 +800,7 @@ def environment() -> "string":
 @plugin
 def environment_name(ctx: Context) -> "string":
     """
-        Return the name of the environment (as defined on the server)
+    Return the name of the environment (as defined on the server)
     """
     env = environment()
 
@@ -778,7 +816,7 @@ def environment_name(ctx: Context) -> "string":
 @plugin
 def environment_server(ctx: Context) -> "string":
     """
-        Return the address of the management server
+    Return the address of the management server
     """
     client = ctx.get_client()
     server_url = client._transport_instance._get_client_config()
@@ -799,11 +837,9 @@ def is_set(obj: "any", attribute: "string") -> "bool":
 
 @plugin
 def server_ca() -> "string":
-    filename = Config.get("compiler_rest_transport", "ssl_ca_cert_file", "")
-    if filename == "":
+    filename = Config.get("compiler_rest_transport", "ssl_ca_cert_file", None)
+    if not filename:
         return ""
-    if filename is None:
-        raise Exception("%s does not exist" % filename)
 
     if not os.path.isfile(filename):
         raise Exception("%s isn't a valid file" % filename)
@@ -823,8 +859,8 @@ def server_ssl() -> "bool":
 
 @plugin
 def server_token(context: Context, client_types: "string[]" = ["agent"]) -> "string":
-    token = Config.get("compiler_rest_transport", "token", "")
-    if token == "":
+    token = Config.get("compiler_rest_transport", "token", None)
+    if not token:
         return ""
 
     # Request a new token for this agent
@@ -897,7 +933,7 @@ def is_instance(ctx: Context, obj: "any", cls: "string") -> "bool":
 @plugin
 def length(value: "string") -> "number":
     """
-        Return the length of the string
+    Return the length of the string
     """
     return len(value)
 
@@ -905,7 +941,7 @@ def length(value: "string") -> "number":
 @plugin
 def filter(values: "list", not_item: "std::Entity") -> "list":
     """
-        Filter not_item from values
+    Filter not_item from values
     """
     return [x for x in values if x != not_item]
 
@@ -913,7 +949,7 @@ def filter(values: "list", not_item: "std::Entity") -> "list":
 @plugin
 def dict_get(dct: "dict", key: "string") -> "string":
     """
-        Get an element from the dict. Raises an exception when the key is not found in the dict
+    Get an element from the dict. Raises an exception when the key is not found in the dict
     """
     return dct[key]
 
@@ -921,7 +957,7 @@ def dict_get(dct: "dict", key: "string") -> "string":
 @plugin
 def contains(dct: "dict", key: "string") -> "bool":
     """
-        Check if key exists in dct.
+    Check if key exists in dct.
     """
     return key in dct
 
@@ -934,10 +970,10 @@ def getattribute(
     no_unknown: "bool" = True,
 ) -> "any":
     """
-        Return the value of the given attribute. If the attribute does not exist, return the default value.
+    Return the value of the given attribute. If the attribute does not exist, return the default value.
 
-        :attr no_unknown: When this argument is set to true, this method will return the default value when the attribute
-                          is unknown.
+    :attr no_unknown: When this argument is set to true, this method will return the default value when the attribute
+                      is unknown.
     """
     try:
         value = getattr(entity, attribute_name)
@@ -951,7 +987,7 @@ def getattribute(
 @plugin
 def invert(value: "bool") -> "bool":
     """
-        Invert a boolean value
+    Invert a boolean value
     """
     return not value
 
@@ -959,7 +995,7 @@ def invert(value: "bool") -> "bool":
 @plugin
 def to_number(value: "any") -> "number":
     """
-        Convert a value to a number
+    Convert a value to a number
     """
     return int(value)
 
@@ -967,7 +1003,7 @@ def to_number(value: "any") -> "number":
 @plugin
 def list_files(ctx: Context, path: "string") -> "list":
     """
-        List files in a directory
+    List files in a directory
     """
     path = determine_path(ctx, "files", path)
     return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
@@ -983,41 +1019,41 @@ def validate_type(
     fq_type_name: "string", value: "any", validation_parameters: "dict" = None
 ) -> "bool":
     """
-        Check whether `value` satisfies the constraints of type `fq_type_name`. When the given type (fq_type_name)
-        requires validation_parameters, they can be provided using the optional `validation_parameters` argument.
+    Check whether `value` satisfies the constraints of type `fq_type_name`. When the given type (fq_type_name)
+    requires validation_parameters, they can be provided using the optional `validation_parameters` argument.
 
-        The following types require validation_parameters:
+    The following types require validation_parameters:
 
-            * pydantic.condecimal:
-                gt: Decimal = None
-                ge: Decimal = None
-                lt: Decimal = None
-                le: Decimal = None
-                max_digits: int = None
-                decimal_places: int = None
-                multiple_of: Decimal = None
-            * pydantic.confloat and pydantic.conint:
-                gt: float = None
-                ge: float = None
-                lt: float = None
-                le: float = None
-                multiple_of: float = None,
-            * pydantic.constr:
-                min_length: int = None
-                max_length: int = None
-                curtail_length: int = None (Only verify the regex on the first curtail_length characters)
-                regex: str = None          (The regex is verified via Pattern.match())
-            * pydantic.stricturl:
-                min_length: int = 1
-                max_length: int = 2 ** 16
-                tld_required: bool = True
-                allowed_schemes: Optional[Set[str]] = None
+        * pydantic.condecimal:
+            gt: Decimal = None
+            ge: Decimal = None
+            lt: Decimal = None
+            le: Decimal = None
+            max_digits: int = None
+            decimal_places: int = None
+            multiple_of: Decimal = None
+        * pydantic.confloat and pydantic.conint:
+            gt: float = None
+            ge: float = None
+            lt: float = None
+            le: float = None
+            multiple_of: float = None,
+        * pydantic.constr:
+            min_length: int = None
+            max_length: int = None
+            curtail_length: int = None (Only verify the regex on the first curtail_length characters)
+            regex: str = None          (The regex is verified via Pattern.match())
+        * pydantic.stricturl:
+            min_length: int = 1
+            max_length: int = 2 ** 16
+            tld_required: bool = True
+            allowed_schemes: Optional[Set[str]] = None
 
-        Example usage:
+    Example usage:
 
-            * Define a vlan_id type which represent a valid vlan ID (0-4,095):
+        * Define a vlan_id type which represent a valid vlan ID (0-4,095):
 
-              typedef vlan_id as number matching std::validate_type("pydantic.conint", self, {"ge": 0, "le": 4095})
+          typedef vlan_id as number matching std::validate_type("pydantic.conint", self, {"ge": 0, "le": 4095})
 
 
     """
@@ -1050,7 +1086,7 @@ def validate_type(
 @plugin
 def is_base64_encoded(s: "string") -> "bool":
     """
-        Check whether the given string is base64 encoded.
+    Check whether the given string is base64 encoded.
     """
     try:
         encoded_str = s.encode("utf-8")

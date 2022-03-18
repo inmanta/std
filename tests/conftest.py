@@ -17,8 +17,9 @@
 """
 import os
 import subprocess
+import sys
 from pathlib import Path
-from typing import Generator
+from typing import Generator, List
 from xml.etree import ElementTree
 
 import pytest
@@ -78,21 +79,55 @@ def fix_classname(testsuite: ElementTree.Element, suite: str) -> None:
         )
 
 
-@pytest.fixture(scope="function", params=[7, 8])
-def docker_container(request: SubRequest) -> Generator[str, None, None]:
-    centos_version = request.param
-    image_name = f"test-module-std-centos{centos_version}"
-
-    try:
-        subprocess.run(
-            ["sudo", "docker", "stop", image_name],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=True,
+@pytest.fixture
+def pip_lock_file() -> None:
+    """get all versions of inmanta packages into a freeze file, to make the environment inside docker like the one outside"""
+    with open("requirements.freeze.all", "w") as ff:
+        subprocess.check_call([sys.executable, "-m", "pip", "freeze"], stdout=ff)
+    with open("requirements.freeze.tmp", "w") as ff:
+        subprocess.check_call(["grep", "inmanta", "requirements.freeze.all"], stdout=ff)
+    # pip freeze can produce lines with @ that refer to folders outside the container
+    # see also https://github.com/pypa/pip/issues/8174
+    # also ignore inmanta-dev-dependencies as this is pinned in the requirements.dev.txt
+    with open("requirements.freeze", "w") as ff:
+        subprocess.check_call(
+            [
+                "grep",
+                "-v",
+                "-e",
+                "@",
+                "-e",
+                "inmanta-dev-dependencies",
+                "-e",
+                "inmanta-module-",
+                "requirements.freeze.tmp",
+            ],
+            stdout=ff,
         )
-    # Thrown if the container does not exists
-    except subprocess.CalledProcessError:
-        pass
+    yield
+
+
+def _get_dockerfiles_for_test() -> List[str]:
+    """
+    Return the list of docker files that should be used to run the tests against.
+    """
+    project_root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    dockerfiles_dir = os.path.join(project_root_dir, "dockerfiles")
+    if sys.version_info[0:2] == (3, 6):
+        return [os.path.join(dockerfiles_dir, "centos7.Dockerfile")]
+    elif sys.version_info[0:2] == (3, 9):
+        return [os.path.join(dockerfiles_dir, "rocky8.Dockerfile")]
+    else:
+        raise Exception(
+            "Running the tests with INMANTA_TEST_INFRA_SETUP=true is only support using a python3.6 or python3.9 venv"
+        )
+
+
+@pytest.fixture(scope="function", params=_get_dockerfiles_for_test())
+def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None, None]:
+    docker_file = request.param
+    docker_file_name = os.path.basename(docker_file).split(".")[0]
+    image_name = f"test-module-std-{docker_file_name}"
 
     docker_build_cmd = ["sudo", "docker", "build", ".", "-t", image_name]
     pip_index_url = os.environ.get("PIP_INDEX_URL", None)
@@ -105,7 +140,7 @@ def docker_container(request: SubRequest) -> Generator[str, None, None]:
         docker_build_cmd.append(f"PIP_PRE={pip_pre}")
 
     docker_build_cmd.append("-f")
-    docker_build_cmd.append(f"./dockerfiles/centos{centos_version}.Dockerfile")
+    docker_build_cmd.append(f"./dockerfiles/{os.path.basename(docker_file)}")
     print(docker_build_cmd)
 
     print(f"Building docker image with name: {image_name}")
@@ -124,7 +159,6 @@ def docker_container(request: SubRequest) -> Generator[str, None, None]:
                 image_name,
             ],
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
             check=True,
         )
         .stdout.decode("utf-8")
@@ -133,12 +167,12 @@ def docker_container(request: SubRequest) -> Generator[str, None, None]:
     print(f"Started container with id {docker_id}")
     yield docker_id
 
-    junit_file = f"junit_centos_{centos_version}.xml"
+    junit_file = f"junit_{docker_file_name}.xml"
     subprocess.run(
         ["sudo", "docker", "cp", f"{docker_id}:/module/std/junit.xml", junit_file],
         check=True,
     )
-    merge_to_junit_xml(junit_file, f"centos-{centos_version}")
+    merge_to_junit_xml(junit_file, f"{docker_file_name}")
     no_clean = os.getenv("INMANTA_NO_CLEAN", "false").lower() == "true"
     print(f"Skipping cleanup: {no_clean}")
     if not no_clean:

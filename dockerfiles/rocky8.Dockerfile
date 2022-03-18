@@ -1,4 +1,4 @@
-FROM centos:7
+FROM rockylinux:8
 ENV container docker
 
 ARG PIP_INDEX_URL
@@ -15,12 +15,12 @@ rm -f /lib/systemd/system/basic.target.wants/*;\
 rm -f /lib/systemd/system/anaconda.target.wants/*;
 VOLUME [ "/sys/fs/cgroup" ]
 
+RUN yum install -y python39 glibc-locale-source
+
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
-
-RUN yum install -y python3
 
 RUN mkdir -p /module/std
 WORKDIR /module/std
@@ -34,7 +34,7 @@ RUN rm -rf env && python3 -m venv env && env/bin/pip install -U pip
 # installed as a V2 module when it contains a inmanta_plugins directory.
 RUN if [ -e "inmanta_plugins" ]; then \
     env/bin/pip install --only-binary asyncpg -r requirements.dev.txt -c requirements.freeze; \
-    rm -rf ./dist ; \
+    rm -rf ./dist; \
     env/bin/inmanta module build; \
     env/bin/pip install -c requirements.freeze ./dist/*.whl; \
 else \

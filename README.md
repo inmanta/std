@@ -24,5 +24,12 @@ In this case, the test driver (which is the test case in `test_in_docker.py`) is
 while the rest of the test cases are executed inside the container.
 The test results can be found in the `junit_docker.xml` file (outside the container).
 
+The python version used to run the tests determines which dockerfile is used:
+
+* Python 3.6: Use the `centos7.Dockerfile` dockerfile
+* Python 3.9: Use the `rocky8.Dockerfile` dockerfile
+
+Other python version are not supported at the moment with `INMANTA_TEST_INFRA_SETUP=True`.
+
 The cleanup behavior can be changed by the `INMANTA_NO_CLEAN` environment variable,
 when set to `true`, the container is not stopped after the tests.

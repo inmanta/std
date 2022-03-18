@@ -19,7 +19,7 @@
 
 def test_get_facts(project):
     """
-        Test mocking out facts during unit tests
+    Test mocking out facts during unit tests
     """
     project.add_fact("std::File[test,path=/etc/motd]", "mode", 755)
     project.compile(

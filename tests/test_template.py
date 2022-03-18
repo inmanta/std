@@ -17,13 +17,14 @@
 """
 import os
 import shutil
+from typing import Dict
 
 import pytest
 
 
 def test_is_defined(project):
     """
-        Test the use of is defined
+    Test the use of is defined
     """
     project.add_mock_file(
         "templates",
@@ -43,7 +44,7 @@ entity Test1:
 string name
 end
 
-Test1 prev [0:1] -- [0:1] Test1 other
+Test1.other [0:1] -- Test1.prev [0:1]
 
 implementation tt for Test1:
 content=std::template("unittest/testtemplate.tmpl")
@@ -66,7 +67,7 @@ Test1(name="t3",other=Test1(name="t31",other=Test1(name="t32")))
 
 def test_template(project):
     """
-        Test the evaluation of a template
+    Test the evaluation of a template
     """
     project.add_mock_file("templates", "test.tmpl", "{{ value }}")
     project.compile(
@@ -81,7 +82,7 @@ std::print(std::template("unittest/test.tmpl"))
 
 def test_plugin_with_list(project):
     """
-        Test the use of is defined
+    Test the use of is defined
     """
     project.add_mock_file(
         "templates",
@@ -132,7 +133,7 @@ def cleanup_test_module(project):
 
 def test_template_current_dir(project, cleanup_test_module):
     """
-        Test the use of current dir in templates
+    Test the use of current dir in templates
     """
     module_init_cf = """
         import std
@@ -192,7 +193,7 @@ def test_files_current_dir(project, cleanup_test_module):
 
 def test_97_template_dict_null(project):
     """
-        Use a dict with null
+    Use a dict with null
     """
     project.add_mock_file(
         "templates",
@@ -211,3 +212,75 @@ std::print(std::template("unittest/test.j2"))
     )
 
     assert "None\n" in project.get_stdout()
+
+
+def test_20_template_dict_items(project):
+    """
+    Iterate over and get dict values from template.
+    """
+    project.add_mock_file(
+        "templates",
+        "test.j2",
+        """
+key-value pairs 1:
+{% for key in mydict -%}
+    {{ key }}: {{ mydict[key] }}
+{% endfor %}
+
+key-value pairs 2:
+{% for key in mydict -%}
+    {{ key }}: {{ mydict.get(key) }}
+{% endfor %}
+
+key-value-pairs 3
+{% for key, value in mydict.items() -%}
+    {{ key }}: {{ value }}
+{% endfor %}
+        """,
+    )
+
+    mydict: Dict[str, int] = {"x": 42, "y": 43, "z": 44}
+    project.compile(
+        f"""
+import unittest
+
+mydict = {mydict}
+std::print(std::template("unittest/test.j2"))
+        """
+    )
+
+    expected_out: str = """
+key-value pairs 1:
+x: 42
+y: 43
+z: 44
+
+
+key-value pairs 2:
+x: 42
+y: 43
+z: 44
+
+
+key-value-pairs 3
+x: 42
+y: 43
+z: 44
+    """
+    assert expected_out.strip() in project.get_stdout()
+
+
+def test_218_template_dict_len(project):
+    project.add_mock_file("templates", "test.j2", "{{ mydict | length }}")
+
+    mydict: Dict[str, int] = {"x": 42, "y": 43, "z": 44}
+    project.compile(
+        f"""
+import unittest
+
+mydict = {mydict}
+std::print(std::template("unittest/test.j2"))
+        """
+    )
+
+    assert project.get_stdout().strip() == str(len(mydict))
