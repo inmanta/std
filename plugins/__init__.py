@@ -657,7 +657,7 @@ def file(ctx: Context, path: "string") -> "string":
         raise Exception("%s does not exist" % path)
 
     if not os.path.isfile(filename):
-        raise Exception("%s isn't a valid file" % path)
+        raise Exception("%s isn't a valid file" % filename)
 
     return FileMarker(os.path.abspath(filename))
 

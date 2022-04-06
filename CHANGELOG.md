@@ -1,3 +1,6 @@
+V3.0.12
+- Improve error message clarity
+
 V3.0.11
 - Don't reload services when they are stopped
 
