@@ -2,4 +2,4 @@ author: Inmanta <code@inmanta.com>
 license: Apache 2.0
 name: std
 version: 3.0.12
-compiler_version: 2020.1
+compiler_version: 2020.8
