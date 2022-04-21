@@ -1,3 +1,6 @@
+V3.0.13
+- Add pytest.ini file
+
 V3.0.12
 - Improve error message clarity
 
