@@ -1,3 +1,6 @@
+V3.0.16
+- Fix tests to support email_validator>=1.2.0
+
 V3.0.15
 - Remove pytest.ini and move its logic to pyproject.toml
 
