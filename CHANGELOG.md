@@ -1,5 +1,6 @@
-V2.1.11
-- Constrained MarkupSafe dependency to compatible range
+V2.1.12
+- Fix tests to support email_validator>=1.2.0 (backport of v3.0.16)
+
 
 V2.1.11
 - Improved testing: Replace centos8 by rocky8 in dockerfiles and tests
