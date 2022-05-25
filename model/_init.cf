@@ -593,3 +593,16 @@ implementation pkgs for Packages:
       std::Package(host=self.host, name=pkg, state=self.state, requires=self.requires, provides=self.provides)
     end
 end
+
+entity ResourceSet:
+    """
+    :attr name: The name of the resource set.
+    """
+    string name
+end
+
+ResourceSet.resources [0:] -- std::Resource
+
+index ResourceSet(name)
+
+implement ResourceSet using std::none
