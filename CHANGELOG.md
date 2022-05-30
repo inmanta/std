@@ -1,3 +1,6 @@
+V3.1.0
+- Add ResourceSet entity
+
 V3.0.16
 - Fix tests to support email_validator>=1.2.0
 
