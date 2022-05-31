@@ -237,6 +237,12 @@ def _get_template_engine(ctx):
 
         def curywrapper(func):
             def safewrapper(*args):
+                undef_args = [
+                    arg for arg in args if isinstance(arg, jinja2.StrictUndefined)
+                ]
+                if undef_args:
+                    # Accessing an undefined value will raise the appropriate UndefinedError
+                    str(undef_args[0])
                 return JinjaDynamicProxy.return_value(func(*args))
 
             return safewrapper

@@ -1,3 +1,6 @@
+V3.1.1
+- Fix passing Undefined to plugins in templates
+
 V3.1.0
 - Add ResourceSet entity
 
