@@ -1,3 +1,6 @@
+V3.1.1
+- Fix environment check for None value
+
 V3.1.0
 - Add ResourceSet entity
 
