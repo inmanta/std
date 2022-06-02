@@ -45,6 +45,6 @@ def test_unknown_environment(project):
     with pytest.raises(Exception):
         project.compile(
             """
-        env_name = std::environment_name()
+        env_name = std::environment()
         """
         )
