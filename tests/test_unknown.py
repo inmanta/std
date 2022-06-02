@@ -16,6 +16,8 @@
     Contact: code@inmanta.com
 """
 
+import pytest
+
 
 def test_is_unknown_should_be_false(project):
     project.compile(
@@ -37,3 +39,12 @@ def test_is_unknown_should_be_true(project):
     )
 
     assert project.get_stdout() == "True\n"
+
+
+def test_unknown_environment(project):
+    with pytest.raises(Exception):
+        project.compile(
+            """
+        env_name = std::environment_name()
+        """
+        )
