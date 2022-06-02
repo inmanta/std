@@ -31,8 +31,8 @@ def test_is_unknown_should_be_false(project):
 def test_is_unknown_should_be_true(project):
     project.compile(
         """
-    env_name = std::environment_name()
-    std::print(std::is_unknown(env_name))
+    unknown_env_int = std::get_env_int("UNKNOWN_ENV_INT")
+    std::print(std::is_unknown(unknown_env_int))
     """
     )
 
