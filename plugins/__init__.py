@@ -787,7 +787,7 @@ def environment() -> "string":
     """
     Return the environment id
     """
-    env = str(Config.get("config", "environment", None))
+    env = Config.get("config", "environment", None)
 
     if env is None:
         raise Exception(
