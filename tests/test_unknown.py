@@ -42,6 +42,9 @@ def test_is_unknown_should_be_true(project):
 
 
 def test_unknown_environment(project):
+    """
+    Ensure that an exception is raised when the std::environment() plugin is called when no environment is configured.
+    """
     with pytest.raises(Exception):
         project.compile(
             """
