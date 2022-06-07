@@ -28,7 +28,7 @@ from collections import defaultdict
 from copy import copy
 from itertools import chain
 from operator import attrgetter
-from typing import Any
+from typing import Any, Tuple
 
 import jinja2
 import pydantic
@@ -237,6 +237,7 @@ def _get_template_engine(ctx):
 
         def curywrapper(func):
             def safewrapper(*args):
+                _raise_if_contains_undefined(args)
                 return JinjaDynamicProxy.return_value(func(*args))
 
             return safewrapper
@@ -245,6 +246,13 @@ def _get_template_engine(ctx):
 
     engine_cache = env
     return env
+
+
+def _raise_if_contains_undefined(args: Tuple[object, ...]) -> None:
+    undef_args = [arg for arg in args if isinstance(arg, jinja2.StrictUndefined)]
+    if undef_args:
+        # Accessing an undefined value will raise the appropriate UndefinedError
+        str(undef_args[0])
 
 
 def _extend_path(ctx: Context, path: str):

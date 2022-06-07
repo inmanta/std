@@ -21,6 +21,8 @@ from typing import Dict
 
 import pytest
 
+from inmanta import ast
+
 
 def test_is_defined(project):
     """
@@ -284,3 +286,50 @@ std::print(std::template("unittest/test.j2"))
     )
 
     assert project.get_stdout().strip() == str(len(mydict))
+
+
+def test_pass_undefined_to_plugin(project):
+    project.add_mock_file("templates", "test.j2", "{{ myvar | std.get_env }}")
+
+    with pytest.raises(ast.WrappingRuntimeException) as exc_info:
+        project.compile(
+            """
+    import unittest
+
+    std::print(std::template("unittest/test.j2"))
+            """
+        )
+    exception_causes = exc_info.value.get_causes()
+    assert len(exception_causes) == 1
+    assert isinstance(exception_causes[0], ast.NotFoundException)
+
+
+def test_if_defined_with_plugin_call(project):
+    project.add_mock_file(
+        "templates",
+        "test.j2",
+        "{% if myvar is defined %} {{ myvar | std.capitalize }} "
+        "{% else %} myvar is not defined {% endif %}",
+    )
+
+    project.compile(
+        """
+    import unittest
+
+    std::print(std::template("unittest/test.j2"))
+            """
+    )
+    assert "myvar is not defined" in project.get_stdout()
+
+
+def test_plugin_in_template_without_args(project):
+    project.add_mock_file("templates", "test.j2", "{{ none | std.timestamp }}")
+
+    project.compile(
+        """
+    import unittest
+
+    std::print(std::template("unittest/test.j2"))
+            """
+    )
+    assert project.get_stdout().strip()
