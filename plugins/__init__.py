@@ -249,9 +249,7 @@ def _get_template_engine(ctx):
 
 
 def _raise_if_contains_undefined(args: Tuple[object, ...]) -> None:
-    undef_args = [
-        arg for arg in args if isinstance(arg, jinja2.StrictUndefined)
-    ]
+    undef_args = [arg for arg in args if isinstance(arg, jinja2.StrictUndefined)]
     if undef_args:
         # Accessing an undefined value will raise the appropriate UndefinedError
         str(undef_args[0])
