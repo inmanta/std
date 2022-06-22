@@ -6,7 +6,7 @@ closes *Add ticket reference here*
 
 # Merge procedure
 
-Don't use the github built-in merge, but the process described [here](https://docs.internal.inmanta.com/topics/tasks/commiting_changes_modules.html)
+Don't use the github built-in merge, but the process described [here](https://internal.inmanta.com/developer/tasks/commiting_changes_modules.html)
 
 ```sh
 git pull
