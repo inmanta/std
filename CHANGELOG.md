@@ -1,3 +1,6 @@
+V3.1.3
+- Don't allow empty names for ResourceSet
+
 V3.1.2
 - Fix passing Undefined to plugins in templates
 
