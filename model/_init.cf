@@ -594,6 +594,11 @@ implementation pkgs for Packages:
     end
 end
 
+typedef resource_set_name as string matching self != ""
+"""
+    A string that contains at least one character.
+"""
+
 entity ResourceSet:
     """
     A ResourceSet describes resources that logically belong together,
@@ -601,7 +606,7 @@ entity ResourceSet:
 
     :attr name: The name of the resource set.
     """
-    non_empty_string name
+    resource_set_name name
 end
 
 ResourceSet.resources [0:] -- std::Resource
