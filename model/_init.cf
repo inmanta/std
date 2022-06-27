@@ -601,7 +601,7 @@ entity ResourceSet:
 
     :attr name: The name of the resource set.
     """
-    string name
+    non_empty_string name
 end
 
 ResourceSet.resources [0:] -- std::Resource
