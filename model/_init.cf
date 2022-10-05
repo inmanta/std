@@ -475,7 +475,7 @@ entity AgentConfig extends PurgeableResource:
                         * retry_wait: The time to wait between retries for the remote target to become available. The default wait is 30s.
                    Example: ssh://centos@centos-machine/?python=python3 (This would connect to a the centos machine and use python3 as it's interpreter)
     """
-    bool? autostart
+    bool? autostart = null
     config_agent agentname
     string agent="internal"
     string uri="local:"
@@ -514,7 +514,7 @@ use relations to create a mutuable set of strings.
     a.string_list += std::MutableString(value="value1")
     a.string_list += std::MutableString(value="value2")
 """
-  string? value
+  string? value = null
 end
 
 implement MutableString using std::none
@@ -547,7 +547,7 @@ use relations to create a mutuable set of numbers.
     a.string_list += std::MutableNumber(value=3)
     a.string_list += std::MutableNumber(value=7)
 """
-  number? value
+  number? value = null
 end
 
 implement MutableNumber using std::none
@@ -568,7 +568,7 @@ Wrapper for boolean values, used to pass a boolean out of an if statement.
     end
 
 """
-  bool? value
+  bool? value = null
 end
 
 implement MutableBool using std::none

@@ -1,3 +1,6 @@
+V4.0.0
+- Remove support for leaving nullable attribute unassigned
+
 V3.1.3
 - Don't allow empty names for ResourceSet
 
