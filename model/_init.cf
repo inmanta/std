@@ -514,7 +514,7 @@ use relations to create a mutuable set of strings.
     a.string_list += std::MutableString(value="value1")
     a.string_list += std::MutableString(value="value2")
 """
-  string? value = null
+  string? value
 end
 
 implement MutableString using std::none
@@ -547,7 +547,7 @@ use relations to create a mutuable set of numbers.
     a.string_list += std::MutableNumber(value=3)
     a.string_list += std::MutableNumber(value=7)
 """
-  number? value = null
+  number? value
 end
 
 implement MutableNumber using std::none
@@ -568,7 +568,7 @@ Wrapper for boolean values, used to pass a boolean out of an if statement.
     end
 
 """
-  bool? value = null
+  bool? value
 end
 
 implement MutableBool using std::none
