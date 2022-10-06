@@ -459,7 +459,7 @@ entity AgentConfig extends PurgeableResource:
         Control agent settings. Currently these settings are only applied to autostarted agents
 
         :attr autostart: When this flag is set to true, the resource will be exported and set the agent map
-                          on the orchestrator. When false (or not set), this instance is ignore but can be used to generate
+                          on the orchestrator. When false, this instance is ignored but can be used to generate
                           agent configuration files.
         :attr agentname: The name of the agent to which this config applies.
         :attr agent: If a resource is exported, agent manages the resource.
@@ -475,7 +475,7 @@ entity AgentConfig extends PurgeableResource:
                         * retry_wait: The time to wait between retries for the remote target to become available. The default wait is 30s.
                    Example: ssh://centos@centos-machine/?python=python3 (This would connect to a the centos machine and use python3 as it's interpreter)
     """
-    bool? autostart
+    bool autostart = false
     config_agent agentname
     string agent="internal"
     string uri="local:"

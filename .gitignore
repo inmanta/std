@@ -7,3 +7,4 @@
 .pytest_cache
 env_vars
 junit*
+.idea
