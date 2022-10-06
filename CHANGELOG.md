@@ -1,5 +1,5 @@
 V4.0.0
-- Remove support for leaving nullable attribute unassigned
+- AgentConfig.autostart doesn't allow null as value anymore
 
 V3.1.3
 - Don't allow empty names for ResourceSet
