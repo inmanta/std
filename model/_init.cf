@@ -475,7 +475,7 @@ entity AgentConfig extends PurgeableResource:
                         * retry_wait: The time to wait between retries for the remote target to become available. The default wait is 30s.
                    Example: ssh://centos@centos-machine/?python=python3 (This would connect to a the centos machine and use python3 as it's interpreter)
     """
-    bool? autostart = null
+    bool autostart = false
     config_agent agentname
     string agent="internal"
     string uri="local:"
