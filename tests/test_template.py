@@ -333,3 +333,41 @@ def test_plugin_in_template_without_args(project):
             """
     )
     assert project.get_stdout().strip()
+
+
+def test_explicit_null(project):
+    """
+    test template with explicit null
+    """
+    project.add_mock_file(
+        "templates",
+        "testnull.j2",
+        """
+{{name}}
+{% if attribute is defined %}{% for a in attribute %}
+{{a}}
+{% endfor %}{% endif %}
+        """,
+    )
+
+    project.compile(
+        """
+import unittest
+
+entity Test:
+    string name = "test"
+    string[]? attribute = null
+end
+
+implementation tt for Test:
+    content=std::template("unittest/testnull.j2")
+    std::print(content)
+end
+
+implement Test using tt
+
+Test()
+        """
+    )
+
+    assert "??" in project.get_stdout()
