@@ -1,5 +1,5 @@
 V4.0.0
-- autostart attribute of AgentConfig doesn't allow null as value anymore
+- Remove support for leaving nullable attribute unassigned (autostart attribute of AgentConfig doesn't allow null as value anymore) This changes the behaviour of 'is defined' in Jinja templates. You should now use 'is not none' instead.
 
 V3.1.3
 - Don't allow empty names for ResourceSet
