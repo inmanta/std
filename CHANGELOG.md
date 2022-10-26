@@ -1,3 +1,6 @@
+V4.0.1
+- Drop is_set plugin
+
 V4.0.0
 - autostart attribute of AgentConfig doesn't allow null as value anymore
 
