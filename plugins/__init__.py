@@ -835,15 +835,6 @@ def environment_server(ctx: Context) -> "string":
 
 
 @plugin
-def is_set(obj: "any", attribute: "string") -> "bool":
-    try:
-        getattr(obj, attribute)
-    except Exception:
-        return False
-    return True
-
-
-@plugin
 def server_ca() -> "string":
     filename = Config.get("compiler_rest_transport", "ssl_ca_cert_file", None)
     if not filename:
