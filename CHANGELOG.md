@@ -1,3 +1,6 @@
+V2.1.14
+- Bump dev dependencies
+
 V2.1.13
 - Fix tests to support email_validator>=1.2.0 (backport of v3.0.16)
 
