@@ -1,3 +1,6 @@
+V4.0.2
+- Improve error logging in std::Package
+
 V4.0.1
 - Drop is_set plugin
 
