@@ -92,20 +92,26 @@ def test_hostname(project):
     fqdn = f"{hostname}.something.com"
     assert project.get_plugin_function("hostname")(fqdn) == hostname
 
+
 def test_cidr_to_prefixlen(project):
     cidr = "192.168.1.100/24"
     prefixlen = "24"
     assert project.get_plugin_function("cidr_to_prefixlen")(cidr) == prefixlen
+
 
 def test_cidr_to_netmask(project):
     cidr = "192.168.1.100/24"
     netmask = "255.255.255.0"
     assert project.get_plugin_function("cidr_to_netmask")(cidr) == netmask
 
+
 def test_cidr_to_network_address(project):
     cidr = "192.168.2.10/24"
     network_address = "192.168.2.0"
-    assert project.get_plugin_function("cidr_to_network_address")(cidr) == network_address
+    assert (
+        project.get_plugin_function("cidr_to_network_address")(cidr) == network_address
+    )
+
 
 def test_netmask(project):
     cidr = 20
@@ -126,6 +132,7 @@ def test_netmask(project):
 def test_ipindex(project, cidr, idx, result):
     ipindex = project.get_plugin_function("ipindex")
     assert ipindex(cidr, idx) == result
+
 
 def test_add(project):
     ip = "192.168.22.11"

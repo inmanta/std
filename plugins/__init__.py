@@ -1112,17 +1112,19 @@ def netmask(prefixlen: "int") -> "std::ipv4_address":
     interface = ipaddress.ip_interface(f"255.255.255.255/{prefixlen}")
     return str(interface.netmask)
 
+
 @plugin
 def cidr_to_prefixlen(addr: "std::ipv_any_interface") -> "int":
     """
     Return the prefixlen of the CIDR
 
     For instance:
-        | std::print(cidr_to_prefixlen("192.168.1.100/24"))  -->  24
+        | std::print(cidr_to_prefixlen("192.168.1.100/24"))  -->  "24"
     """
     interface = ipaddress.ip_interface(addr)
 
     return str(interface.network.prefixlen)
+
 
 @plugin
 def cidr_to_network_address(addr: "std::ipv_any_interface") -> "std::ipv_any_address":
@@ -1136,6 +1138,7 @@ def cidr_to_network_address(addr: "std::ipv_any_interface") -> "std::ipv_any_add
 
     return str(interface.network.network_address)
 
+
 @plugin
 def cidr_to_netmask(addr: "std::ipv_any_interface") -> "std::ipv_any_address":
     """
@@ -1147,6 +1150,7 @@ def cidr_to_netmask(addr: "std::ipv_any_interface") -> "std::ipv_any_address":
     interface = ipaddress.ip_interface(addr)
 
     return str(interface.network.netmask)
+
 
 @plugin
 def ipindex(addr: "std::ipv_any_network", position: "number") -> "string":
