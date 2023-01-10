@@ -1105,24 +1105,6 @@ def hostname(fqdn: "string") -> "string":
 
 
 @plugin
-def network(ip: "std::ipv4_address", cidr: "string") -> "string":
-    """
-    Given the ip and the cidr, return the network address
-    """
-    net = ipaddress.ip_network(f"{ip}/{cidr}", False)
-    return str(net.network_address)
-
-
-@plugin
-def cidr_to_network(cidr: "string") -> "string":
-    """
-    Given cidr return the network address
-    """
-    net = ipaddress.ip_network(cidr, False)
-    return str(net.network_address)
-
-
-@plugin
 def netmask(cidr: "number") -> "std::ipv4_address":
     """
     Given the cidr, return the netmask
@@ -1132,21 +1114,7 @@ def netmask(cidr: "number") -> "std::ipv4_address":
 
 
 @plugin
-def concat(host: "std::hoststring", domain: "std::hoststring") -> "std::hoststring":
-    """
-    Concat host and domain
-    """
-    return "%s.%s" % (host, domain)
-
-
-@plugin
-def net_to_nm(network_addr: "string") -> "string":
-    net = ipaddress.ip_interface(network_addr)
-    return str(net.netmask)
-
-
-@plugin
-def ipnet(addr: "std::ipv_any_cidr", what: "string") -> "string":
+def ipnet(addr: "std::ipv_any_network", what: "string") -> "string":
     """
     Return the ip, prefixlen, netmask or network address of the CIDR
 
@@ -1160,17 +1128,13 @@ def ipnet(addr: "std::ipv_any_cidr", what: "string") -> "string":
 
     For instance:
 
-        | std::print(ipnet("192.168.1.100/24", "ip"))         -->  192.168.1.100
         | std::print(ipnet("192.168.1.100/24", "prefixlen"))  -->  24
         | std::print(ipnet("192.168.1.100/24", "netmask"))    -->  255.255.255.0
         | std::print(ipnet("192.168.1.100/24", "network"))    -->  192.168.1.0
     """
     net = ipaddress.ip_network(addr, False)
-    if what == "ip":
-        net = ipaddress.ip_interface(addr)
-        return str(net.ip)
 
-    elif what == "prefixlen":
+    if what == "prefixlen":
         return str(net.prefixlen)
 
     elif what == "netmask":
@@ -1185,74 +1149,8 @@ def ipindex(addr: "std::ipv_any_network", position: "number") -> "string":
     """
     Return the address at position in the network.
     """
-    net = ipaddress.ip_interface(addr)
-    return str(net.network[position])
-
-
-@plugin
-def is_valid_ip(addr: "string") -> "bool":
-    try:
-        net = ipaddress.ip_address(addr)
-        return net.version == 4
-    except Exception:
-        return False
-
-
-@plugin
-def is_valid_cidr_v6(addr: "string") -> "bool":
-    if "/" not in addr:
-        return False
-    try:
-        net = ipaddress.ip_interface(addr)
-        return net.version == 6
-    except Exception:
-        return False
-
-
-@plugin
-def is_valid_ip_v6(addr: "string") -> "bool":
-    try:
-        net = ipaddress.ip_address(addr)
-        return net.version == 6
-    except Exception:
-        return False
-
-
-@plugin
-def is_valid_cidr(addr: "string") -> "bool":
-    if "/" not in addr:
-        return False
-    try:
-        net = ipaddress.ip_interface(addr)
-        return net.version == 4
-    except Exception:
-        return False
-
-
-@plugin
-def is_valid_cidr_v10(addr: "string") -> "bool":
-    """
-    Validate if the string matches a v6 or a v4 network in CIDR notation
-    """
-    if "/" not in addr:
-        return False
-    try:
-        ipaddress.ip_network(addr, False)
-        return True
-    except Exception:
-        return False
-
-
-@plugin
-def is_valid_ip_v10(addr: "string") -> "bool":
-    """
-    Validate if the string matches a v6 or v4 address
-    """
-    try:
-        ipaddress.ip_address(addr)
-        return True
-    except Exception:
-        return False
+    net = ipaddress.ip_network(addr, False)
+    return str(net[position])
 
 
 @plugin
@@ -1261,14 +1159,3 @@ def add(addr: "std::ipv_any_address", n: "number") -> "std::ipv_any_address":
     Add a number to the given ip.
     """
     return str(ipaddress.ip_address(addr) + n)
-
-
-@plugin
-def is_valid_netmask(netmask: "string") -> "bool":
-    """
-    Validate if the string matches a netmask
-    """
-    try:
-        return ipaddress.ip_network(f"0.0.0.0/{netmask}")
-    except Exception:
-        return False

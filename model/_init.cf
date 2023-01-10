@@ -32,10 +32,6 @@ typedef ipv4_address as string matching std::validate_type("ipaddress.IPv4Addres
 """
     A string representing a valid IPv4 address (e.g. 192.168.0.1).
 """
-typedef ipv4_cidr as string matching std::is_valid_cidr(self) == true
-"""
-    A string representing a valid CIDR IPv4 address (e.g. 192.168.1.0/24).
-"""
 typedef ipv4_interface as string matching std::validate_type("ipaddress.IPv4Interface", self)
 """
     A string representing an IPv4 interface. This type is equivalent to ipv4_network,
@@ -65,10 +61,6 @@ typedef ipv6_network as string matching std::validate_type("ipaddress.IPv6Networ
     is the network address, and the prefix length must be a single number, the prefix.
 
     Example: 2001:db00::0/24
-"""
-typedef ipv6_cidr as string matching std::is_valid_cidr_v6(self) == true
-"""
-    A string representing a valid CIDR IPv6 address (e.g. 2001:db00::0/24).
 """
 typedef uuid as string matching std::validate_type("uuid.UUID", self)
 """
@@ -110,10 +102,6 @@ typedef ipv_any_interface as string matching std::validate_type("pydantic.IPvAny
 typedef ipv_any_network as string matching std::validate_type("pydantic.IPvAnyNetwork", self)
 """
     A string matching the requiremenst of ipv4_network or ipv6_network.
-"""
-typedef ipv_any_cidr as string matching std::is_valid_cidr_v10(self) == true
-"""
-    A string matching the requiremenst of ipv4_cidr or ipv6_cidr.
 """
 typedef negative_float as number matching std::validate_type("pydantic.NegativeFloat", self)
 """
