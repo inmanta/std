@@ -1105,44 +1105,48 @@ def hostname(fqdn: "string") -> "string":
 
 
 @plugin
-def netmask(cidr: "number") -> "std::ipv4_address":
+def netmask(prefixlen: "int") -> "std::ipv4_address":
     """
     Given the cidr, return the netmask
     """
-    net = ipaddress.ip_interface(f"255.255.255.255/{cidr}")
-    return str(net.netmask)
-
+    interface = ipaddress.ip_interface(f"255.255.255.255/{prefixlen}")
+    return str(interface.netmask)
 
 @plugin
-def ipnet(addr: "std::ipv_any_network", what: "string") -> "string":
+def cidr_to_prefixlen(addr: "std::ipv_any_interface") -> "int":
     """
-    Return the ip, prefixlen, netmask or network address of the CIDR
-
-    :param addr: CIDR
-    :param what: The required result:
-
-     - ip: The IP address of `addr` object.
-     - prefixlen: The prefix length of `addr` object.
-     - netmask: The subnet mask of `addr` object.
-     - network: The network address of `addr` object.
+    Return the prefixlen of the CIDR
 
     For instance:
-
-        | std::print(ipnet("192.168.1.100/24", "prefixlen"))  -->  24
-        | std::print(ipnet("192.168.1.100/24", "netmask"))    -->  255.255.255.0
-        | std::print(ipnet("192.168.1.100/24", "network"))    -->  192.168.1.0
+        | std::print(cidr_to_prefixlen("192.168.1.100/24"))  -->  24
     """
-    net = ipaddress.ip_network(addr, False)
+    interface = ipaddress.ip_interface(addr)
 
-    if what == "prefixlen":
-        return str(net.prefixlen)
+    return str(interface.network.prefixlen)
 
-    elif what == "netmask":
-        return str(net.netmask)
+@plugin
+def cidr_to_network_address(addr: "std::ipv_any_interface") -> "std::ipv_any_address":
+    """
+    Return the network address of the CIDR
 
-    elif what == "network":
-        return str(net.network_address)
+    For instance:
+        | std::print(cidr_to_network_address("192.168.1.100/24"))  -->  192.168.1.0
+    """
+    interface = ipaddress.ip_interface(addr)
 
+    return str(interface.network.network_address)
+
+@plugin
+def cidr_to_netmask(addr: "std::ipv_any_interface") -> "std::ipv_any_address":
+    """
+    Return the netmask of the CIDR
+
+    For instance:
+        | std::print(cidr_to_netmask("192.168.1.100/24"))    -->  255.255.255.0
+    """
+    interface = ipaddress.ip_interface(addr)
+
+    return str(interface.network.netmask)
 
 @plugin
 def ipindex(addr: "std::ipv_any_network", position: "number") -> "string":

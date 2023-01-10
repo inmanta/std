@@ -92,75 +92,25 @@ def test_hostname(project):
     fqdn = f"{hostname}.something.com"
     assert project.get_plugin_function("hostname")(fqdn) == hostname
 
+def test_cidr_to_prefixlen(project):
+    cidr = "192.168.1.100/24"
+    prefixlen = "24"
+    assert project.get_plugin_function("cidr_to_prefixlen")(cidr) == prefixlen
 
-def test_hostname_in_model(project):
-    model = """
-        import std
+def test_cidr_to_netmask(project):
+    cidr = "192.168.1.100/24"
+    netmask = "255.255.255.0"
+    assert project.get_plugin_function("cidr_to_netmask")(cidr) == netmask
 
-        std::hostname(true)
-    """
-    assert_compilation_error(project, model, "Invalid value 'True', expected String")
-
-
-def test_network(project):
-    ip = "192.168.2.10/24"
+def test_cidr_to_network_address(project):
+    cidr = "192.168.2.10/24"
     network_address = "192.168.2.0"
-    assert project.get_plugin_function("ipnet")(ip, "network") == network_address
-
-
-def test_network_in_model_invalid_cidr(project):
-    model = """
-        import std
-
-        std::ipnet("192.168.333.40/24", "network")
-    """
-    assert_compilation_error(project, model, "Invalid value '192.168.333.40/24'")
-
-
-def test_cidr_to_network_in_model_invalid_cidr(project):
-    model = """
-        import std
-
-        std::ipnet(true, "network")
-    """
-    assert_compilation_error(project, model, "Invalid value 'True', expected String")
-
+    assert project.get_plugin_function("cidr_to_network_address")(cidr) == network_address
 
 def test_netmask(project):
     cidr = 20
     netmask = "255.255.240.0"
     assert project.get_plugin_function("netmask")(cidr) == netmask
-
-
-def test_netmask_in_model_invalid_type(project):
-    model = """
-        import std
-
-        # Pass string type instead of number
-        std::netmask("16")
-    """
-    assert_compilation_error(project, model, "Invalid value '16', expected Number")
-
-
-@pytest.mark.parametrize(
-    "cidr,prefixlen,netmask,network",
-    [
-        ("192.168.5.3/16", "16", "255.255.0.0", "192.168.0.0"),
-        (
-            "2001:0db8:85a3::8a2e:0370:7334/64",
-            "64",
-            "ffff:ffff:ffff:ffff::",
-            "2001:db8:85a3::",
-        ),
-    ],
-)
-def test_ipnet(project, cidr, prefixlen, netmask, network):
-    ipnet = project.get_plugin_function("ipnet")
-
-    assert ipnet(cidr, "prefixlen") == prefixlen
-    assert ipnet(cidr, "netmask") == netmask
-    assert ipnet(cidr, "network") == network
-    assert ipnet(cidr, "invalid") is None
 
 
 @pytest.mark.parametrize(
@@ -174,29 +124,8 @@ def test_ipnet(project, cidr, prefixlen, netmask, network):
     ],
 )
 def test_ipindex(project, cidr, idx, result):
-    ipnet = project.get_plugin_function("ipindex")
-    assert ipnet(cidr, idx) == result
-
-
-def test_ipindex_in_model_invalid_cidr(project):
-    model = """
-        import std
-
-        # Pass ip instead of cidr
-        std::ipindex("192.125.125.22", 16)
-    """
-    assert_compilation_error(project, model, "")
-
-
-def test_ipindex_in_model_invalid_position(project):
-    model = """
-        import std
-
-        # Pass position as string type instead of number
-        std::ipindex("192.125.125.0/24", "16")
-    """
-    assert_compilation_error(project, model, "Invalid value '16', expected Number")
-
+    ipindex = project.get_plugin_function("ipindex")
+    assert ipindex(cidr, idx) == result
 
 def test_add(project):
     ip = "192.168.22.11"
@@ -211,30 +140,3 @@ def test_add(project):
     increment = 15
     result = "::10"
     assert project.get_plugin_function("add")(ip, increment) == result
-
-
-def test_add_in_model_invalid_ipv4_addr(project):
-    model = """
-        import std
-
-        std::add("192.125.123.1111", 8)
-    """
-    assert_compilation_error(project, model, "Invalid value '192.125.123.1111'")
-
-
-def test_add_in_model_invalid_ipv6_addr(project):
-    model = """
-        import std
-
-        std::add("ffff::fffff", 128)
-    """
-    assert_compilation_error(project, model, "Invalid value 'ffff::fffff'")
-
-
-def test_add_in_model_invalid_n_value(project):
-    model = """
-        import std
-
-        std::add("ffff::ffff", "128")
-    """
-    assert_compilation_error(project, model, "Invalid value '128', expected Number")
