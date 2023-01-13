@@ -490,6 +490,22 @@ def capitalize(string: "string") -> "string":
 
 
 @plugin
+def upper(string: "string") -> "string":
+    """
+    Return a copy of the string with all the cased characters converted to uppercase.
+    """
+    return string.upper()
+
+
+@plugin
+def lower(string: "string") -> "string":
+    """
+    Return a copy of the string with all the cased characters converted to lowercase.
+    """
+    return string.lower()
+
+
+@plugin
 def type(obj: "any") -> "any":
     value = obj.value
     return value.type().__definition__
