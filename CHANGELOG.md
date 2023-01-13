@@ -43,7 +43,7 @@
 - Select the correct docker container for test runs with INMANTA\_TEST\_INFRA\_SETUP=true based on the version of the venv running the tests.
 
 ## v3.0.7
-- Added support to run the tests against the ## v2 version of this module.
+- Added support to run the tests against the V2 version of this module.
 
 ## v3.0.6
 - replace centos8 by rocky8 in dockerfiles and tests
