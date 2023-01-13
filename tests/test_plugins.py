@@ -49,3 +49,18 @@ def test_select_attr(project):
     )
 
     assert sorted(project.get_instances("__config__::Out")[0].fields) == ["A", "B", "C"]
+
+
+def test_string_plugins(project):
+    project.compile(
+        """
+        l = std::lower("aAbB")
+        l = "aabb"
+
+        u = std::upper("aAbB")
+        u = "AABB"
+
+        c = std::capitalize("aAbB c")
+        c = "Aabb c"
+        """
+    )

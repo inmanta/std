@@ -119,13 +119,13 @@ def _get_dockerfiles_for_test() -> List[str]:
         return [os.path.join(dockerfiles_dir, "rocky8.Dockerfile")]
     else:
         raise Exception(
-            "Running the tests with INMANTA_TEST_INFRA_SETUP=true is only support using a python3.6 or python3.9 venv"
+            "Running the tests with INMANTA_TEST_INFRA_SETUP=true is only supported using a python3.6 or python3.9 venv"
         )
 
 
-@pytest.fixture(scope="function", params=_get_dockerfiles_for_test())
+@pytest.fixture(scope="function")
 def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None, None]:
-    docker_file = request.param
+    docker_file = _get_dockerfiles_for_test()
     docker_file_name = os.path.basename(docker_file).split(".")[0]
     image_name = f"test-module-std-{docker_file_name}"
 
