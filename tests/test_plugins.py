@@ -88,35 +88,33 @@ Holder(value="{value}")
 
 
 def test_hostname(project):
-    hostname = "test"
-    fqdn = f"{hostname}.something.com"
-    assert project.get_plugin_function("hostname")(fqdn) == hostname
+    assert project.get_plugin_function("hostname")("test.something.com") == "test"
 
 
 def test_cidr_to_prefixlen(project):
-    cidr = "192.168.1.100/24"
-    prefixlen = "24"
-    assert project.get_plugin_function("cidr_to_prefixlen")(cidr) == prefixlen
+    assert project.get_plugin_function("cidr_to_prefixlen")("192.168.1.100/24") == "24"
+
+
+def test_network_to_prefixlen(project):
+    assert project.get_plugin_function("cidr_to_prefixlen")("192.168.1.0/24") == "24"
 
 
 def test_cidr_to_netmask(project):
-    cidr = "192.168.1.100/24"
-    netmask = "255.255.255.0"
-    assert project.get_plugin_function("cidr_to_netmask")(cidr) == netmask
+    assert (
+        project.get_plugin_function("cidr_to_netmask")("192.168.1.100/24")
+        == "255.255.255.0"
+    )
 
 
 def test_cidr_to_network_address(project):
-    cidr = "192.168.2.10/24"
-    network_address = "192.168.2.0"
     assert (
-        project.get_plugin_function("cidr_to_network_address")(cidr) == network_address
+        project.get_plugin_function("cidr_to_network_address")("192.168.2.10/24")
+        == "192.168.2.0"
     )
 
 
 def test_netmask(project):
-    cidr = 20
-    netmask = "255.255.240.0"
-    assert project.get_plugin_function("netmask")(cidr) == netmask
+    assert project.get_plugin_function("netmask")(20) == "255.255.240.0"
 
 
 @pytest.mark.parametrize(
@@ -130,20 +128,10 @@ def test_netmask(project):
     ],
 )
 def test_ipindex(project, cidr, idx, result):
-    ipindex = project.get_plugin_function("ipindex")
-    assert ipindex(cidr, idx) == result
+    assert project.get_plugin_function("ipindex")(cidr, idx) == result
 
 
 def test_add(project):
-    ip = "192.168.22.11"
-    increment = 22
-    result = "192.168.22.33"
-    assert project.get_plugin_function("add")(ip, increment) == result
-    ip = "192.168.22.250"
-    increment = 22
-    result = "192.168.23.16"
-    assert project.get_plugin_function("add")(ip, increment) == result
-    ip = "::1"
-    increment = 15
-    result = "::10"
-    assert project.get_plugin_function("add")(ip, increment) == result
+    assert project.get_plugin_function("add")("192.168.22.11", 22) == "192.168.22.33"
+    assert project.get_plugin_function("add")("192.168.22.250", 22) == "192.168.23.16"
+    assert project.get_plugin_function("add")("::1", 15) == "::10"
