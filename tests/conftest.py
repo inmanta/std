@@ -107,16 +107,16 @@ def pip_lock_file() -> None:
     yield
 
 
-def _get_dockerfiles_for_test() -> List[str]:
+def _get_dockerfiles_for_test() -> str:
     """
     Return the list of docker files that should be used to run the tests against.
     """
     project_root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     dockerfiles_dir = os.path.join(project_root_dir, "dockerfiles")
     if sys.version_info[0:2] == (3, 6):
-        return [os.path.join(dockerfiles_dir, "centos7.Dockerfile")]
+        return os.path.join(dockerfiles_dir, "centos7.Dockerfile")
     elif sys.version_info[0:2] == (3, 9):
-        return [os.path.join(dockerfiles_dir, "rocky8.Dockerfile")]
+        return os.path.join(dockerfiles_dir, "rocky8.Dockerfile")
     else:
         raise Exception(
             "Running the tests with INMANTA_TEST_INFRA_SETUP=true is only supported using a python3.6 or python3.9 venv"
