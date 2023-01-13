@@ -19,7 +19,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Generator, List
+from typing import Generator
 from xml.etree import ElementTree
 
 import pytest
