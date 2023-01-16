@@ -53,55 +53,93 @@ def test_select_attr(project):
 
 
 def test_hostname(project):
-    assert project.get_plugin_function("hostname")("test.something.com") == "test"
+    project.compile(
+        """
+        r = std::hostname("test.something.com")
+        r = "test"
+        """
+    )
 
 
 def test_prefixlen(project):
-    assert project.get_plugin_function("prefixlen")("192.168.1.100/24") == "24"
+    project.compile(
+        """
+        r = std::prefixlen("192.168.1.100/24")
+        r = 24
+        """
+    )
 
 
 def test_network_to_prefixlen(project):
-    assert project.get_plugin_function("prefixlen")("192.168.1.0/24") == "24"
+    project.compile(
+        """
+        r = std::prefixlen("192.168.1.0/24")
+        r = 24
+        """
+    )
 
 
 def test_netmask(project):
-    assert project.get_plugin_function("netmask")("192.168.1.100/24") == "255.255.255.0"
+    project.compile(
+        """
+        r = std::netmask("192.168.1.100/24")
+        r = "255.255.255.0"
+        """
+    )
 
 
 def test_network_address(project):
-    assert (
-        project.get_plugin_function("network_address")("192.168.2.10/24")
-        == "192.168.2.0"
+    project.compile(
+        """
+        r = std::network_address("192.168.2.10/24")
+        r = "192.168.2.0"
+        """
     )
 
 
 def test_prefixlength_to_netmask(project):
-    assert project.get_plugin_function("prefixlength_to_netmask")(20) == "255.255.240.0"
+    project.compile(
+        """
+        r = std::prefixlength_to_netmask(20)
+        r = "255.255.240.0"
+        """
+    )
 
 
 @pytest.mark.parametrize(
     "cidr, idx, result",
     [
-        ("192.168.5.3/16", 1, "192.168.0.1"),
-        ("192.168.5.3/16", 256, "192.168.1.0"),
-        ("2001:0db8:85a3::8a2e:0370:7334/64", 1, "2001:db8:85a3::1"),
-        ("2001:0db8:85a3::8a2e:0370:7334/64", 10000, "2001:db8:85a3::2710"),
-        ("2001:0db8:85a3::8a2e:0370:7334/64", 100000, "2001:db8:85a3::1:86a0"),
+        ("192.168.0.0/16", 1, "192.168.0.1"),
+        ("192.168.0.0/16", 256, "192.168.1.0"),
+        ("2001:0db8:85a3::0/64", 1, "2001:db8:85a3::1"),
+        ("2001:0db8:85a3::0/64", 10000, "2001:db8:85a3::2710"),
+        ("2001:0db8:85a3::0/64", 100000, "2001:db8:85a3::1:86a0"),
     ],
 )
 def test_ipindex(project, cidr, idx, result):
-    assert project.get_plugin_function("ipindex")(cidr, idx) == result
+    project.compile(
+        f"""
+        r = std::ipindex("{cidr}", {idx})
+        r = "{result}"
+        """
+    )
 
 
-def test_add_to_ip(project):
-    assert (
-        project.get_plugin_function("add_to_ip")("192.168.22.11", 22) == "192.168.22.33"
+@pytest.mark.parametrize(
+    "cidr, idx, result",
+    [
+        ("192.168.22.11", 22, "192.168.22.33"),
+        ("192.168.22.250", 22, "192.168.23.16"),
+        ("::1", 15, "::10"),
+    ],
+)
+def test_add_to_ip(project, cidr, idx, result):
+    project.compile(
+        f"""
+        r = std::add_to_ip("{cidr}", {idx})
+        r = "{result}"
+        """
     )
-    assert (
-        project.get_plugin_function("add_to_ip")("192.168.22.250", 22)
-        == "192.168.23.16"
-    )
-    assert project.get_plugin_function("add_to_ip")("::1", 15) == "::10"
 
 
 def test_string_plugins(project):

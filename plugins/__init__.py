@@ -1135,11 +1135,11 @@ def prefixlen(addr: "std::ipv_any_interface") -> "int":
     Return the prefixlen of the CIDR
 
     For instance:
-        | std::print(prefixlen("192.168.1.100/24"))  -->  "24"
+        | std::print(prefixlen("192.168.1.100/24"))  -->  24
     """
     interface = ipaddress.ip_interface(addr)
 
-    return str(interface.network.prefixlen)
+    return interface.network.prefixlen
 
 
 @plugin
