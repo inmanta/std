@@ -1173,7 +1173,7 @@ def ipindex(addr: "std::ipv_any_network", position: "number") -> "string":
     """
     Return the address at position in the network.
     """
-    net = ipaddress.ip_network(addr, False)
+    net = ipaddress.ip_network(addr)
     return str(net[position])
 
 
