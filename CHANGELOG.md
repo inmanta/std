@@ -2,6 +2,7 @@
 
 ## v4.1.1 - ?
 - Ported ip plugin to std
+- Improve error logging in std::Package
 
 ## v4.1.0 - 2023-01-13
 - Add upper and lower string functions

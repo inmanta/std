@@ -503,3 +503,22 @@ svc = std::Package(host=host, name="wget", state="removed")
     assert ctx.change == inmanta.const.Change.purged
 
     assert not yum.is_installed()
+
+    # Check if there is sufficient logging if an error occurs on install
+    project.compile(
+        """
+import unittest
+
+host = std::Host(name="server", os=std::linux)
+svc = std::Package(host=host, name="asdasdasd", state="installed")
+"""
+    )
+
+    svc = project.get_resource("std::Package", name="asdasdasd")
+    ctx = project.deploy(svc, run_as_root=False)
+    assert ctx.status == inmanta.const.ResourceState.failed
+    assert ctx.change == inmanta.const.Change.nochange
+    assert (
+        "Yum failed: stdout: errout: Error: Unable to find a match: asdasdasd"
+        in ctx.logs[0].msg
+    )

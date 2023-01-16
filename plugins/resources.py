@@ -460,9 +460,9 @@ class YumPackage(ResourceHandler):
     def _run_yum(self, args):
         # todo: cache value
         if self._io.file_exists("/usr/bin/dnf"):
-            return self._io.run("/usr/bin/dnf", ["-d", "0", "-e", "0", "-y"] + args)
+            return self._io.run("/usr/bin/dnf", ["-d", "0", "-e", "1", "-y"] + args)
         else:
-            return self._io.run("/usr/bin/yum", ["-d", "0", "-e", "0", "-y"] + args)
+            return self._io.run("/usr/bin/yum", ["-d", "0", "-e", "1", "-y"] + args)
 
     def check_resource(self, ctx, resource):
         yum_output = self._run_yum(["info", resource.name])
