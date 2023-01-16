@@ -1,7 +1,7 @@
 # Changelog
 
 ## v4.1.1 - ?
-
+- Improve error logging in std::Package
 
 ## v4.1.0 - 2023-01-13
 - Add upper and lower string functions
