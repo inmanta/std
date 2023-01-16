@@ -75,7 +75,7 @@ def test_network_address(project):
     )
 
 
-def test_netmask(project):
+def test_prefixlength_to_netmask(project):
     assert project.get_plugin_function("prefixlength_to_netmask")(20) == "255.255.240.0"
 
 
