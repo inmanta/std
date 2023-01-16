@@ -1121,21 +1121,21 @@ def hostname(fqdn: "string") -> "string":
 
 
 @plugin
-def netmask(prefixlen: "int") -> "std::ipv4_address":
+def prefixlength_to_netmask(prefixlen: "int") -> "std::ipv4_address":
     """
-    Given the cidr, return the netmask
+    Given the prefixlength, return the netmask
     """
     interface = ipaddress.ip_interface(f"255.255.255.255/{prefixlen}")
     return str(interface.netmask)
 
 
 @plugin
-def cidr_to_prefixlen(addr: "std::ipv_any_interface") -> "int":
+def prefixlen(addr: "std::ipv_any_interface") -> "int":
     """
     Return the prefixlen of the CIDR
 
     For instance:
-        | std::print(cidr_to_prefixlen("192.168.1.100/24"))  -->  "24"
+        | std::print(prefixlen("192.168.1.100/24"))  -->  "24"
     """
     interface = ipaddress.ip_interface(addr)
 
@@ -1143,12 +1143,12 @@ def cidr_to_prefixlen(addr: "std::ipv_any_interface") -> "int":
 
 
 @plugin
-def cidr_to_network_address(addr: "std::ipv_any_interface") -> "std::ipv_any_address":
+def network_address(addr: "std::ipv_any_interface") -> "std::ipv_any_address":
     """
     Return the network address of the CIDR
 
     For instance:
-        | std::print(cidr_to_network_address("192.168.1.100/24"))  -->  192.168.1.0
+        | std::print(network_address("192.168.1.100/24"))  -->  192.168.1.0
     """
     interface = ipaddress.ip_interface(addr)
 
@@ -1156,12 +1156,12 @@ def cidr_to_network_address(addr: "std::ipv_any_interface") -> "std::ipv_any_add
 
 
 @plugin
-def cidr_to_netmask(addr: "std::ipv_any_interface") -> "std::ipv_any_address":
+def netmask(addr: "std::ipv_any_interface") -> "std::ipv_any_address":
     """
     Return the netmask of the CIDR
 
     For instance:
-        | std::print(cidr_to_netmask("192.168.1.100/24"))    -->  255.255.255.0
+        | std::print(netmask("192.168.1.100/24"))    -->  255.255.255.0
     """
     interface = ipaddress.ip_interface(addr)
 
@@ -1178,7 +1178,7 @@ def ipindex(addr: "std::ipv_any_network", position: "number") -> "string":
 
 
 @plugin
-def add(addr: "std::ipv_any_address", n: "number") -> "std::ipv_any_address":
+def add_to_ip(addr: "std::ipv_any_address", n: "number") -> "std::ipv_any_address":
     """
     Add a number to the given ip.
     """

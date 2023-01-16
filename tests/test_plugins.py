@@ -17,20 +17,6 @@
 """
 import pytest
 
-from inmanta.ast import RuntimeException
-
-
-def assert_compilation_error(project, model, error_message):
-    exception_occured = False
-
-    try:
-        project.compile(model)
-    except RuntimeException as e:
-        exception_occured = True
-        print(e.msg)
-        assert error_message in e.msg
-    assert exception_occured
-
 
 def test_select_attr(project):
     project.compile(
@@ -65,54 +51,32 @@ def test_select_attr(project):
 
     assert sorted(project.get_instances("__config__::Out")[0].fields) == ["A", "B", "C"]
 
-def run_test(project, thetype, value, is_ok):
-    def make():
-        project.compile(
-            f"""
-import std
-entity Holder:
-    {thetype} value
-end
-implement Holder using std::none
-
-Holder(value="{value}")
-"""
-        )
-
-    if not is_ok:
-        with pytest.raises(RuntimeException):
-            make()
-    else:
-        make()
 
 def test_hostname(project):
     assert project.get_plugin_function("hostname")("test.something.com") == "test"
 
 
-def test_cidr_to_prefixlen(project):
-    assert project.get_plugin_function("cidr_to_prefixlen")("192.168.1.100/24") == "24"
+def test_prefixlen(project):
+    assert project.get_plugin_function("prefixlen")("192.168.1.100/24") == "24"
 
 
 def test_network_to_prefixlen(project):
-    assert project.get_plugin_function("cidr_to_prefixlen")("192.168.1.0/24") == "24"
+    assert project.get_plugin_function("prefixlen")("192.168.1.0/24") == "24"
 
 
-def test_cidr_to_netmask(project):
+def test_netmask(project):
+    assert project.get_plugin_function("netmask")("192.168.1.100/24") == "255.255.255.0"
+
+
+def test_network_address(project):
     assert (
-        project.get_plugin_function("cidr_to_netmask")("192.168.1.100/24")
-        == "255.255.255.0"
-    )
-
-
-def test_cidr_to_network_address(project):
-    assert (
-        project.get_plugin_function("cidr_to_network_address")("192.168.2.10/24")
+        project.get_plugin_function("network_address")("192.168.2.10/24")
         == "192.168.2.0"
     )
 
 
 def test_netmask(project):
-    assert project.get_plugin_function("netmask")(20) == "255.255.240.0"
+    assert project.get_plugin_function("prefixlength_to_netmask")(20) == "255.255.240.0"
 
 
 @pytest.mark.parametrize(
@@ -129,10 +93,16 @@ def test_ipindex(project, cidr, idx, result):
     assert project.get_plugin_function("ipindex")(cidr, idx) == result
 
 
-def test_add(project):
-    assert project.get_plugin_function("add")("192.168.22.11", 22) == "192.168.22.33"
-    assert project.get_plugin_function("add")("192.168.22.250", 22) == "192.168.23.16"
-    assert project.get_plugin_function("add")("::1", 15) == "::10"
+def test_add_to_ip(project):
+    assert (
+        project.get_plugin_function("add_to_ip")("192.168.22.11", 22) == "192.168.22.33"
+    )
+    assert (
+        project.get_plugin_function("add_to_ip")("192.168.22.250", 22)
+        == "192.168.23.16"
+    )
+    assert project.get_plugin_function("add_to_ip")("::1", 15) == "::10"
+
 
 def test_string_plugins(project):
     project.compile(
@@ -147,4 +117,3 @@ def test_string_plugins(project):
         c = "Aabb c"
         """
     )
-
