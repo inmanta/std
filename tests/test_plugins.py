@@ -65,7 +65,6 @@ def test_select_attr(project):
 
     assert sorted(project.get_instances("__config__::Out")[0].fields) == ["A", "B", "C"]
 
-
 def run_test(project, thetype, value, is_ok):
     def make():
         project.compile(
@@ -85,7 +84,6 @@ Holder(value="{value}")
             make()
     else:
         make()
-
 
 def test_hostname(project):
     assert project.get_plugin_function("hostname")("test.something.com") == "test"
@@ -135,3 +133,18 @@ def test_add(project):
     assert project.get_plugin_function("add")("192.168.22.11", 22) == "192.168.22.33"
     assert project.get_plugin_function("add")("192.168.22.250", 22) == "192.168.23.16"
     assert project.get_plugin_function("add")("::1", 15) == "::10"
+
+def test_string_plugins(project):
+    project.compile(
+        """
+        l = std::lower("aAbB")
+        l = "aabb"
+
+        u = std::upper("aAbB")
+        u = "AABB"
+
+        c = std::capitalize("aAbB c")
+        c = "Aabb c"
+        """
+    )
+
