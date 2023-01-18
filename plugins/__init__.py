@@ -19,6 +19,7 @@
 import base64
 import hashlib
 import importlib
+import ipaddress
 import logging
 import os
 import random
@@ -1109,3 +1110,76 @@ def is_base64_encoded(s: "string") -> "bool":
     except Exception:
         return False
     return True
+
+
+@plugin
+def hostname(fqdn: "string") -> "string":
+    """
+    Return the hostname part of the fqdn
+    """
+    return fqdn.split(".")[0]
+
+
+@plugin
+def prefixlength_to_netmask(prefixlen: "int") -> "std::ipv4_address":
+    """
+    Given the prefixlength, return the netmask
+    """
+    interface = ipaddress.ip_interface(f"255.255.255.255/{prefixlen}")
+    return str(interface.netmask)
+
+
+@plugin
+def prefixlen(addr: "std::ipv_any_interface") -> "int":
+    """
+    Return the prefixlen of the CIDR
+
+    For instance:
+        | std::print(prefixlen("192.168.1.100/24"))  -->  24
+    """
+    interface = ipaddress.ip_interface(addr)
+
+    return interface.network.prefixlen
+
+
+@plugin
+def network_address(addr: "std::ipv_any_interface") -> "std::ipv_any_address":
+    """
+    Return the network address of the CIDR
+
+    For instance:
+        | std::print(network_address("192.168.1.100/24"))  -->  192.168.1.0
+    """
+    interface = ipaddress.ip_interface(addr)
+
+    return str(interface.network.network_address)
+
+
+@plugin
+def netmask(addr: "std::ipv_any_interface") -> "std::ipv_any_address":
+    """
+    Return the netmask of the CIDR
+
+    For instance:
+        | std::print(netmask("192.168.1.100/24"))    -->  255.255.255.0
+    """
+    interface = ipaddress.ip_interface(addr)
+
+    return str(interface.network.netmask)
+
+
+@plugin
+def ipindex(addr: "std::ipv_any_network", position: "number") -> "string":
+    """
+    Return the address at position in the network.
+    """
+    net = ipaddress.ip_network(addr)
+    return str(net[position])
+
+
+@plugin
+def add_to_ip(addr: "std::ipv_any_address", n: "number") -> "std::ipv_any_address":
+    """
+    Add a number to the given ip.
+    """
+    return str(ipaddress.ip_address(addr) + n)
