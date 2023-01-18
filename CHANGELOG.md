@@ -1,6 +1,6 @@
 # Changelog
 
-## v4.1.1 - ?
+## v4.1.1 - 2023-01-18
 - Ported ip plugin to std
 - Improve error logging in std::Package
 
