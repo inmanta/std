@@ -329,7 +329,6 @@ def get_passwords(pw_file):
     records = {}
     if os.path.exists(pw_file):
         with open(pw_file, "r") as fd:
-
             for line in fd.readlines():
                 line = line.strip()
                 if len(line) > 2:
