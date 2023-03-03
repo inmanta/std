@@ -139,7 +139,6 @@ class Symlink(PurgeableResource):
 
 @resource("std::testing::NullResource", agent="agentname", id_attribute="name")
 class Null(ManagedResource, PurgeableResource):
-
     fields = ("name", "agentname")
 
 
