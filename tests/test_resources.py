@@ -522,3 +522,17 @@ svc = std::Package(host=host, name="asdasdasd", state="installed")
         "Yum failed: stdout: errout: Error: Unable to find a match: asdasdasd"
         in ctx.logs[0].msg
     )
+
+
+def test_null_resource(project):
+    project.compile(
+        """
+            import std::testing
+
+            std::testing::NullResource()
+
+            std::testing::NullResource(agentname="testx", name="aaa")
+        """
+    )
+    project.deploy_resource("std::testing::NullResource", name="null")
+    project.deploy_resource("std::testing::NullResource", name="aaa")
