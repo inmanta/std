@@ -21,6 +21,7 @@ import os
 import pytest
 
 import inmanta
+import inmanta.const
 from inmanta.agent.handler import HandlerContext
 
 
@@ -532,7 +533,14 @@ def test_null_resource(project):
             std::testing::NullResource()
 
             std::testing::NullResource(agentname="testx", name="aaa")
+
+            std::testing::NullResource(agentname="testx", name="bbb", fail=true)
         """
     )
     project.deploy_resource("std::testing::NullResource", name="null")
     project.deploy_resource("std::testing::NullResource", name="aaa")
+    project.deploy_resource(
+        "std::testing::NullResource",
+        name="bbb",
+        status=inmanta.const.ResourceState.failed,
+    )

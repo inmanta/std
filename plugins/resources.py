@@ -139,7 +139,7 @@ class Symlink(PurgeableResource):
 
 @resource("std::testing::NullResource", agent="agentname", id_attribute="name")
 class Null(ManagedResource, PurgeableResource):
-    fields = ("name", "agentname")
+    fields = ("name", "agentname", "fail")
 
 
 @resource("std::AgentConfig", agent="agent", id_attribute="agentname")
@@ -166,6 +166,8 @@ class NullProvider(CRUDHandler):
     """Does nothing at all"""
 
     def read_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
+        if resource.fail:
+            raise Exception("This resource is set to fail")
         return
 
     def create_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:

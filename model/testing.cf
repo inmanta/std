@@ -22,10 +22,12 @@ entity NullResource extends ManagedResource, PurgeableResource:
 
         :attr name: the name of this resource
         :attr agentname: the name of the agent to deploy this resource on
+        :attr fail: when true, this resource will always fail on both dryrun and deploy
     """
     string name = "null"
     string agentname = "internal"
     bool send_event = true
+    bool fail = false
 end
 
 index NullResource(agentname, name)
