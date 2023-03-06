@@ -21,6 +21,7 @@ inmanta module release
 git push
 git push {tag} # push the tag as well
 ```
+3. Remove the branch
 
 # Self Check:
 
