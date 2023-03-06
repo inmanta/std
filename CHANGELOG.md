@@ -1,7 +1,7 @@
 # Changelog
 
 ## v4.1.4 - ?
-
+- Add std::testing::NullResource, the resource that does nothing
 
 ## v4.1.3 - 2023-02-02
 

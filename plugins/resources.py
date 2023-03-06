@@ -31,6 +31,7 @@ from inmanta.agent.handler import (
 from inmanta.execute.util import Unknown
 from inmanta.resources import (
     IgnoreResourceException,
+    ManagedResource,
     PurgeableResource,
     Resource,
     ResourceNotFoundExcpetion,
@@ -136,6 +137,11 @@ class Symlink(PurgeableResource):
     fields = ("source", "target", "reload")
 
 
+@resource("std::testing::NullResource", agent="agentname", id_attribute="name")
+class Null(ManagedResource, PurgeableResource):
+    fields = ("name", "agentname", "fail")
+
+
 @resource("std::AgentConfig", agent="agent", id_attribute="agentname")
 class AgentConfig(PurgeableResource):
     """
@@ -153,6 +159,27 @@ class AgentConfig(PurgeableResource):
             # When this attribute is not set, also ignore it
             raise IgnoreResourceException()
         return obj.autostart
+
+
+@provider("std::testing::NullResource", name="null")
+class NullProvider(CRUDHandler):
+    """Does nothing at all"""
+
+    def read_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
+        if resource.fail:
+            raise Exception("This resource is set to fail")
+        return
+
+    def create_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
+        ctx.set_created()
+
+    def delete_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
+        ctx.set_deleted()
+
+    def update_resource(
+        self, ctx: HandlerContext, changes: dict, resource: PurgeableResource
+    ) -> None:
+        ctx.set_updated()
 
 
 @provider("std::File", name="posix_file")

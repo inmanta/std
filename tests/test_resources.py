@@ -21,6 +21,7 @@ import os
 import pytest
 
 import inmanta
+import inmanta.const
 from inmanta.agent.handler import HandlerContext
 
 
@@ -521,4 +522,25 @@ svc = std::Package(host=host, name="asdasdasd", state="installed")
     assert (
         "Yum failed: stdout: errout: Error: Unable to find a match: asdasdasd"
         in ctx.logs[0].msg
+    )
+
+
+def test_null_resource(project):
+    project.compile(
+        """
+            import std::testing
+
+            std::testing::NullResource()
+
+            std::testing::NullResource(agentname="testx", name="aaa")
+
+            std::testing::NullResource(agentname="testx", name="bbb", fail=true)
+        """
+    )
+    project.deploy_resource("std::testing::NullResource", name="null")
+    project.deploy_resource("std::testing::NullResource", name="aaa")
+    project.deploy_resource(
+        "std::testing::NullResource",
+        name="bbb",
+        status=inmanta.const.ResourceState.failed,
     )
