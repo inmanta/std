@@ -1,7 +1,7 @@
 # Changelog
 
 ## v4.1.5 - ?
-
+- Fixed bug in delete operation of std::testing::NullResource
 
 ## v4.1.4 - 2023-03-06
 - Add std::testing::NullResource, the resource that does nothing
