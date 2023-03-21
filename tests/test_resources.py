@@ -535,6 +535,9 @@ def test_null_resource(project):
             std::testing::NullResource(agentname="testx", name="aaa")
 
             std::testing::NullResource(agentname="testx", name="bbb", fail=true)
+
+
+            std::testing::NullResource(agentname="p", name="p", purged=true)
         """
     )
     project.deploy_resource("std::testing::NullResource", name="null")
@@ -544,3 +547,4 @@ def test_null_resource(project):
         name="bbb",
         status=inmanta.const.ResourceState.failed,
     )
+    project.deploy_resource("std::testing::NullResource", name="p")
