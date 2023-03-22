@@ -174,7 +174,7 @@ class NullProvider(CRUDHandler):
         ctx.set_created()
 
     def delete_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
-        ctx.set_deleted()
+        ctx.set_purged()
 
     def update_resource(
         self, ctx: HandlerContext, changes: dict, resource: PurgeableResource
