@@ -2,6 +2,7 @@
 
 ## v2.1.15 - ?
 
+- Adjust the .ci configuration file to run the tests using python3.6
 - Convert to new development flow
 
 
