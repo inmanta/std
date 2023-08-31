@@ -116,12 +116,10 @@ def _get_dockerfiles_for_test() -> str:
 
     if sys.version_info.major <= 2:
         raise Exception(
-            "Running the tests with INMANTA_TEST_INFRA_SETUP=true is only supported for venvs with python > 3"
+            "Running the tests with INMANTA_TEST_INFRA_SETUP=true is only supported for venvs with python >= 3"
         )
-    if sys.version_info.major == 3:
-        if sys.version_info.minor <= 6:
-            return os.path.join(dockerfiles_dir, "centos7.Dockerfile")
-
+    if sys.version_info.major == 3 and sys.version_info.minor <= 6:
+        return os.path.join(dockerfiles_dir, "centos7.Dockerfile")
     return os.path.join(dockerfiles_dir, "rocky8.Dockerfile")
 
 
