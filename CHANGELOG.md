@@ -1,6 +1,6 @@
 # Changelog
 
-## v2.1.15 - ?
+## v2.1.15 - 2023-08-31
 
 - Adjust the .ci configuration file to run the tests using python3.6
 - Convert to new development flow
