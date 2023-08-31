@@ -2,6 +2,7 @@
 
 ## v4.1.8 - ?
 
+- Adjust the .ci configuration file to run the tests using python3.9
 
 ## v4.1.7 - 2023-04-18
 
