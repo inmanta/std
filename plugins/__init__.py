@@ -523,7 +523,9 @@ def sequence(i: "number", start: "number" = 0, offset: "number" = 0) -> "list":
     :return: A list containing the sequence of numbers.
     """
     if offset != 0:
-        logging.getLogger(__name__).warning("The 'offset' parameter in the 'sequence' plugin is deprecated and will be removed in a future version.")
+        logging.getLogger(__name__).warning(
+            "The 'offset' parameter in the 'sequence' plugin is deprecated and will be removed in a future version."
+        )
     return list(range(start, int(i) + start - offset))
 
 
