@@ -2,6 +2,7 @@
 
 ## v4.1.10 - ?
 
+- Deprecate offset parameter in sequence plugin
 
 ## v4.1.9 - 2023-08-31
 
