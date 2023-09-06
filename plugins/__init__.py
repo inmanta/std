@@ -515,7 +515,17 @@ def type(obj: "any") -> "any":
 def sequence(i: "number", start: "number" = 0, offset: "number" = 0) -> "list":
     """
     Return a sequence of i numbers, starting from zero or start if supplied.
+
+    :param i: The number of elements in the sequence.
+    :param start: The starting value for the sequence.
+    :param offset: [Deprecated] An offset value (this parameter will be removed in the future).
+
+    :return: A list containing the sequence of numbers.
     """
+    if offset != 0:
+        logging.getLogger(__name__).warning(
+            "The 'offset' parameter in the 'sequence' plugin is deprecated and will be removed in a future version."
+        )
     return list(range(start, int(i) + start - offset))
 
 
