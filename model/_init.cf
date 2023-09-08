@@ -180,7 +180,7 @@ end
 entity DiscoveryResource extends Resource:
     """
     A resource that scans the infrastructure for a certain type of deployment.
-    This resource can be used to facilitate the onboarding of resource that are not yet managed
+    This resource can be used to facilitate the onboarding of resources that are not yet managed
     by the orchestrator.
     """
 end
