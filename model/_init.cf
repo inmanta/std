@@ -157,7 +157,7 @@ entity Resource:
         that are common for most handlers.
         It is not required to inherit from this entity at the moment but highly recommended for documentation purposes.
 
-        :attr send_event: This controls wether a resource should send its deploy state to the resources in its provides.
+        :attr send_event: This controls whether a resource should send its deploy state to the resources in its provides.
     """
     bool send_event=false
 end
@@ -175,6 +175,14 @@ entity PurgeableResource extends Resource:
     """
     bool purged=false
     bool purge_on_delete=false
+end
+
+entity DiscoveryResource extends Resource:
+    """
+    A resource that scans the infrastructure for a certain type of deployment.
+    This resource can be used to facilitate the onboarding of resources that are not yet managed
+    by the orchestrator.
+    """
 end
 
 entity ManagedResource extends Resource:
@@ -468,7 +476,7 @@ entity AgentConfig extends PurgeableResource:
                    * local: Manage resource locally
                    * ssh://[user@]hostname[:port] Login using ssh. When user is left out, root is assumed. For port, the system
                      default is used.
-                   * host The actual hostname or ip to use. Altough this is not a valid host in uri form it is supported.
+                   * host The actual hostname or ip to use. Although this is not a valid host in uri form it is supported.
                    * A query string can be used to set the properties:
                         * python: The python interpreter to use. The default value is python
                         * retries: The number of retries before giving up. The default number of retries 10
@@ -489,7 +497,7 @@ index AgentConfig(agentname)
 entity MutableString:
     """
 Wrapper for string values. It can be used to pass a string out of an if statement, or to
-use relations to create a mutuable set of strings.
+use relations to create a mutable set of strings.
 
 :Example:
 .. code-block:: inmanta

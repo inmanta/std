@@ -1,7 +1,8 @@
 # Changelog
 
-## v4.1.11 - ?
+## v4.2.0 - ?
 
+- Added the DiscoveryResource entity
 
 ## v4.1.10 - 2023-09-06
 
