@@ -18,7 +18,6 @@
 
 import base64
 import hashlib
-import importlib
 import ipaddress
 import logging
 import os
@@ -46,6 +45,7 @@ from inmanta.execute.util import NoneValue, Unknown
 from inmanta.export import dependency_manager, unknown_parameters
 from inmanta.module import Project
 from inmanta.plugins import Context, plugin
+import inmanta.validation_type
 
 
 @plugin
@@ -1082,29 +1082,10 @@ def validate_type(
 
 
     """
-    if not (
-        fq_type_name.startswith("pydantic.")
-        or fq_type_name.startswith("datetime.")
-        or fq_type_name.startswith("ipaddress.")
-        or fq_type_name.startswith("uuid.")
-    ):
-        return False
-    module_name, type_name = fq_type_name.split(".", 1)
-    module = importlib.import_module(module_name)
-    t = getattr(module, type_name)
-    # Construct pydantic model
-    if validation_parameters is not None:
-        model = pydantic.create_model(
-            fq_type_name, value=(t(**validation_parameters), ...)
-        )
-    else:
-        model = pydantic.create_model(fq_type_name, value=(t, ...))
-    # Do validation
     try:
-        model(value=value)
-    except pydantic.ValidationError:
+        inmanta.validation_type.validate_type(fq_type_name, value, validation_parameters)
+    except pydantic.ValidationError | ValueError:
         return False
-
     return True
 
 
