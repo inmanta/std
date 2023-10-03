@@ -1079,14 +1079,13 @@ def validate_type(
         * Define a vlan_id type which represent a valid vlan ID (0-4,095):
 
           typedef vlan_id as number matching std::validate_type("pydantic.conint", self, {"ge": 0, "le": 4095})
-
-
     """
+    unwrapped_value = DynamicProxy.unwrap(value)
     try:
         inmanta.validation_type.validate_type(
-            fq_type_name, value, validation_parameters
+            fq_type_name, unwrapped_value, validation_parameters
         )
-    except pydantic.ValidationError | ValueError:
+    except(pydantic.ValidationError, ValueError):
         return False
     return True
 
