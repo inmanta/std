@@ -38,6 +38,7 @@ from jinja2.runtime import Undefined, missing
 
 # don't bind to `resources` because this package has a submodule named resources that will bind to `resources` when imported
 import inmanta.resources
+import inmanta.validation_type
 from inmanta.ast import NotFoundException, OptionalValueException, RuntimeException
 from inmanta.config import Config
 from inmanta.execute.proxy import DynamicProxy, UnknownException
@@ -45,7 +46,6 @@ from inmanta.execute.util import NoneValue, Unknown
 from inmanta.export import dependency_manager, unknown_parameters
 from inmanta.module import Project
 from inmanta.plugins import Context, plugin
-import inmanta.validation_type
 
 
 @plugin
@@ -1083,7 +1083,9 @@ def validate_type(
 
     """
     try:
-        inmanta.validation_type.validate_type(fq_type_name, value, validation_parameters)
+        inmanta.validation_type.validate_type(
+            fq_type_name, value, validation_parameters
+        )
     except pydantic.ValidationError | ValueError:
         return False
     return True
