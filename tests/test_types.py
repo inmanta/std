@@ -152,6 +152,7 @@ def test_attribute_types(project, attr_type, value, is_valid):
         (
             "pydantic.constr",
             "string",
+            # Test for Unknown values
             "std::get_env(name='non-existing-env-var')",
             '{"regex": "^tst.*$"}',
             False,
