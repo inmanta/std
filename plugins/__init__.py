@@ -15,9 +15,9 @@
 
     Contact: code@inmanta.com
 """
-
 import base64
 import hashlib
+import importlib
 import ipaddress
 import logging
 import os
@@ -38,7 +38,6 @@ from jinja2.runtime import Undefined, missing
 
 # don't bind to `resources` because this package has a submodule named resources that will bind to `resources` when imported
 import inmanta.resources
-import inmanta.validation_type
 from inmanta.ast import NotFoundException, OptionalValueException, RuntimeException
 from inmanta.config import Config
 from inmanta.execute.proxy import DynamicProxy, UnknownException
@@ -1080,15 +1079,55 @@ def validate_type(
 
           typedef vlan_id as number matching std::validate_type("pydantic.conint", self, {"ge": 0, "le": 4095})
     """
-    unwrapped_value = DynamicProxy.unwrap(value)
-    if isinstance(unwrapped_value, NoneValue):
-        unwrapped_value = None
     try:
-        inmanta.validation_type.validate_type(
-            fq_type_name, unwrapped_value, validation_parameters
-        )
-    except (pydantic.ValidationError, ValueError):
+        import inmanta.validation_type
+    except ModuleNotFoundError:
+        # We are running against a version of inmanta-core that doesn't have the validation_type method yet.
+        # Fallback to the old implementation.
+        return _validate_type_legacy(fq_type_name, value, validation_parameters)
+    else:
+        # Use validate_type implementation from inmanta-core
+        unwrapped_value = DynamicProxy.unwrap(value)
+        if isinstance(unwrapped_value, NoneValue):
+            unwrapped_value = None
+        try:
+            inmanta.validation_type.validate_type(
+                fq_type_name, unwrapped_value, validation_parameters
+            )
+        except (pydantic.ValidationError, ValueError):
+            return False
+        return True
+
+
+def _validate_type_legacy(
+    fq_type_name: "string", value: "any", validation_parameters: "dict" = None
+) -> "bool":
+    """
+    This method contains the old implementation of the validate_type plugin for backwards compatibility reason.
+    """
+    if not (
+        fq_type_name.startswith("pydantic.")
+        or fq_type_name.startswith("datetime.")
+        or fq_type_name.startswith("ipaddress.")
+        or fq_type_name.startswith("uuid.")
+    ):
         return False
+    module_name, type_name = fq_type_name.split(".", 1)
+    module = importlib.import_module(module_name)
+    t = getattr(module, type_name)
+    # Construct pydantic model
+    if validation_parameters is not None:
+        model = pydantic.create_model(
+            fq_type_name, value=(t(**validation_parameters), ...)
+        )
+    else:
+        model = pydantic.create_model(fq_type_name, value=(t, ...))
+    # Do validation
+    try:
+        model(value=value)
+    except pydantic.ValidationError:
+        return False
+
     return True
 
 
