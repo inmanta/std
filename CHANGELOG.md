@@ -2,6 +2,7 @@
 
 ## v4.2.1 - ?
 
+- Port std module to validation_type method from inmanta-core
 
 ## v4.2.0 - 2023-09-08
 

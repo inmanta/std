@@ -16,6 +16,7 @@
     Contact: code@inmanta.com
 """
 import string
+from typing import Union
 
 import pytest
 
@@ -106,21 +107,36 @@ def test_attribute_types(project, attr_type, value, is_valid):
 
 
 @pytest.mark.parametrize(
-    "attr_type,base_type,value,validation_parameters,is_valid",
+    "attr_type,base_type,value,validation_parameters,is_optional,is_valid",
     [
-        ("pydantic.condecimal", "number", 8, '{"gt": 0, "lt": 10}', True),
-        ("pydantic.condecimal", "number", 8, '{"gt": 0, "lt": 5}', False),
-        ("pydantic.confloat", "number", 1.5, '{"multiple_of": 0.5}', True),
-        ("pydantic.confloat", "number", 1.5, '{"multiple_of": 0.2}', False),
-        ("pydantic.conint", "number", 4, '{"ge": 4}', True),
-        ("pydantic.conint", "number", 4, '{"ge": 5}', False),
-        ("pydantic.constr", "string", '"test123"', '{"regex": "^test.*$"}', True),
-        ("pydantic.constr", "string", '"test123"', '{"regex": "^tst.*$"}', False),
+        ("pydantic.condecimal", "number", 8, '{"gt": 0, "lt": 10}', False, True),
+        ("pydantic.condecimal", "number", 8, '{"gt": 0, "lt": 5}', False, False),
+        ("pydantic.confloat", "number", 1.5, '{"multiple_of": 0.5}', False, True),
+        ("pydantic.confloat", "number", 1.5, '{"multiple_of": 0.2}', False, False),
+        ("pydantic.conint", "number", 4, '{"ge": 4}', False, True),
+        ("pydantic.conint", "number", 4, '{"ge": 5}', False, False),
+        (
+            "pydantic.constr",
+            "string",
+            '"test123"',
+            '{"regex": "^test.*$"}',
+            False,
+            True,
+        ),
+        (
+            "pydantic.constr",
+            "string",
+            '"test123"',
+            '{"regex": "^tst.*$"}',
+            False,
+            False,
+        ),
         (
             "pydantic.stricturl",
             "string",
             '"http://test:8080"',
             '{"tld_required": false}',
+            False,
             True,
         ),
         (
@@ -129,17 +145,35 @@ def test_attribute_types(project, attr_type, value, is_valid):
             '"http://test:8080"',
             '{"tld_required": true}',
             False,
+            False,
+        ),
+        ("pydantic.constr", "string", "null", '{"regex": "^tst.*$"}', True, True),
+        ("pydantic.constr", "string", "null", '{"regex": "^tst.*$"}', False, False),
+        (
+            "pydantic.constr",
+            "string",
+            # Test for Unknown values
+            "std::get_env(name='non-existing-env-var')",
+            '{"regex": "^tst.*$"}',
+            False,
+            True,
         ),
     ],
 )
 def test_constrained_types(
-    project, attr_type, base_type, value, validation_parameters, is_valid
+    project,
+    attr_type: str,
+    base_type: str,
+    value: Union[str, int],
+    validation_parameters: str,
+    is_optional: bool,
+    is_valid: bool,
 ):
     model = f"""
             typedef custom_type as {base_type} matching std::validate_type("{attr_type}", self, {validation_parameters})
 
             entity Test:
-                custom_type attr
+                custom_type{"?" if is_optional else ""} attr
             end
 
             implement Test using std::none
