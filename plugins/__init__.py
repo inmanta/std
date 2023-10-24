@@ -44,7 +44,7 @@ from inmanta.execute.proxy import DynamicProxy, UnknownException
 from inmanta.execute.util import NoneValue, Unknown
 from inmanta.export import dependency_manager, unknown_parameters
 from inmanta.module import Project
-from inmanta.plugins import Context, plugin, deprecated
+from inmanta.plugins import Context, deprecated, plugin
 
 
 @plugin
