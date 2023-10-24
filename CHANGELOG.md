@@ -1,6 +1,6 @@
 # Changelog
 
-## v4.2.2 - ?
+## v4.3.0 - ?
 
 - replace "number" type by "int" type where "number" was used as an "int"
 
