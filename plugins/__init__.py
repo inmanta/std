@@ -49,7 +49,7 @@ from inmanta.plugins import Context, plugin
 
 @plugin
 def unique_file(
-    prefix: "string", seed: "string", suffix: "string", length: "int" = 20 #can I remove this argument?
+    prefix: "string", seed: "string", suffix: "string", length: "int" = 20  # can I remove this argument?
 ) -> "string":
     return prefix + hashlib.md5(seed.encode("utf-8")).hexdigest() + suffix
 
