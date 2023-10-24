@@ -44,12 +44,12 @@ from inmanta.execute.proxy import DynamicProxy, UnknownException
 from inmanta.execute.util import NoneValue, Unknown
 from inmanta.export import dependency_manager, unknown_parameters
 from inmanta.module import Project
-from inmanta.plugins import Context, plugin
+from inmanta.plugins import Context, deprecated, plugin
 
 
 @plugin
 def unique_file(
-    prefix: "string", seed: "string", suffix: "string", length: "number" = 20
+    prefix: "string", seed: "string", suffix: "string", length: "int" = 20
 ) -> "string":
     return prefix + hashlib.md5(seed.encode("utf-8")).hexdigest() + suffix
 
@@ -349,7 +349,7 @@ def save_passwords(pw_file, records):
 
 @plugin
 def generate_password(
-    context: Context, pw_id: "string", length: "number" = 20
+    context: Context, pw_id: "string", length: "int" = 20
 ) -> "string":
     """
     Generate a new random password and store it in the data directory of the
@@ -448,7 +448,7 @@ def select(objects: "list", attr: "string") -> "list":
 
 
 @plugin
-def item(objects: "list", index: "number") -> "list":
+def item(objects: "list", index: "int") -> "list":
     """
     Return a list that selects the item at index from each of the sublists
     """
@@ -471,7 +471,7 @@ def key_sort(items: "list", key: "any") -> "list":
 
 
 @plugin
-def timestamp(dummy: "any" = None) -> "number":
+def timestamp(dummy: "any" = None) -> "int":
     """
     Return an integer with the current unix timestamp
 
@@ -511,7 +511,7 @@ def type(obj: "any") -> "any":
 
 
 @plugin
-def sequence(i: "number", start: "number" = 0, offset: "number" = 0) -> "list":
+def sequence(i: "int", start: "int" = 0, offset: "int" = 0) -> "list":
     """
     Return a sequence of i numbers, starting from zero or start if supplied.
 
@@ -519,7 +519,7 @@ def sequence(i: "number", start: "number" = 0, offset: "number" = 0) -> "list":
     :param start: The starting value for the sequence.
     :param offset: [Deprecated] An offset value (this parameter will be removed in the future).
 
-    :return: A list containing the sequence of numbers.
+    :return: A list containing the sequence of ints.
     """
     if offset != 0:
         logging.getLogger(__name__).warning(
@@ -539,7 +539,7 @@ def inlineif(conditional: "bool", a: "any", b: "any") -> "any":
 
 
 @plugin
-def at(objects: "list", index: "number") -> "any":
+def at(objects: "list", index: "int") -> "any":
     """
     Get the item at index
     """
@@ -571,7 +571,7 @@ def objid(value: "any") -> "string":
 
 
 @plugin
-def count(item_list: "list") -> "number":
+def count(item_list: "list") -> "int":
     """
     Returns the number of elements in this list
     """
@@ -918,7 +918,7 @@ def server_token(context: Context, client_types: "string[]" = ["agent"]) -> "str
 
 
 @plugin
-def server_port() -> "number":
+def server_port() -> "int":
     return Config.get("compiler_rest_transport", "port", 8888)
 
 
@@ -934,7 +934,7 @@ def get_env(name: "string", default_value: "string" = None) -> "string":
 
 
 @plugin
-def get_env_int(name: "string", default_value: "number" = None) -> "number":
+def get_env_int(name: "string", default_value: "int" = None) -> "int":
     env = os.environ
     if name in env:
         return int(env[name])
@@ -955,7 +955,7 @@ def is_instance(ctx: Context, obj: "any", cls: "string") -> "bool":
 
 
 @plugin
-def length(value: "string") -> "number":
+def length(value: "string") -> "int":
     """
     Return the length of the string
     """
@@ -1016,6 +1016,7 @@ def invert(value: "bool") -> "bool":
     return not value
 
 
+@deprecated
 @plugin
 def to_number(value: "any") -> "number":
     """
@@ -1201,7 +1202,7 @@ def netmask(addr: "std::ipv_any_interface") -> "std::ipv_any_address":
 
 
 @plugin
-def ipindex(addr: "std::ipv_any_network", position: "number") -> "string":
+def ipindex(addr: "std::ipv_any_network", position: "int") -> "string":
     """
     Return the address at position in the network.
     """
@@ -1210,7 +1211,7 @@ def ipindex(addr: "std::ipv_any_network", position: "number") -> "string":
 
 
 @plugin
-def add_to_ip(addr: "std::ipv_any_address", n: "number") -> "std::ipv_any_address":
+def add_to_ip(addr: "std::ipv_any_address", n: "int") -> "std::ipv_any_address":
     """
     Add a number to the given ip.
     """
