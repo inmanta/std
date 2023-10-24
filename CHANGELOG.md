@@ -5,7 +5,6 @@
 
 ## v4.3.0 - 2023-10-24
 
-- release 4.3.0
 - replace "number" type by "int" type where "number" was used as an "int"
 
 ## v4.2.1 - 2023-10-05
