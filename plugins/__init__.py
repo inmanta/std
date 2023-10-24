@@ -44,7 +44,7 @@ from inmanta.execute.proxy import DynamicProxy, UnknownException
 from inmanta.execute.util import NoneValue, Unknown
 from inmanta.export import dependency_manager, unknown_parameters
 from inmanta.module import Project
-from inmanta.plugins import Context, plugin
+from inmanta.plugins import Context, plugin, deprecated
 
 
 @plugin
@@ -1016,12 +1016,13 @@ def invert(value: "bool") -> "bool":
     return not value
 
 
+@deprecated
 @plugin
 def to_number(value: "any") -> "number":
     """
     Convert a value to a number
     """
-    return float(value)
+    return int(value)
 
 
 @plugin
