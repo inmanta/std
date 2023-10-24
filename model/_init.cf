@@ -239,7 +239,7 @@ entity File extends Reload, PurgeableResource:
         :attr content: The file contents
     """
     string path
-    number mode
+    int mode
     string owner
     string group
     string content
@@ -272,7 +272,7 @@ entity ConfigFile extends File:
     """
         A file with often used defaults for configuration files.
     """
-    number mode=644
+    int mode=644
     string owner="root"
     string group="root"
 end
@@ -345,7 +345,7 @@ entity Directory extends Reload, PurgeableResource:
         A directory on the filesystem
     """
     string path
-    number mode
+    int mode
     string owner
     string group
     bool purge_on_delete=false
@@ -357,7 +357,7 @@ entity DefaultDirectory extends Directory:
     """
         A directory that is world readable. It is also writable for its owner root.
     """
-    number mode=755
+    int mode=755
     string owner="root"
     string group="root"
 end
@@ -410,7 +410,7 @@ entity OS:
         :attr python_cmd: Specifies what command should be used to launch the python interpreter on the other end
     """
     string name
-    number version = 0
+    int version = 0
     string? python_cmd = "python"
 end
 
