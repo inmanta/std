@@ -2,6 +2,7 @@
 
 ## v4.3.1 - ?
 
+- fix error with version that should have stayed a number
 
 ## v4.3.0 - 2023-10-24
 
