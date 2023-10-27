@@ -16,7 +16,7 @@ rm -f /lib/systemd/system/basic.target.wants/*;\
 rm -f /lib/systemd/system/anaconda.target.wants/*;
 VOLUME [ "/sys/fs/cgroup" ]
 
-RUN yum install -y python$PYTHON_VERSION glibc-locale-source
+RUN yum install -y python$PYTHON_VERSION glibc-locale-source gcc python3.11-devel.i686
 
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
