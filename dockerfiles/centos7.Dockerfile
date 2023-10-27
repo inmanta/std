@@ -22,7 +22,7 @@ ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 
-RUN yum install -y python{$PYTHON_VERSION}
+RUN yum install -y python$PYTHON_VERSION
 
 RUN mkdir -p /module/std
 WORKDIR /module/std
