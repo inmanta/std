@@ -2,6 +2,7 @@
 
 ## v4.3.2 - ?
 
+- make version in OS entity a float
 
 ## v4.3.1 - 2023-10-25
 

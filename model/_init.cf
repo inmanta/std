@@ -410,7 +410,7 @@ entity OS:
         :attr python_cmd: Specifies what command should be used to launch the python interpreter on the other end
     """
     string name
-    number version = 0
+    number version = 0.0
     string? python_cmd = "python"
 end
 
