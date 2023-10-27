@@ -3,6 +3,7 @@ ENV container docker
 
 ARG PIP_INDEX_URL
 ARG PIP_PRE
+ARG PYTHON_VERSION=39
 
 RUN (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == \
 systemd-tmpfiles-setup.service ] || rm -f $i; done); \
@@ -15,7 +16,7 @@ rm -f /lib/systemd/system/basic.target.wants/*;\
 rm -f /lib/systemd/system/anaconda.target.wants/*;
 VOLUME [ "/sys/fs/cgroup" ]
 
-RUN yum install -y python39 glibc-locale-source
+RUN yum install -y python${PYTHON_VERSION} glibc-locale-source
 
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
