@@ -111,7 +111,7 @@ def _get_python_version() -> str:
     """
     Return the runtime python version as <major><minor> e.g. 311
     """
-    return f"{sys.version_info.major}{sys.version_info.minor}"
+    return f"{sys.version_info.major}.{sys.version_info.minor}"
 
 
 def _get_dockerfiles_for_test() -> str:
@@ -121,13 +121,7 @@ def _get_dockerfiles_for_test() -> str:
     project_root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     dockerfiles_dir = os.path.join(project_root_dir, "dockerfiles")
 
-    if sys.version_info.major <= 2:
-        raise Exception(
-            "Running the tests with INMANTA_TEST_INFRA_SETUP=true is only supported for venvs with python >= 3"
-        )
-    if sys.version_info.major == 3 and sys.version_info.minor <= 6:
-        return os.path.join(dockerfiles_dir, "centos7.Dockerfile")
-    return os.path.join(dockerfiles_dir, "rocky8.Dockerfile")
+    return os.path.join(dockerfiles_dir, "python.Dockerfile")
 
 
 @pytest.fixture(scope="function")
@@ -135,7 +129,7 @@ def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None,
     docker_file = _get_dockerfiles_for_test()
     docker_file_name = os.path.basename(docker_file).split(".")[0]
     python_version = _get_python_version()
-    image_name = f"test-module-std-{docker_file_name}-python{python_version}"
+    image_name = f"test-module-std-{docker_file_name}-{python_version}"
 
     docker_build_cmd = ["sudo", "docker", "build", ".", "-t", image_name]
     pip_index_url = os.environ.get("PIP_INDEX_URL", None)

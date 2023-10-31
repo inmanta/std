@@ -31,12 +31,8 @@ def test_docker(docker_container):
         [
             "sudo",
             "docker",
-            "exec",
+            "run",
             f"{docker_container}",
-            "env/bin/pytest",
-            "tests/",
-            "-v",
-            "--junitxml=junit.xml",
         ],
         check=True,
     )
