@@ -31,7 +31,7 @@ def test_docker(docker_container):
         [
             "sudo",
             "docker",
-            "run",
+            "start",
             f"{docker_container}",
         ],
         check=True,
