@@ -150,27 +150,22 @@ def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None,
 
     print(f"Building docker image with name: {image_name}")
     subprocess.run(docker_build_cmd, check=True)
-    # docker_id = (
-    #     subprocess.run(
-    #         [
-    #             "sudo",
-    #             "docker",
-    #             "run",
-    #             "-d",
-    #             "--rm",
-    #             "--privileged",
-    #             "-v",
-    #             "/sys/fs/cgroup:/sys/fs/cgroup:ro",
-    #             image_name,
-    #         ],
-    #         stdout=subprocess.PIPE,
-    #         check=True,
-    #     )
-    #     .stdout.decode("utf-8")
-    #     .strip()
-    # )
-    # print(f"Started container with id {docker_id}")
-    yield image_name
+    docker_id = (
+        subprocess.run(
+            [
+                "sudo",
+                "docker",
+                "create",
+                image_name,
+            ],
+            stdout=subprocess.PIPE,
+            check=True,
+        )
+        .stdout.decode("utf-8")
+        .strip()
+    )
+    print(f"Created container with id {docker_id}")
+    yield docker_id
 
     junit_file = f"junit_{docker_file_name}.xml"
     subprocess.run(
