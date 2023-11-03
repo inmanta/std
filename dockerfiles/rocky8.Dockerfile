@@ -3,6 +3,8 @@ ENV container docker
 
 ARG PIP_INDEX_URL
 ARG PIP_PRE
+ARG PYTHON_VERSION=39
+ARG PYTHON311_SPECIFIC_ARGS
 
 RUN (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == \
 systemd-tmpfiles-setup.service ] || rm -f $i; done); \
@@ -15,14 +17,13 @@ rm -f /lib/systemd/system/basic.target.wants/*;\
 rm -f /lib/systemd/system/anaconda.target.wants/*;
 VOLUME [ "/sys/fs/cgroup" ]
 
-RUN yum install -y python39 glibc-locale-source
+RUN yum install -y python$PYTHON_VERSION glibc-locale-source $PYTHON311_SPECIFIC_ARGS
 
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 
-RUN mkdir -p /module/std
 WORKDIR /module/std
 
 # Copy the entire module into the container

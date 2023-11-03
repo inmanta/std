@@ -107,6 +107,14 @@ def pip_lock_file() -> None:
     yield
 
 
+
+def _get_python_version() -> str:
+    """
+    Return the runtime python version as <major><minor> e.g. 311
+    """
+    return f"{sys.version_info.major}{sys.version_info.minor}"
+
+
 def _get_dockerfiles_for_test() -> str:
     """
     Return the path to the docker file that should be used to run the tests against, depending on the runtime python version.
@@ -127,7 +135,9 @@ def _get_dockerfiles_for_test() -> str:
 def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None, None]:
     docker_file = _get_dockerfiles_for_test()
     docker_file_name = os.path.basename(docker_file).split(".")[0]
-    image_name = f"test-module-std-{docker_file_name}"
+
+    python_version = _get_python_version()
+    image_name = f"test-module-std-{docker_file_name}-python{python_version}"
 
     docker_build_cmd = ["sudo", "docker", "build", ".", "-t", image_name]
     pip_index_url = os.environ.get("PIP_INDEX_URL", None)
@@ -138,6 +148,14 @@ def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None,
     if pip_pre is not None:
         docker_build_cmd.append("--build-arg")
         docker_build_cmd.append(f"PIP_PRE={pip_pre}")
+
+
+    docker_build_cmd.append("--build-arg")
+    docker_build_cmd.append(f"PYTHON_VERSION={python_version}")
+
+    if sys.version_info.major == 3 and sys.version_info.minor >= 11:
+        docker_build_cmd.append("--build-arg")
+        docker_build_cmd.append(f"PYTHON311_SPECIFIC_ARGS=gcc python3.11-devel.i686")
 
     docker_build_cmd.append("-f")
     docker_build_cmd.append(f"./dockerfiles/{os.path.basename(docker_file)}")
