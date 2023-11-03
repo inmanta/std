@@ -2,6 +2,7 @@
 
 ## v4.3.3 - ?
 
+- Add support for python 3.11
 
 ## v4.3.2 - 2023-10-27
 
