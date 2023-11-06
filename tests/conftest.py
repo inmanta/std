@@ -153,7 +153,7 @@ def docker_container(pip_lock_file, request: SubRequest) -> Generator[str, None,
 
     if sys.version_info.major == 3 and sys.version_info.minor >= 11:
         docker_build_cmd.append("--build-arg")
-        docker_build_cmd.append("PYTHON311_SPECIFIC_ARGS=gcc python3.11-devel.i686")
+        docker_build_cmd.append("PYTHON_DEVEL_PACKAGES=gcc python3.11-devel")
 
     docker_build_cmd.append("-f")
     docker_build_cmd.append(f"./dockerfiles/{os.path.basename(docker_file)}")
