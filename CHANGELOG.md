@@ -2,6 +2,7 @@
 
 ## v4.3.4 - ?
 
+- Deprecate obsolete plugins.
 
 ## v4.3.3 - 2023-11-08
 
