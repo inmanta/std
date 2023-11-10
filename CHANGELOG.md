@@ -1,6 +1,6 @@
 # Changelog
 
-## v4.3.4 - ?
+## v4.3.4 - 2023-11-10
 
 - Deprecate obsolete plugins.
 
