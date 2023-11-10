@@ -441,7 +441,7 @@ def assert_function(expression: "bool", message: "string" = ""):
 
 
 @deprecated(replaced_by="using a list comprehension")
-@plugin  # use list comprehension instead
+@plugin
 def select(objects: "list", attr: "string") -> "list":
     """
     Return a list with the select attributes
@@ -982,7 +982,7 @@ def dict_get(dct: "dict", key: "string") -> "string":
     return dct[key]
 
 
-@deprecated(replaced_by="the `<key> in <dict>` construct")  # use 'in'
+@deprecated(replaced_by="the `<key> in <dict>` construct")
 @plugin
 def contains(dct: "dict", key: "string") -> "bool":
     """
@@ -1019,7 +1019,7 @@ def invert(value: "bool") -> "bool":
     """
     Invert a boolean value
     """
-    return value
+    return not value
 
 
 @deprecated
