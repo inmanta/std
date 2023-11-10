@@ -418,7 +418,7 @@ def replace(string: "string", old: "string", new: "string") -> "string":
     return string.replace(old, new)
 
 
-@deprecated
+@deprecated(replaced_by="the `==` binary operator")
 @plugin
 def equals(arg1: "any", arg2: "any", desc: "string" = None):
     """
@@ -440,7 +440,7 @@ def assert_function(expression: "bool", message: "string" = ""):
         raise AssertionError("Assertion error: " + message)
 
 
-@deprecated
+@deprecated(replaced_by="using a list comprehension")
 @plugin  # use list comprehension instead
 def select(objects: "list", attr: "string") -> "list":
     """
@@ -964,7 +964,7 @@ def length(value: "string") -> "int":
     return len(value)
 
 
-@deprecated  # use list comp instead
+@deprecated(replaced_by="using a list comprehension")
 @plugin
 def filter(values: "list", not_item: "std::Entity") -> "list":
     """
@@ -973,7 +973,7 @@ def filter(values: "list", not_item: "std::Entity") -> "list":
     return [x for x in values if x != not_item]
 
 
-@deprecated  # use [] notation ? + why is return value "string" here and not "any"
+@deprecated(replaced_by="using the `<dict>[<key>]` construct")
 @plugin
 def dict_get(dct: "dict", key: "string") -> "string":
     """
@@ -982,7 +982,7 @@ def dict_get(dct: "dict", key: "string") -> "string":
     return dct[key]
 
 
-@deprecated  # use 'in'
+@deprecated(replaced_by="the `<key> in <dict>` construct")  # use 'in'
 @plugin
 def contains(dct: "dict", key: "string") -> "bool":
     """
@@ -1013,13 +1013,13 @@ def getattribute(
         return default_value
 
 
-@deprecated  # can use "not" in the language
+@deprecated(replaced_by="the `not` unary operator")
 @plugin
 def invert(value: "bool") -> "bool":
     """
     Invert a boolean value
     """
-    return not value
+    return value
 
 
 @deprecated
