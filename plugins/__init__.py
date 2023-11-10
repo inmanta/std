@@ -418,7 +418,7 @@ def replace(string: "string", old: "string", new: "string") -> "string":
     return string.replace(old, new)
 
 
-@plugin
+@plugin  # ask before deprecating
 def equals(arg1: "any", arg2: "any", desc: "string" = None):
     """
     Compare arg1 and arg2
@@ -439,7 +439,8 @@ def assert_function(expression: "bool", message: "string" = ""):
         raise AssertionError("Assertion error: " + message)
 
 
-@plugin
+@plugin  # use list comprehension instead
+@deprecated
 def select(objects: "list", attr: "string") -> "list":
     """
     Return a list with the select attributes
@@ -963,6 +964,7 @@ def length(value: "string") -> "int":
 
 
 @plugin
+@deprecated  # use list comp instead
 def filter(values: "list", not_item: "std::Entity") -> "list":
     """
     Filter not_item from values
@@ -971,6 +973,7 @@ def filter(values: "list", not_item: "std::Entity") -> "list":
 
 
 @plugin
+@deprecated  # use [] notation ? + why is return value "string" here and not "any"
 def dict_get(dct: "dict", key: "string") -> "string":
     """
     Get an element from the dict. Raises an exception when the key is not found in the dict
@@ -979,6 +982,7 @@ def dict_get(dct: "dict", key: "string") -> "string":
 
 
 @plugin
+@deprecated  # use 'in'
 def contains(dct: "dict", key: "string") -> "bool":
     """
     Check if key exists in dct.
@@ -1008,6 +1012,7 @@ def getattribute(
         return default_value
 
 
+@deprecated  # can use "not" in the language
 @plugin
 def invert(value: "bool") -> "bool":
     """
