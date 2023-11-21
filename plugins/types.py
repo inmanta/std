@@ -22,7 +22,11 @@ import pydantic
 
 
 def regex_string(regex: typing.Union[str, re.Pattern]) -> type:
-    """Build a regex constrained string that is both supported by pydantic v1 and v2"""
+    """Build a regex constrained string that is both supported by pydantic v1 and v2
+
+    :param regex: A regex string or compiler regex pattern
+    :return: A type that the current pydantic can use for validation
+    """
     try:
         # v2
         return typing.Annotated[
