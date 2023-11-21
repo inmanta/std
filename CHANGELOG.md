@@ -1,6 +1,6 @@
 # Changelog
 
-## v4.3.5 - ?
+## v4.3.5 - 2023-11-21
 
 - Add ``regex_string`` function
 
