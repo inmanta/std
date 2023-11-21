@@ -131,22 +131,6 @@ def test_attribute_types(project, attr_type, value, is_valid):
             False,
             False,
         ),
-        (
-            "pydantic.stricturl",
-            "string",
-            '"http://test:8080"',
-            '{"tld_required": false}',
-            False,
-            True,
-        ),
-        (
-            "pydantic.stricturl",
-            "string",
-            '"http://test:8080"',
-            '{"tld_required": true}',
-            False,
-            False,
-        ),
         ("pydantic.constr", "string", "null", '{"regex": "^tst.*$"}', True, True),
         ("pydantic.constr", "string", "null", '{"regex": "^tst.*$"}', False, False),
         (

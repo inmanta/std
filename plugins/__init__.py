@@ -1074,11 +1074,6 @@ def validate_type(
             max_length: int = None
             curtail_length: int = None (Only verify the regex on the first curtail_length characters)
             regex: str = None          (The regex is verified via Pattern.match())
-        * pydantic.stricturl:
-            min_length: int = 1
-            max_length: int = 2 ** 16
-            tld_required: bool = True
-            allowed_schemes: Optional[Set[str]] = None
 
     Example usage:
 
