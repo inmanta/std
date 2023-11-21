@@ -2,6 +2,8 @@
 
 ## v4.3.5 - ?
 
+- Add ``regex_string`` function
+
 
 ## v4.3.4 - 2023-11-10
 
