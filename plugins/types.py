@@ -15,29 +15,21 @@
 
     Contact: code@inmanta.com
 """
-import re
-import typing
-
 import pydantic
 
 
-def regex_string(regex: typing.Union[str, re.Pattern]) -> type:
-    """Build a regex constrained string that is both supported by pydantic v1 and v2
+def regex_string(regex: str) -> type:
+    """
+    Build a regex constrained string that is both supported by pydantic v1 and v2
 
-    :param regex: A regex string or compiler regex pattern
+    :param regex: A regex string
     :return: A type that the current pydantic can use for validation
     """
     try:
-        # v2
-        return typing.Annotated[
-            str,
-            pydantic.AfterValidator(
-                pydantic.TypeAdapter(
-                    pydantic.constr(pattern=regex),
-                    config=pydantic.ConfigDict(regex_engine="python-re"),
-                ).validate_python
-            ),
-        ]
-    except AttributeError:
-        # v1
+        from inmanta.validation_type import regex_string as core_regex_string
+    except ImportError:
+        # v1 (all versions of core that use v2 have this method)
         return pydantic.constr(regex=regex)
+    else:
+        # delegate to core
+        return core_regex_string(regex)
