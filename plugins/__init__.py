@@ -583,8 +583,8 @@ def count(item_list: "list") -> "int":
     return len(item_list)
 
 
-@plugin
-def len(item_list: "list") -> "int":
+@plugin("len")
+def list_len(item_list: "list") -> "int":
     """
     Returns the number of elements in this list. Unlike `count`, this plugin is conservative when it comes to unknown values.
     If any unknown is present in the list, the result is also unknown.
