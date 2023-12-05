@@ -1,12 +1,12 @@
 # Changelog
 
-## v4.3.6 - ?
+## v4.4.0 - ?
 
+- Add len plugin to get the length of a list, conservative with respect to unknowns
 
 ## v4.3.5 - 2023-11-21
 
 - Add ``regex_string`` function
-
 
 ## v4.3.4 - 2023-11-10
 

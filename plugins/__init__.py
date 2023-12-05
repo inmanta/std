@@ -28,7 +28,7 @@ from collections import defaultdict
 from copy import copy
 from itertools import chain
 from operator import attrgetter
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 import jinja2
 import pydantic
@@ -575,9 +575,24 @@ def objid(value: "any") -> "string":
 @plugin
 def count(item_list: "list") -> "int":
     """
-    Returns the number of elements in this list
+    Returns the number of elements in this list.
+
+    If any unknowns are present in the list, counts them like any other value. Depending on the unknown semantics in your
+    model this may produce an inaccurate count. For a count that is conservative with respect to unknowns, see `len`.
     """
     return len(item_list)
+
+
+@plugin("len")
+def list_len(item_list: "list") -> "int":
+    """
+    Returns the number of elements in this list. Unlike `count`, this plugin is conservative when it comes to unknown values.
+    If any unknown is present in the list, the result is also unknown.
+    """
+    unknown: Optional[Unknown] = next(
+        (item for item in item_list if isinstance(item, Unknown)), None
+    )
+    return len(item_list) if unknown is None else Unknown(source=unknown.source)
 
 
 @plugin
