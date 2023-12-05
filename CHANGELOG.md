@@ -1,6 +1,6 @@
 # Changelog
 
-## v4.4.0 - ?
+## v4.4.0 - 2023-12-05
 
 - Add len plugin to get the length of a list, conservative with respect to unknowns
 
