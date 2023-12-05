@@ -145,6 +145,12 @@ typedef non_empty_string as string matching /^(.*\S.*)$/
     A string that contains at least one non-whitespace character
 """
 
+typedef port as number matching self >= 0 and self < 65536
+"""
+    A valid port (number between 0 and 65536)
+"""
+
+
 implementation none for Entity:
     """
         An empty implementation that can be used as a safe default.
@@ -203,8 +209,18 @@ end
 
 entity Host extends ManagedDevice:
     """
-        A host models a server of computer in the managed infrastructure
+        A host that has an ip attribute for easy ip address access in the configuration
+        model.
+
+        :attr ip: The ipaddress of this node
+        :attr remote_agent: Start the mgmt agent for this node on the server and use remote io (ssh)
+        :attr remote_user: The remote user for the remote agent to login with
+        :attr remote_port: The remote port for this remote agent to use.
     """
+    ipv_any_address ip
+    bool remote_agent=false
+    string remote_user="root"
+    port remote_port=22
 end
 
 implement Host using hostDefaults
