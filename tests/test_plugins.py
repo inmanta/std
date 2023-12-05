@@ -155,3 +155,33 @@ def test_string_plugins(project):
         c = "Aabb c"
         """
     )
+
+
+def test_len(project) -> None:
+    """
+    Verify the behavior of the len plugin and constrast it with the count plugin.
+    """
+    project.compile(
+        """
+        unknown = std::get_env_int("UNKNOWN_ENV_INT")
+
+        empty_list = []
+        non_empty_list = [1, 2]
+        unknown_list = [1, unknown, 2]
+        two_unknowns_list = [1, unknown, 2, unknown]
+
+        assert = true
+
+        assert = std::count(empty_list) == 0
+        assert = std::len(empty_list) == 0
+
+        assert = std::count(non_empty_list) == 2
+        assert = std::len(non_empty_list) == 2
+
+        assert = std::count(unknown_list) == 3
+        assert = std::is_unknown(std::len(unknown_list))
+
+        assert = std::count(two_unknowns_list) == 4
+        assert = std::is_unknown(std::len(two_unknowns_list))
+        """,
+    )
