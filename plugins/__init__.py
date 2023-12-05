@@ -28,7 +28,7 @@ from collections import defaultdict
 from copy import copy
 from itertools import chain
 from operator import attrgetter
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 import jinja2
 import pydantic
@@ -589,7 +589,9 @@ def len(item_list: "list") -> "int":
     Returns the number of elements in this list. Unlike `count`, this plugin is conservative when it comes to unknown values.
     If any unknown is present in the list, the result is also unknown.
     """
-    unknown: Optional[Unknown] = next(item for item in item_list if isinstance(item, Unknown), None)
+    unknown: Optional[Unknown] = next(
+        (item for item in item_list if isinstance(item, Unknown)), None
+    )
     return len(item_list) if unknown is None else Unknown(source=unknown.source)
 
 
