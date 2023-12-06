@@ -1,6 +1,6 @@
 # Changelog
 
-## v4.5.0 - ?
+## v4.5.0 - 2023-12-06
 
 - Add support to deploy an agentConfig for std::Host
 
