@@ -455,7 +455,7 @@ implementation agentConfig for HostConfig:
     std::AgentConfig(
         autostart=true,
         agentname=host.name,
-        uri=std::template("ip/host_uri.j2"),
+        uri=std::template("std/host_uri.j2"),
         provides=host,
     )
 end
