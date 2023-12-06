@@ -21,9 +21,9 @@ from inmanta.module import Project
 def test_agent_config(project: Project):
     project.compile(
         """
-        import ip
+        import std
 
-        host = ip::Host(
+        host = std::Host(
             name="test",
             ip="127.0.0.1",
             os=std::linux,
@@ -35,9 +35,9 @@ def test_agent_config(project: Project):
 
     project.compile(
         """
-        import ip
+        import std
 
-        host = ip::Host(
+        host = std::Host(
             name="test",
             ip="127.0.0.1",
             os=std::linux,
@@ -52,9 +52,9 @@ def test_agent_config(project: Project):
 
     project.compile(
         """
-        import ip
+        import std
 
-        host = ip::Host(
+        host = std::Host(
             name="test",
             ip="127.0.0.1",
             os=std::OS(name="testos", family=std::unix, python_cmd="test"),
