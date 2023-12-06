@@ -461,6 +461,7 @@ implementation agentConfig for HostConfig:
 end
 
 Host.host_config [1] -- HostConfig.host [1]
+implement HostConfig using std::none
 implement HostConfig using agentConfig when host.ip is defined and host.remote_agent
 
 implementation hostDefaults for std::Host:
