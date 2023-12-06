@@ -145,7 +145,7 @@ typedef non_empty_string as string matching /^(.*\S.*)$/
     A string that contains at least one non-whitespace character
 """
 
-typedef port as number matching self >= 0 and self < 65536
+typedef port as int matching self >= 0 and self < 65536
 """
     A TCP/UDP port number.
 """
