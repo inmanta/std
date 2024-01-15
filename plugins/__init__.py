@@ -1233,6 +1233,10 @@ def ipindex(
 ) -> "string":
     """
     Return the address at position in the network.
+
+    :param addr: The network address
+    :param position: The desired position of the address
+    :param keep_prefix: If the prefix should be included in the result
     """
     net = ipaddress.ip_network(addr)
     address = str(net[position])
@@ -1254,5 +1258,9 @@ def add_to_ip(addr: "std::ipv_any_address", n: "int") -> "std::ipv_any_address":
 def ip_address_from_interface(
     ip_interface: "std::ipv_any_interface",  # type: ignore
 ) -> "std::ipv_any_address":  # type: ignore
-    """Take an ip address with network prefix and only return the ip address"""
+    """
+    Take an ip address with network prefix and only return the ip address
+
+    :param ip_interface: The interface from where we will extract the ip address
+    """
     return str(ipaddress.ip_interface(ip_interface).ip)
