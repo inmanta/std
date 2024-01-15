@@ -507,6 +507,16 @@ def lower(string: "string") -> "string":
 
 
 @plugin
+def limit(string: "string", length: "int") -> "string":
+    """Limit the length for the string
+
+    :param string: The string to limit the length off
+    :param length: The max length of the string
+    """
+    return string[:length]
+
+
+@plugin
 def type(obj: "any") -> "any":
     value = obj.value
     return value.type().__definition__
@@ -1218,12 +1228,18 @@ def netmask(addr: "std::ipv_any_interface") -> "std::ipv_any_address":
 
 
 @plugin
-def ipindex(addr: "std::ipv_any_network", position: "int") -> "string":
+def ipindex(
+    addr: "std::ipv_any_network", position: "int", keep_prefix: "bool" = False
+) -> "string":
     """
     Return the address at position in the network.
     """
     net = ipaddress.ip_network(addr)
-    return str(net[position])
+    address = str(net[position])
+
+    if keep_prefix:
+        return f"{address}/{net.prefixlen}"
+    return address
 
 
 @plugin
@@ -1232,3 +1248,11 @@ def add_to_ip(addr: "std::ipv_any_address", n: "int") -> "std::ipv_any_address":
     Add a number to the given ip.
     """
     return str(ipaddress.ip_address(addr) + n)
+
+
+@plugin
+def ip_address_from_interface(
+    ip_interface: "std::ipv_any_interface",  # type: ignore
+) -> "std::ipv_any_address":  # type: ignore
+    """Take an ip address with network prefix and only return the ip address"""
+    return str(ipaddress.ip_interface(ip_interface).ip)

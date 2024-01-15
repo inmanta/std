@@ -2,6 +2,7 @@
 
 ## v5.0.1 - ?
 
+- Add limit and ip_address_from_interface plugins and support for keep_prefix on ipindex
 
 ## v5.0.0 - 2023-12-07
 - Add support to deploy an agentConfig for std::Host
