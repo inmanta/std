@@ -1,6 +1,6 @@
 # Changelog
 
-## v5.1.0 - ?
+## v5.1.0 - 2024-01-16
 
 - Add limit and ip_address_from_interface plugins and support for keep_prefix on ipindex
 
