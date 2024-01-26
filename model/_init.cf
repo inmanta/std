@@ -641,3 +641,27 @@ ResourceSet.resources [0:] -- std::Resource
 index ResourceSet(name)
 
 implement ResourceSet using std::none
+
+
+typedef value_reference as string matching std::is_valid_value_reference(self)
+
+
+entity EnvironmentReference:
+    """ A reference to an environment variable.
+
+    :attr variable_name: The name of the environment variable to reference.
+    :attr value: The value from the environment
+    """
+    string variable_name
+    string value
+end
+
+
+implementation env_ref for EnvironmentReference:
+    self.value = std::get_value_reference_attribute(
+        reference=std::create_environment_reference(self.variable_name),
+        name="value",
+    )
+end
+
+implement EnvironmentReference using env_ref

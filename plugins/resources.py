@@ -67,29 +67,6 @@ def generate_content(content_list, seperator):
     return seperator.join([x[1] for x in sort_list]) + seperator
 
 
-def store_file(exporter, obj):
-    content = obj.content
-    if isinstance(content, Unknown):
-        return content
-
-    if "FileMarker" in content.__class__.__name__:
-        with open(content.filename, "rb") as fd:
-            content = fd.read()
-
-    if len(obj.prefix_content) > 0:
-        content = (
-            generate_content(obj.prefix_content, obj.content_seperator)
-            + obj.content_seperator
-            + content
-        )
-    if len(obj.suffix_content) > 0:
-        content += obj.content_seperator + generate_content(
-            obj.suffix_content, obj.content_seperator
-        )
-
-    return exporter.upload_file(content)
-
-
 @resource("std::Service", agent="host.name", id_attribute="name")
 class Service(Resource):
     """
@@ -105,8 +82,34 @@ class File(PurgeableResource):
     A file on a filesystem
     """
 
-    fields = ("path", "owner", "hash", "group", "permissions", "reload")
-    map = {"hash": store_file, "permissions": lambda y, x: int(x.mode)}
+    fields = ("path", "owner", "content", "group", "permissions", "reload")
+
+    @staticmethod
+    def get_permissions(_, instance) -> int:
+        return int(instance.mode)
+
+    @staticmethod
+    def get_hash(exporter, obj):
+        content = obj.content
+        if isinstance(content, Unknown):
+            return content
+
+        if "FileMarker" in content.__class__.__name__:
+            with open(content.filename, "rb") as fd:
+                content = fd.read()
+
+        if len(obj.prefix_content) > 0:
+            content = (
+                generate_content(obj.prefix_content, obj.content_seperator)
+                + obj.content_seperator
+                + content
+            )
+        if len(obj.suffix_content) > 0:
+            content += obj.content_seperator + generate_content(
+                obj.suffix_content, obj.content_seperator
+            )
+
+        return exporter.upload_file(content)
 
 
 @resource("std::Directory", agent="host.name", id_attribute="path")
@@ -192,13 +195,8 @@ class PosixFileProvider(CRUDHandler):
         if not self._io.file_exists(resource.path):
             raise ResourcePurged()
 
-        resource.hash = self._io.hash_file(resource.path)
-
         # upload the previous version for back up and for generating a diff!
-        content = self._io.read_binary(resource.path)
-
-        if not self.stat_file(resource.hash):
-            self.upload_file(resource.hash, content)
+        resource.content = self._io.read_binary(resource.path).decode()
 
         for key, value in self._io.file_stat(resource.path).items():
             setattr(resource, key, value)
@@ -209,13 +207,7 @@ class PosixFileProvider(CRUDHandler):
                 f"Cannot create file {resource.path}, because it already exists."
             )
 
-        data = self.get_file(resource.hash)
-        if hash_file(data) != resource.hash:
-            raise Exception(
-                "File hash was %s expected %s" % (resource.hash, hash_file(data))
-            )
-
-        self._io.put(resource.path, data)
+        self._io.put(resource.path, resource.content.encode())
         self._io.chmod(resource.path, str(resource.permissions))
         self._io.chown(resource.path, resource.owner, resource.group)
         ctx.set_created()
@@ -233,19 +225,15 @@ class PosixFileProvider(CRUDHandler):
                 f"Cannot update file {resource.path} because it doesn't exist"
             )
 
-        if "hash" in changes:
-            data = self.get_file(resource.hash)
-            if hash_file(data) != resource.hash:
-                raise Exception(
-                    "File hash was %s expected %s" % (resource.hash, hash_file(data))
-                )
-            self._io.put(resource.path, data)
+        if "content" in changes:
+            self._io.put(resource.path, resource.content.encode())
 
         if "permissions" in changes:
             self._io.chmod(resource.path, str(resource.permissions))
 
         if "owner" in changes or "group" in changes:
             self._io.chown(resource.path, resource.owner, resource.group)
+
         ctx.set_updated()
 
 

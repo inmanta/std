@@ -28,7 +28,8 @@ from collections import defaultdict
 from copy import copy
 from itertools import chain
 from operator import attrgetter
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, Literal
+from dataclasses import dataclass
 
 import jinja2
 import pydantic
@@ -45,7 +46,7 @@ from inmanta.execute.util import NoneValue, Unknown
 from inmanta.export import dependency_manager, unknown_parameters
 from inmanta.module import Project
 from inmanta.plugins import Context, deprecated, plugin
-
+from inmanta import references
 
 @plugin
 def unique_file(
@@ -1264,3 +1265,52 @@ def ip_address_from_interface(
     :param ip_interface: The interface from where we will extract the ip address
     """
     return str(ipaddress.ip_interface(ip_interface).ip)
+
+
+@plugin
+def is_valid_value_reference(value: "string") -> "bool":
+    """ Validate if value is a valid value reference
+    """
+    return isinstance(value, references.ValueReference)
+
+
+@plugin
+def get_value_reference_attribute(reference: "std::value_reference", name: "string") -> "string":
+    """ Reference an attribute in a secret reference
+    """
+    # TODO: we can add type checking here so that we can only reference attribute that exist on the
+    # secret that reference returns
+    return references.ValueReferenceAttributeString.create(reference, name)
+
+
+@dataclass
+class EnvironmentValue:
+    value: str
+
+
+class EnvironmentVariableReference(references.ValueReferenceModel):
+    # TODO: this one should also refer to EnvironmentVariable so that plugins like get_value_reference_attribute can do more type checking
+    reference_type: Literal["std::EnvironmentReference"] = "std::EnvironmentReference"
+    variable_name: str
+    """ The variable name to fetch the value from
+    """
+
+class EnvironmentVariableReferenceResolver(references.Resolver[EnvironmentVariableReference, EnvironmentValue]):
+    def __init__(self, reference: EnvironmentVariableReference) -> None:
+        self._reference: EnvironmentVariableReference = reference
+
+    def fetch(self) -> EnvironmentValue:
+        """ Fetch the value
+        """
+        return EnvironmentValue(value=os.getenv(self._reference.variable_name))
+
+
+@plugin
+def create_environment_reference(variable_name: "string") -> "std::value_reference":
+    """Create a reference to an enviroment variable
+    """
+    return references.ValueReference.create(
+        reference=EnvironmentVariableReference(
+            variable_name=variable_name,
+        )
+    )
