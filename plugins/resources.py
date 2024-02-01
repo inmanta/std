@@ -502,9 +502,7 @@ class YumPackage(ResourceHandler):
         repo_keyword = (
             "Repo"
             if "Repo" in output
-            else "Repository"
-            if "Repository" in output
-            else None
+            else "Repository" if "Repository" in output else None
         )
 
         if not repo_keyword:
