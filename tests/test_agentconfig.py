@@ -15,6 +15,7 @@
 
     Contact: code@inmanta.com
 """
+
 from inmanta.module import Project
 
 

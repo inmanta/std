@@ -15,6 +15,7 @@
 
     Contact: code@inmanta.com
 """
+
 import string
 from typing import Union
 
