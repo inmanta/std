@@ -581,8 +581,6 @@ class YumPackage(ResourceHandler):
 class DirectoryHandler(CRUDHandler):
     """
     A handler for creating directories
-
-    TODO: add recursive operations
     """
 
     def read_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
