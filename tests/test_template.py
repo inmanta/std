@@ -72,6 +72,7 @@ def test_template(project):
     """
     Test the evaluation of a template
     """
+    # Check that a local variable can be accessed in the template
     project.add_mock_file("templates", "test.tmpl", "{{ value }}")
     project.compile(
         """import unittest
@@ -81,6 +82,26 @@ std::print(std::template("unittest/test.tmpl"))
     )
 
     assert project.get_stdout() == "1234\n"
+
+    # Check that an value can be passed directly to the plugin
+    project.compile(
+        """import unittest
+std::print(std::template("unittest/test.tmpl", value="1234"))
+    """
+    )
+
+    assert project.get_stdout() == "1234\n"
+
+    # Check precedence when the value is provided by both the
+    # local variable and the plugin parameter
+    project.compile(
+        """import unittest
+value = "1234"
+std::print(std::template("unittest/test.tmpl", value="5678"))
+    """
+    )
+
+    assert project.get_stdout() == "5678\n"
 
 
 def test_plugin_with_list(project):

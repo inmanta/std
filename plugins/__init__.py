@@ -212,6 +212,20 @@ class ResolverContext(jinja2.runtime.Context):
             return missing
 
 
+class EmptyResolver:
+    """
+    Empty resolver, matching the api that ResolverContext.resolve_or_missing
+    expects.  Always raises a NotFoundException when lookup is called.
+
+    This resolver is used when the variable accessible to the template are
+    provided via arguments of the plugin instead of local variables in the
+    model.
+    """
+
+    def lookup(self, key: str) -> str:
+        raise NotFoundException(None, key)
+
+
 def _get_template_engine(ctx: Context) -> Environment:
     """
     Initialize the template engine environment
@@ -290,14 +304,18 @@ def template(ctx: Context, path: "string", **kwargs: "any") -> "string":
         template = jinja_env.get_template(template_path)
         tcache[template_path] = template
 
-    resolver = ctx.get_resolver()
+    if not kwargs:
+        # No additional kwargs are provided, use the current context
+        # to resolve the template variables
+        variables = {"{{resolver": ctx.get_resolver()}
+    else:
+        # A strict set of variables is provided via kwargs, only use
+        # these as variables in the template
+        variables = {k: JinjaDynamicProxy.return_value(v) for k, v in kwargs.items()}
+        variables["{{resolver"] = EmptyResolver()
 
     try:
-        out = template.render(
-            {"{{resolver": resolver},
-            **{k: JinjaDynamicProxy.return_value(v) for k, v in kwargs.items()},
-        )
-        return out
+        return template.render(variables)
     except UndefinedError as e:
         raise NotFoundException(ctx.owner, None, e.message)
 
