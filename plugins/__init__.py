@@ -293,7 +293,7 @@ def template(ctx: Context, path: "string", **kwargs: "any") -> "string":
     generate a new statement that has dependencies on the used variables.
 
     :param path: The path to the jinja2 template that should be resolved.
-    :param **kwargs: A set of variables that should be added to the context
+    :param **kwargs: A set of variables that should overwrite the context
         accessible to the template.
     """
     jinja_env = _get_template_engine(ctx)
