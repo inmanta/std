@@ -33,7 +33,7 @@ from typing import Any, Optional, Tuple
 
 import jinja2
 import pydantic
-from jinja2 import Environment, FileSystemLoader, PrefixLoader
+from jinja2 import Environment, FileSystemLoader, PrefixLoader, Template
 from jinja2.exceptions import UndefinedError
 from jinja2.runtime import Undefined, missing
 
@@ -55,7 +55,7 @@ def unique_file(
     return prefix + hashlib.md5(seed.encode("utf-8")).hexdigest() + suffix
 
 
-tcache = {}
+tcache: dict[str, Template] = {}
 
 engine_cache = None
 
@@ -212,7 +212,21 @@ class ResolverContext(jinja2.runtime.Context):
             return missing
 
 
-def _get_template_engine(ctx):
+class EmptyResolver:
+    """
+    Empty resolver, matching the api that ResolverContext.resolve_or_missing
+    expects.  Always raises a NotFoundException when lookup is called.
+
+    This resolver is used when the variable accessible to the template are
+    provided via arguments of the plugin instead of local variables in the
+    model.
+    """
+
+    def lookup(self, key: str) -> str:
+        raise NotFoundException(None, key)
+
+
+def _get_template_engine(ctx: Context) -> Environment:
     """
     Initialize the template engine environment
     """
@@ -273,10 +287,14 @@ def _extend_path(ctx: Context, path: str):
 
 
 @plugin("template")
-def template(ctx: Context, path: "string"):
+def template(ctx: Context, path: "string", **kwargs: "any") -> "string":
     """
     Execute the template in path in the current context. This function will
     generate a new statement that has dependencies on the used variables.
+
+    :param path: The path to the jinja2 template that should be resolved.
+    :param **kwargs: A set of variables that should overwrite the context
+        accessible to the template.
     """
     jinja_env = _get_template_engine(ctx)
     template_path = _extend_path(ctx, path)
@@ -286,11 +304,18 @@ def template(ctx: Context, path: "string"):
         template = jinja_env.get_template(template_path)
         tcache[template_path] = template
 
-    resolver = ctx.get_resolver()
+    if not kwargs:
+        # No additional kwargs are provided, use the current context
+        # to resolve the template variables
+        variables = {"{{resolver": ctx.get_resolver()}
+    else:
+        # A strict set of variables is provided via kwargs, only use
+        # these as variables in the template
+        variables = dict(kwargs)
+        variables["{{resolver"] = EmptyResolver()
 
     try:
-        out = template.render({"{{resolver": resolver})
-        return out
+        return template.render(variables)
     except UndefinedError as e:
         raise NotFoundException(ctx.owner, None, e.message)
 
