@@ -311,7 +311,7 @@ def template(ctx: Context, path: "string", **kwargs: "any") -> "string":
     else:
         # A strict set of variables is provided via kwargs, only use
         # these as variables in the template
-        variables = {k: JinjaDynamicProxy.return_value(v) for k, v in kwargs.items()}
+        variables = dict(kwargs)
         variables["{{resolver"] = EmptyResolver()
 
     try:
