@@ -21,6 +21,7 @@ import shutil
 from typing import Dict
 
 import pytest
+import pytest_inmanta.plugin
 
 from inmanta import ast
 
@@ -68,7 +69,7 @@ Test1(name="t3",other=Test1(name="t31",other=Test1(name="t32")))
     assert "t2 is not defined" in project.get_stdout()
 
 
-def test_template(project):
+def test_template(project: pytest_inmanta.plugin.Project) -> None:
     """
     Test the evaluation of a template
     """
@@ -102,6 +103,20 @@ std::print(std::template("unittest/test.tmpl", value="5678"))
     )
 
     assert project.get_stdout() == "5678\n"
+
+    # Check that when we provide the wrong value, the value from the
+    # model is not fetched instead
+    with pytest.raises(ast.WrappingRuntimeException) as exc:
+        project.compile(
+            """import unittest
+value = "1234"
+std::print(std::template("unittest/test.tmpl", wrong_value="5678"))
+        """
+        )
+
+    assert isinstance(exc.value.get_causes()[0], ast.NotFoundException), str(
+        exc.value.get_causes()
+    )
 
 
 def test_plugin_with_list(project):
