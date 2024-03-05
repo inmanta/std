@@ -1,5 +1,8 @@
 # Changelog
 
+## v5.2.1 - ?
+
+
 ## v5.2.0 - 2024-03-05
 
 - Allow to render a template based on plugin arguments
