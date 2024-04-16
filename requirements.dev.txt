@@ -2,4 +2,4 @@ inmanta-dev-dependencies[module]==1.76.0; python_version <= '3.6'
 inmanta-dev-dependencies[module]==2.95.0; python_version > '3.6'
 wheel==0.42.0
 # Pin to iso 6
-inmanta-core~=8.0,<8.8.dev
+inmanta-core~=8.0,<8.8
