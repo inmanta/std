@@ -12,7 +12,9 @@ note: to add a changelog entry and bump the version number:
 
 
 1. merge using the merge button
-2. tag and bump
+2. Wait for tests to pass
+3. Add the tag and push it back
+
 
 ```sh
 git checkout master
@@ -21,7 +23,7 @@ inmanta module release
 git push
 git push {tag} # push the tag as well
 ```
-3. Remove the branch
+4. Remove the branch
 
 # Self Check:
 
