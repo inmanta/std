@@ -19,19 +19,11 @@
 import logging
 
 from inmanta import data
-from inmanta.agent.handler import (
-    CRUDHandler,
-    HandlerContext,
-    ResourcePurged,
-    provider,
-)
-from inmanta.resources import (
-    IgnoreResourceException,
-    PurgeableResource,
-    resource,
-)
+from inmanta.agent.handler import CRUDHandler, HandlerContext, ResourcePurged, provider
+from inmanta.resources import IgnoreResourceException, PurgeableResource, resource
 
 LOGGER = logging.getLogger(__name__)
+
 
 @resource("std::AgentConfig", agent="agent", id_attribute="agentname")
 class AgentConfig(PurgeableResource):
