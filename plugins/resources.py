@@ -20,9 +20,14 @@ import logging
 
 from inmanta import data
 from inmanta.agent.handler import CRUDHandler, HandlerContext, ResourcePurged, provider
-from inmanta.resources import IgnoreResourceException, PurgeableResource, resource
+from inmanta.resources import IgnoreResourceException, PurgeableResource, resource, ManagedResource
 
 LOGGER = logging.getLogger(__name__)
+
+
+@resource("std::testing::NullResource", agent="agentname", id_attribute="name")
+class Null(ManagedResource, PurgeableResource):
+    fields = ("name", "agentname", "fail")
 
 
 @resource("std::AgentConfig", agent="agent", id_attribute="agentname")

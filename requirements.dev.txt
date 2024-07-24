@@ -1,4 +1,3 @@
 inmanta-dev-dependencies[module]==1.76.0; python_version <= '3.6'
 inmanta-dev-dependencies[module]==2.124.0; python_version > '3.6'
 wheel==0.43.0
-inmanta-module-fs
