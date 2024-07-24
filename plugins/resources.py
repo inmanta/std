@@ -20,7 +20,12 @@ import logging
 
 from inmanta import data
 from inmanta.agent.handler import CRUDHandler, HandlerContext, ResourcePurged, provider
-from inmanta.resources import IgnoreResourceException, PurgeableResource, resource, ManagedResource
+from inmanta.resources import (
+    IgnoreResourceException,
+    ManagedResource,
+    PurgeableResource,
+    resource,
+)
 
 LOGGER = logging.getLogger(__name__)
 
