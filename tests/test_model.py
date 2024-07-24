@@ -24,9 +24,10 @@ def test_resources(project):
     project.compile(
         """
 import unittest
+import fs
 
 host = std::Host(name="server", os=std::linux)
-file = std::ConfigFile(host=host, path="/tmp/test", content="1234")
+file = fs::ConfigFile(host=host, path="/tmp/test", content="1234")
         """
     )
 
@@ -40,10 +41,11 @@ def test_packages(project):
     project.compile(
         """
 import unittest
+import fs
 
 host = std::Host(name="server", os=std::linux)
-before = std::ConfigFile(host=host, path="/before", content="1234")
-after = std::ConfigFile(host=host, path="/after", content="1234")
+before = fs::ConfigFile(host=host, path="/before", content="1234")
+after = fs::ConfigFile(host=host, path="/after", content="1234")
 
 std::Packages(
     host=host,
@@ -61,9 +63,9 @@ std::Packages(
     emacs = project.get_resource("std::Package", name="emacs")
     assert emacs
 
-    before = project.get_resource("std::ConfigFile", path="/before")
+    before = project.get_resource("fs::ConfigFile", path="/before")
     assert before
-    after = project.get_resource("std::ConfigFile", path="/after")
+    after = project.get_resource("fs::ConfigFile", path="/after")
     assert after
 
     assert before.id in vim.requires
