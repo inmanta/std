@@ -26,18 +26,6 @@ from xml.etree import ElementTree
 import pytest
 from _pytest.fixtures import SubRequest
 
-collect_ignore = []
-if os.getenv("INMANTA_TEST_INFRA_SETUP", "false").lower() == "true":
-    # If the INMANTA_TEST_INFRA_SETUP is on, ignore the tests when running outside of docker except the "test_in_docker" one.
-    # That test executes the rest of the tests inside a docker container
-    # (and skips itself, because the environment variable will be off in the container).
-    test_dir = os.path.dirname(os.path.realpath(__file__))
-    test_modules = [
-        module for module in os.listdir(test_dir) if "test_in_docker" not in module
-    ]
-
-    collect_ignore += test_modules
-
 
 def merge_to_junit_xml(filename: str, suite: str) -> None:
     """
