@@ -1,7 +1,8 @@
 # Changelog
 
-## v5.2.3 - ?
+## v6.0.0 - ?
 
+- Remove resources related to files, system packages, systemd
 
 ## v5.2.2 - 2024-07-04
 
