@@ -4,6 +4,11 @@
 
 - Remove resources related to files, system packages, systemd
 
+### Upgrade procedure:
+- Resources related to files have been moved in `inmanta-module-fs`
+- Resources related to system packages have been moved in `inmanta-module-apt` and `inmanta-module-yum`
+- Resources related to systemd packages have been moved in `inmanta-module-systemd`
+
 ## v5.2.2 - 2024-07-04
 
 
