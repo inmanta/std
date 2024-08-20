@@ -1,5 +1,8 @@
 # Changelog
 
+## v5.2.5 - ?
+
+
 ## v5.2.4 - 2024-08-20
 
 - Pin pytest-inmanta to iso7 compatible version
