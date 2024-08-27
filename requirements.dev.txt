@@ -1,4 +1,3 @@
 inmanta-dev-dependencies[module]==2.127.0
 pytest-inmanta<3
 wheel==0.43.0
-inmanta-core<12
