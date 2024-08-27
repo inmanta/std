@@ -8,7 +8,7 @@ flake8 = flake8 plugins tests
 .PHONY: ci-install
 ci-install:
 	wget -O documented_constraints.txt https://docs.inmanta.com/inmanta-service-orchestrator/7/reference/requirements.txt
-	pip install -U -r requirements.txt -r requirements.dev.txt -c documented_constraints.txt
+	env/bin/pip install -U -r requirements.txt -r requirements.dev.txt -c documented_constraints.txt
 
 .PHONY: install
 install:
