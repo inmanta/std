@@ -1,6 +1,6 @@
 # Changelog
 
-## v6.0.0 - ?
+## v6.0.0 - 2024-08-28
 
 - Remove resources related to files, system packages, systemd
 
