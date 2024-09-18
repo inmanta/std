@@ -42,6 +42,7 @@ class EntitlementResource(inmanta.resources.PurgeableResource):
     pass
 ```
 
+More information about developing Python Resources and Handlers can be found [here](https://docs.inmanta.com/inmanta-service-orchestrator/7/model_developers/handlers.html#handler).
 
 Another example would be to define a new resource that can be created / updated / removed. The following example is really basic
 and should probably not be implemented, an inventory would be better for that. But for the sake of a basic example, let's suppose that
@@ -115,5 +116,5 @@ typedef alfanum as string matching std::validate_type("pydantic.constr", self, {
 :maxdepth: 1
 autodoc.rst
 CHANGELOG.md
-dev-docs/DEVELOPMENT.md
+docs/DEVELOPMENT.md
 ```
