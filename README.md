@@ -1,35 +1,104 @@
-# STD
+# std Module
 
-The inmanta standard library.
+Inmanta base module that defines primitive types, entities and plugins regularly used when developing models.
 
-## How to run the tests in docker
+## Features
 
-Some of the tests run against systemd, which testing against on developers own systems would not be ideal.
-Instead this module has a docker file to run the tests in, so that they are nice and isolated:
+* Definition of Resource to define new resource:
+  * `Resource`/ `PurgeableResource` / `ManagedResource`: Base classes to define new resources
+  * `DiscoveryResource`: To define a resource that scans the infrastructure for a certain type of deployment
+* Definition of `ResourceSet` (to manage resources in different sets) entities
+* Create, Read, Update, Delete of ***Agent Configuration*** to manage the different settings of the agent
+* Primitive type definitions such as:
+  * `Datetime`
+  * `IP`
+  * `Port`
+  * `URL`
+  * `UUID`
+* `NullResource` entity mainly used for testing
 
-```bash
-docker build . -t test-module-std
-docker run -d --rm --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro --name std-tests test-module-std
-docker exec std-tests env/bin/pytest tests -v
+
+## Usage example
+
+This simple example shows how to create an agent configuration.
+
+```inmanta
+std::AgentConfig(
+    autostart=true,
+    agentname="http://example.com",
+    uri="local:",
+)
+
 ```
 
-Stopping the container (`docker stop std-tests`) will also clean up the volumes.
+Another example would be to define a new resource that can be created / updated / removed. The following example is really basic
+and should probably not be implemented, an inventory would be better for that. But for the sake of a basic example, let's suppose that
+we want a resource that represent the reservation of an IP address from a particular user. We would also save the datetime at which the
+request has been made.
 
-## Using pytest to set up the container
+```inmanta
+entity MyNewResource extends PurgeableResource:
+    """
+        A base class for a resource that can be purged and can be purged by Inmanta whenever the resource is no
+        longer managed.
 
-It is also possible to set up the container and run the tests in it via pytest.
-This is controlled by the `INMANTA_TEST_INFRA_SETUP` environment variable.
-When it's set to `true`, the container is started, and torn down automatically after the tests.
-In this case, the test driver (which is the test case in `test_in_docker.py`) is the only one executed outside the container,
-while the rest of the test cases are executed inside the container.
-The test results can be found in the `junit_docker.xml` file (outside the container).
+        :attr purged: Set whether this resource should exist or not.
+    """
+    ipv4_address reserved_ip
+    datetime since
+    name_email user
+end
 
-The python version used to run the tests determines which dockerfile is used:
+implement MyNewResource using parents
 
-* Python 3.6: Use the `centos7.Dockerfile` dockerfile
-* Python 3.9: Use the `rocky8.Dockerfile` dockerfile
+new_resource = MyNewResource(
+    reserved_ip="192.168.1.1",
+    since="1970-01-01T00:00:00",
+    user="Fred Bloggs <fred.bloggs@example.com>",
+)
+```
 
-Other python version are not supported at the moment with `INMANTA_TEST_INFRA_SETUP=True`.
+If we wanted to remove ("purge" in inmanta terms) this resource, we would do the following:
 
-The cleanup behavior can be changed by the `INMANTA_NO_CLEAN` environment variable,
-when set to `true`, the container is not stopped after the tests.
+```inmanta
+new_resource = MyNewResource(
+    reserved_ip="192.168.1.1",
+    since="1970-01-01T00:00:00",
+    user="Fred Bloggs <fred.bloggs@example.com>",
+    purged=true,  # This is the diff
+)
+```
+
+We can also define new types:
+- Based on constraints on the type
+- Provide a list of values (Enum)
+- Use an existing pydantic type to enforce additional constraints
+- Rely on regex
+```inmanta
+typedef port as int matching self >= 1024 and self < 65536
+"""
+    A TCP/UDP port number that an user can use.
+"""
+
+typedef protocol as string matching self in ["tcp", "udp"]
+"""
+    A protocol
+"""
+
+typedef negative_float as number matching std::validate_type("pydantic.NegativeFloat", self)
+"""
+    A floating point number less than zero.
+"""
+
+typedef alfanum as string matching std::validate_type("pydantic.constr", self, {"regex": "^[a-zA-Z0-9]*$", "strict": true})
+"""
+    An alfanumeric number (lower- and uppercase characters are allowed).
+"""
+```
+
+```{toctree}
+:maxdepth: 1
+autodoc.rst
+CHANGELOG.md
+dev-docs/DEVELOPMENT.md
+```
