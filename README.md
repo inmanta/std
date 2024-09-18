@@ -20,7 +20,7 @@ Inmanta base module that defines primitive types, entities and plugins regularly
 
 ## Usage example
 
-This simple example shows how to create an agent configuration.
+This simple example shows how to create an agent configuration. This configuration will try to update part of the agent configuration on the orchestrator. An agent configuration is mandatory to export resources towards the orchestrator.
 
 ```inmanta
 std::AgentConfig(
@@ -28,8 +28,20 @@ std::AgentConfig(
     agentname="http://example.com",
     uri="local:",
 )
-
 ```
+
+The name of this agent `http://example.com` can now be referred to when defining a python Resource
+
+```python
+@inmanta.resources.resource(
+    "__config__::MyNewResource",
+    "uri",
+    "agentname"  # This is the name of the field that will refer to the agent's name, in this case this field will contain `http://example.com`
+)
+class EntitlementResource(inmanta.resources.PurgeableResource):
+    pass
+```
+
 
 Another example would be to define a new resource that can be created / updated / removed. The following example is really basic
 and should probably not be implemented, an inventory would be better for that. But for the sake of a basic example, let's suppose that
@@ -47,6 +59,7 @@ entity MyNewResource extends PurgeableResource:
     ipv4_address reserved_ip
     datetime since
     name_email user
+    string agentname
 end
 
 implement MyNewResource using parents
@@ -55,6 +68,7 @@ new_resource = MyNewResource(
     reserved_ip="192.168.1.1",
     since="1970-01-01T00:00:00",
     user="Fred Bloggs <fred.bloggs@example.com>",
+    agentname="http://example.com",
 )
 ```
 
@@ -66,6 +80,7 @@ new_resource = MyNewResource(
     since="1970-01-01T00:00:00",
     user="Fred Bloggs <fred.bloggs@example.com>",
     purged=true,  # This is the diff
+    agentname="http://example.com",
 )
 ```
 
