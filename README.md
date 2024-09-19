@@ -20,7 +20,7 @@ Inmanta base module that defines primitive types, entities and plugins regularly
 
 ## Usage example
 
-This simple example shows how to create an agent configuration. This configuration will try to update part of the agent configuration on the orchestrator. An agent configuration is mandatory to export resources towards the orchestrator.
+This simple example shows how to create an agent configuration. This configuration will try to update part of the agent configuration on the orchestrator. An agent configuration is mandatory to deploy resources to the infrastructure.
 
 ```inmanta
 std::AgentConfig(
