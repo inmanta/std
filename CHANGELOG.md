@@ -1,6 +1,6 @@
 # Changelog
 
-## v6.0.1 - ?
+## v6.0.1 - 2024-09-25
 
 - Update README.md
 
