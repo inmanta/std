@@ -1,6 +1,6 @@
 # Changelog
 
-## v5.2.5 - ?
+## v5.2.5 - 2024-09-25
 
 - Update README.md
 
