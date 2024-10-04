@@ -2,6 +2,7 @@
 
 ## v6.0.2 - ?
 
+- Update documentation
 
 ## v6.0.1 - 2024-09-25
 

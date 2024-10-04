@@ -1,4 +1,4 @@
-# STD
+# developer documentation
 
 The inmanta standard library.
 
