@@ -1,6 +1,6 @@
 # Changelog
 
-## v5.2.6 - ?
+## v5.2.6 - 2024-10-04
 
 - Update documentation
 
