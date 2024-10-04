@@ -2,6 +2,7 @@
 
 ## v5.2.6 - ?
 
+- Update documentation
 
 ## v5.2.5 - 2024-09-25
 
