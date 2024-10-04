@@ -163,8 +163,14 @@ entity Resource:
         It is not required to inherit from this entity at the moment but highly recommended for documentation purposes.
 
         :attr send_event: This controls whether a resource should send its deploy state to the resources in its provides.
+        :attr receive_event: This controls whether a resource should receive events from other resources, i.e. its requires
+            that have send_event=true. Resources with receive_event=true will always be deployed whenever a dependency
+            produces an event. Set this to false for resources that do not rely on events (most practical resources) to
+            reduce the amount of redundant deploys, thereby increasing performance (will not have any effect for
+            inmanta-core<14).
     """
     bool send_event=false
+    bool receive_event=true
 end
 
 entity PurgeableResource extends Resource:
