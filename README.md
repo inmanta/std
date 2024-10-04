@@ -116,5 +116,4 @@ typedef alfanum as string matching std::validate_type("pydantic.constr", self, {
 :maxdepth: 1
 autodoc.rst
 CHANGELOG.md
-docs/DEVELOPMENT.md
 ```
