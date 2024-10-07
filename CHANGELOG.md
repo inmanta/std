@@ -1,7 +1,7 @@
 # Changelog
 
 ## v5.2.7 - ?
-
+- Add ``receive_events`` attribute to ``std::Resource``
 
 ## v5.2.6 - 2024-10-04
 
