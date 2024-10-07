@@ -1,4 +1,4 @@
-# std Module
+# std module
 
 Inmanta base module that defines primitive types, entities and plugins regularly used when developing models.
 
