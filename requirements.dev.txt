@@ -1,3 +1,3 @@
 inmanta-dev-dependencies[module]==1.76.0; python_version <= '3.6'
-inmanta-dev-dependencies[module]==2.136.0; python_version > '3.6'
+inmanta-dev-dependencies[module]==2.137.0; python_version > '3.6'
 wheel==0.44.0
