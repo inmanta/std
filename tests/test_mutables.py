@@ -37,9 +37,9 @@ def test_mutable_string(project):
     assert a.value == "a"
 
 
-def test_mutable_number(project):
+def test_mutable_int(project):
     model = """
-    attr_a = std::MutableNumber()
+    attr_a = std::MutableInt()
     if true:
         attr_a.value = 3
     else:
@@ -53,6 +53,24 @@ def test_mutable_number(project):
     root = project._root_scope.get_child("__config__")
     a = root.lookup("a")
     assert a.value == 3
+
+
+def test_mutable_float(project):
+    model = """
+    attr_a = std::MutableFloat()
+    if true:
+        attr_a.value = 8.0
+    else:
+        attr_a.value = 9.0
+    end
+
+    a = attr_a.value
+    """
+
+    project.compile(model)
+    root = project._root_scope.get_child("__config__")
+    a = root.lookup("a")
+    assert a.value == 8.0
 
 
 def test_mutable_bool(project):
