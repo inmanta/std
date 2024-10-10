@@ -1,6 +1,6 @@
 # Changelog
 
-## v6.1.1 - ?
+## v7.0.0 - ?
 
 - Remove usage of number type
 
