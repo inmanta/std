@@ -4,6 +4,15 @@
 
 - Remove usage of number type
 
+### Upgrade procedure
+- `std::to_number` plugin has been removed
+  - Numbers can be converted into a float by using `float(value)`
+  - Numbers can be converted into an integer by using `int(value)`
+- `std::OS.version` needs to be converted to a float
+- `std::MutableNumber` entity has been removed, new alternatives are available:
+  - `std::MutableInt` can be used for mutable integer
+  - `std::MutableFloat` can be used for mutable float
+
 ## v6.1.0 - 2024-10-07
 - Add ``receive_events`` attribute to ``std::Resource``
 
