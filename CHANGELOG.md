@@ -1,5 +1,8 @@
 # Changelog
 
+## v7.0.1 - ?
+
+
 ## v7.0.0 - 2024-10-14
 
 - Remove usage of number type
