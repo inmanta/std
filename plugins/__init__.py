@@ -1073,15 +1073,6 @@ def invert(value: "bool") -> "bool":
     return not value
 
 
-@deprecated
-@plugin
-def to_number(value: "any") -> "number":
-    """
-    Convert a value to a number
-    """
-    return int(value)
-
-
 @plugin
 def list_files(ctx: Context, path: "string") -> "list":
     """
