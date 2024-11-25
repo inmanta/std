@@ -2,6 +2,7 @@
 
 ## v7.0.1 - ?
 
+- The std::AgentConfig handler will act as a no-op when running against an ISO or OSS version that doesn't have the autostart_on_start environment configuration option anymore
 
 ## v7.0.0 - 2024-10-14
 
