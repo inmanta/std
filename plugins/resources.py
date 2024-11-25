@@ -106,8 +106,8 @@ class AgentConfigHandler(CRUDHandler):
         if not self.has_autostarted_agent_map:
             ctx.info(
                 msg="Not making any changes, because we are running against a version of the Inmanta server"
-                    " that doesn't have the the autostarted_agent_map configuration option anymore."
-                    " It's recommended to remove this resource from the configuration model."
+                " that doesn't have the the autostarted_agent_map configuration option anymore."
+                " It's recommended to remove this resource from the configuration model."
             )
             return
         agent_config = self._get_map()
