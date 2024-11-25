@@ -77,6 +77,12 @@ class NullProvider(CRUDHandler):
 
 @provider("std::AgentConfig", name="agentrest")
 class AgentConfigHandler(CRUDHandler):
+
+    # If this evaluates to True, it means we are running against an ISO (ISO8+) or OSS
+    # version that doesn't have the AUTOSTARTED_AGENT_MAP environment configuration
+    # option anymore. In that case this handler should not make any changes.
+    has_autostarted_agent_map: bool = hasattr(data, "AUTOSTART_AGENT_MAP")
+
     def _get_map(self) -> dict:
         def call():
             return self.get_client().get_setting(
@@ -97,6 +103,8 @@ class AgentConfigHandler(CRUDHandler):
         return self.run_sync(call)
 
     def read_resource(self, ctx: HandlerContext, resource: AgentConfig) -> None:
+        if not self.has_autostarted_agent_map:
+            return
         agent_config = self._get_map()
         ctx.set("map", agent_config)
 
@@ -106,11 +114,15 @@ class AgentConfigHandler(CRUDHandler):
         resource.uri = agent_config[resource.agentname]
 
     def create_resource(self, ctx: HandlerContext, resource: AgentConfig) -> None:
+        if not self.has_autostarted_agent_map:
+            return
         agent_config = ctx.get("map")
         agent_config[resource.agentname] = resource.uri
         self._set_map(agent_config)
 
     def delete_resource(self, ctx: HandlerContext, resource: AgentConfig) -> None:
+        if not self.has_autostarted_agent_map:
+            return
         agent_config = ctx.get("map")
         del agent_config[resource.agentname]
         self._set_map(agent_config)
@@ -118,6 +130,8 @@ class AgentConfigHandler(CRUDHandler):
     def update_resource(
         self, ctx: HandlerContext, changes: dict, resource: AgentConfig
     ) -> None:
+        if not self.has_autostarted_agent_map:
+            return
         agent_config = ctx.get("map")
         agent_config[resource.agentname] = resource.uri
         self._set_map(agent_config)
