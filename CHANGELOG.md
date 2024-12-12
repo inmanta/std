@@ -1,8 +1,9 @@
 # Changelog
 
-## v7.0.1 - ?
+## v8.0.0 - ?
 
 - The std::AgentConfig handler will act as a no-op when running against an ISO or OSS version that doesn't have the autostart_agent_map environment configuration option anymore. It's recommanded to no longer use this resource in that case.
+- Remove deprecated 'offset' parameter in 'sequence' plugin.
 
 ## v7.0.0 - 2024-10-14
 
