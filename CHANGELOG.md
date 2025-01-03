@@ -1,7 +1,8 @@
 # Changelog
 
-## v8.0.1 - ?
+## v8.1.0 - ?
 
+- Add getenv, getenv_or_unknown and getenv_or_raise plugins
 
 ## v8.0.0 - 2024-12-12
 
