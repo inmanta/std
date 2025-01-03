@@ -17,6 +17,9 @@
 """
 
 import pytest
+from pytest_inmanta.plugin import Project
+
+from inmanta.ast import ExplicitPluginException
 
 
 def test_select_attr(project):
@@ -158,13 +161,58 @@ def test_string_plugins(project):
     )
 
 
+def test_getenv(project: Project, monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    Verify the good behavior of all getenv plugins
+    """
+    # Check that getenv_or_raise raises a plugin exception
+    with pytest.raises(
+        ExplicitPluginException,
+        match="Environment variable NOT_AN_ENV_VAR doesn't exist",
+    ):
+        project.compile("std::getenv_or_raise('NOT_AN_ENV_VAR')")
+
+    # Check that getenv_or_unknown returns an unknown
+    project.compile(
+        """
+        unknown = std::getenv_or_unknown('NOT_AN_ENV_VAR')
+
+        assert = true
+        assert = std::is_unknown(unknown)
+        """
+    )
+
+    # Check that getenv returns None or a default
+    project.compile(
+        """
+        none = std::getenv('NOT_AN_ENV_VAR')
+        none = null
+
+        def = std::getenv('NOT_AN_ENV_VAR', "def")
+        def = "def"
+        """
+    )
+
+    # Check that all getenv plugins return the env var when it is set
+    with monkeypatch.context() as ctx:
+        ctx.setenv("ENV_VAR", "val")
+        project.compile(
+            """
+            val = "val"
+            val = std::getenv("ENV_VAR")
+            val = std::getenv_or_unknown("ENV_VAR")
+            val = std::getenv_or_raise("ENV_VAR")
+            """
+        )
+
+
 def test_len(project) -> None:
     """
-    Verify the behavior of the len plugin and constrast it with the count plugin.
+    Verify the behavior of the len plugin and contrast it with the count plugin.
     """
     project.compile(
         """
-        unknown = std::get_env_int("UNKNOWN_ENV_INT")
+        unknown = int(std::getenv_or_unknown("UNKNOWN_ENV_INT"))
 
         empty_list = []
         non_empty_list = [1, 2]

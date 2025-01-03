@@ -39,7 +39,12 @@ from jinja2.runtime import Undefined, missing
 
 # don't bind to `resources` because this package has a submodule named resources that will bind to `resources` when imported
 import inmanta.resources
-from inmanta.ast import NotFoundException, OptionalValueException, RuntimeException
+from inmanta.ast import (
+    NotFoundException,
+    OptionalValueException,
+    PluginException,
+    RuntimeException,
+)
 from inmanta.config import Config
 from inmanta.execute.proxy import DynamicProxy, UnknownException
 from inmanta.execute.util import NoneValue, Unknown
@@ -971,16 +976,64 @@ def server_port() -> "int":
 
 
 @plugin
+def getenv(key: "string", default: "string?" = None) -> "string?":
+    """
+    Get an environment variable, return None if it doesn't exist.
+    The optional second argument can specify an alternate default.
+
+    Equivalent to python's os.getenv
+
+    :param key: The name of the environment variable to get
+    :param default: The default value to return if the environment variable
+        is not set.
+    """
+    return os.getenv(key, default)
+
+
+@plugin
+def getenv_or_unknown(key: "string") -> "string":
+    """
+    Get an environment variable, return Unknown if it doesn't exist.
+    Also log a warning to show the missing environment variable.
+
+    :param key: The name of the environment variable to get
+    """
+    val = getenv(key)
+    if val is not None:
+        return val
+
+    logging.getLogger(__name__).warning(
+        "Environment variable %s doesn't exist, returning Unknown(source=%s) instead",
+        key,
+        repr(key),
+    )
+    return Unknown(source=key)
+
+
+@plugin
+def getenv_or_raise(key: "string") -> "string":
+    """
+    Get an environment variable, raise a LookupError if it doesn't exist.
+
+    :param key: The name of the environment variable to get
+    """
+    val = getenv(key)
+    if val is not None:
+        return val
+
+    raise PluginException(f"Environment variable {key} doesn't exist")
+
+
+@deprecated(replaced_by="std::getenv(...) or std::getenv_or_unknown(...)")
+@plugin
 def get_env(name: "string", default_value: "string" = None) -> "string":
-    env = os.environ
-    if name in env:
-        return env[name]
-    elif default_value is not None:
-        return default_value
+    if default_value is None:
+        return getenv_or_unknown(name)
     else:
-        return Unknown(source=name)
+        return getenv(name, default_value)
 
 
+@deprecated(replaced_by="int(std::getenv(...)) or int(std::getenv_or_unknown(...))")
 @plugin
 def get_env_int(name: "string", default_value: "int" = None) -> "int":
     env = os.environ
