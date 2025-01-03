@@ -39,7 +39,12 @@ from jinja2.runtime import Undefined, missing
 
 # don't bind to `resources` because this package has a submodule named resources that will bind to `resources` when imported
 import inmanta.resources
-from inmanta.ast import NotFoundException, OptionalValueException, RuntimeException
+from inmanta.ast import (
+    NotFoundException,
+    OptionalValueException,
+    PluginException,
+    RuntimeException,
+)
 from inmanta.config import Config
 from inmanta.execute.proxy import DynamicProxy, UnknownException
 from inmanta.execute.util import NoneValue, Unknown
@@ -1016,7 +1021,7 @@ def getenv_or_raise(key: "string") -> "string":
     if val is not None:
         return val
 
-    raise LookupError(f"Environment variable {key} doesn't exist")
+    raise PluginException(f"Environment variable {key} doesn't exist")
 
 
 @deprecated(replaced_by="std::getenv(...) or std::getenv_or_unknown(...)")
