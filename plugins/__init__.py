@@ -998,7 +998,7 @@ def getenv_or_unknown(key: "string") -> "string":
 
     :param key: The name of the environment variable to get
     """
-    val = getenv(key)
+    val = os.getenv(key)
     if val is not None:
         return val
 
@@ -1017,32 +1017,43 @@ def getenv_or_raise(key: "string") -> "string":
 
     :param key: The name of the environment variable to get
     """
-    val = getenv(key)
+    val = os.getenv(key)
     if val is not None:
         return val
 
     raise PluginException(f"Environment variable {key} doesn't exist")
 
 
-@deprecated(replaced_by="std::getenv(...) or std::getenv_or_unknown(...)")
 @plugin
-def get_env(name: "string", default_value: "string" = None) -> "string":
-    if default_value is None:
-        return getenv_or_unknown(name)
-    else:
-        return getenv(name, default_value)
+def get_env(name: "string", default_value: "string?" = None) -> "string":
+    # This plugin will remain, but it is recommended to use getenv and getenv_or_unknown
+    # instead
+    val = os.getenv(name, default_value)
+    if val is not None:
+        return val
+
+    logging.getLogger(__name__).warning(
+        "Environment variable %s doesn't exist, returning Unknown(source=%s) instead",
+        name,
+        repr(name),
+    )
+    return Unknown(source=name)
 
 
-@deprecated(replaced_by="int(std::getenv(...)) or int(std::getenv_or_unknown(...))")
 @plugin
-def get_env_int(name: "string", default_value: "int" = None) -> "int":
-    env = os.environ
-    if name in env:
-        return int(env[name])
-    elif default_value is not None:
-        return default_value
-    else:
-        return Unknown(source=name)
+def get_env_int(name: "string", default_value: "int?" = None) -> "int":
+    # This plugin will remain, but it is recommended to use getenv and getenv_or_unknown
+    # instead
+    val: str | int | None = os.getenv(name, default_value)
+    if val is not None:
+        return int(val)
+
+    logging.getLogger(__name__).warning(
+        "Environment variable %s doesn't exist, returning Unknown(source=%s) instead",
+        name,
+        repr(name),
+    )
+    return Unknown(source=name)
 
 
 @plugin
