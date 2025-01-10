@@ -1,7 +1,8 @@
 # Changelog
 
-## v8.0.1 - ?
+## v8.1.0 - ?
 
+- Add json serialization and deserialization plugins
 
 ## v8.0.0 - 2024-12-12
 
