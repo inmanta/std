@@ -17,6 +17,7 @@
 """
 
 import pytest
+from pytest_inmanta.plugin import Project
 
 
 def test_select_attr(project):
@@ -185,4 +186,18 @@ def test_len(project) -> None:
         assert = std::count(two_unknowns_list) == 4
         assert = std::is_unknown(std::len(two_unknowns_list))
         """,
+    )
+
+
+def test_json(project: Project) -> None:
+    """
+    Test the usage of the json plugins
+    """
+    project.compile(
+        """
+        d = std::json_loads(s)
+        d = {"a": "a", "b": [{"a": "a"}]}
+        s = std::json_dumps(d)
+        s = '{"a": "a", "b": [{"a": "a"}]}'
+        """
     )
