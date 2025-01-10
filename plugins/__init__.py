@@ -16,6 +16,7 @@
     Contact: code@inmanta.com
 """
 
+import json
 import base64
 import hashlib
 import importlib
@@ -1276,3 +1277,62 @@ def ip_address_from_interface(
     :param ip_interface: The interface from where we will extract the ip address
     """
     return str(ipaddress.ip_interface(ip_interface).ip)
+
+
+def unwrap(item: object) -> object:
+    """
+    Converts a value from the plugin domain to the python domain.
+
+    This method is based on DynamicProxy.unwrap, which doesn't handle the None values
+    as we would like to, so we only change this part of its behavior.
+    https://github.com/inmanta/inmanta-core/blob/88d8465d487e432ec104e207682e783fb9aeae66/src/inmanta/execute/proxy.py#L93
+    """
+    if item is None:
+        return None
+
+    if isinstance(item, NoneValue):
+        return None
+
+    if isinstance(item, DynamicProxy):
+        item = item._get_instance()
+
+    if isinstance(item, list):
+        return [unwrap(x) for x in item]
+
+    if isinstance(item, dict):
+
+        def recurse_dict_item(
+            key_value: tuple[object, object],
+        ) -> tuple[object, object]:
+            (key, value) = key_value
+            if not isinstance(key, str):
+                raise RuntimeException(
+                    None,
+                    "dict keys should be strings, got %s of type %s with dict value %s"
+                    % (key, type(key), value),
+                )
+            return (key, unwrap(value))
+
+        return dict(map(recurse_dict_item, item.items()))
+
+    return item
+
+
+@plugin
+def json_loads(s: "string") -> "any":
+    """
+    Deserialize s (a string instance containing a JSON document) to an inmanta dsl object.
+
+    :param s: The serialized json string to parse.
+    """
+    return json.loads(s)
+
+
+@plugin
+def json_dumps(obj: "any") -> "string":
+    """
+    Serialize obj to a JSON formatted string.
+
+    :param obj: The inmanta object that should be serialized as json.
+    """
+    return json.dumps(unwrap(obj))
