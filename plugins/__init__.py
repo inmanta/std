@@ -20,6 +20,7 @@ import base64
 import hashlib
 import importlib
 import ipaddress
+import json
 import logging
 import os
 import random
@@ -39,6 +40,7 @@ from jinja2.runtime import Undefined, missing
 
 # don't bind to `resources` because this package has a submodule named resources that will bind to `resources` when imported
 import inmanta.resources
+from inmanta import util
 from inmanta.ast import (
     NotFoundException,
     OptionalValueException,
@@ -1340,3 +1342,23 @@ def ip_address_from_interface(
     :param ip_interface: The interface from where we will extract the ip address
     """
     return str(ipaddress.ip_interface(ip_interface).ip)
+
+
+@plugin
+def json_loads(s: "string") -> "any":
+    """
+    Deserialize s (a string instance containing a JSON document) to an inmanta dsl object.
+
+    :param s: The serialized json string to parse.
+    """
+    return json.loads(s)
+
+
+@plugin
+def json_dumps(obj: "any") -> "string":
+    """
+    Serialize obj to a JSON formatted string.
+
+    :param obj: The inmanta object that should be serialized as json.
+    """
+    return json.dumps(obj, default=util.internal_json_encoder)

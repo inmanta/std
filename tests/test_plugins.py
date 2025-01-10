@@ -16,10 +16,12 @@
     Contact: code@inmanta.com
 """
 
+import re
+
 import pytest
 from pytest_inmanta.plugin import Project
 
-from inmanta.ast import ExplicitPluginException
+from inmanta.ast import ExplicitPluginException, ExternalException
 
 
 def test_select_attr(project):
@@ -233,4 +235,33 @@ def test_len(project) -> None:
         assert = std::count(two_unknowns_list) == 4
         assert = std::is_unknown(std::len(two_unknowns_list))
         """,
+    )
+
+
+def test_json(project: Project) -> None:
+    """
+    Test the usage of the json plugins
+    """
+    project.compile(
+        """
+        d = std::json_loads(s)
+        d = {"a": "a", "b": [{"a": "a"}], "int": 0, "float": 1.0, "bool": true}
+        s = std::json_dumps(d)
+        s = '{"a": "a", "b": [{"a": "a"}], "int": 0, "float": 1.0, "bool": true}'
+        """
+    )
+
+    # Entities can not be serialized
+    with pytest.raises(ExternalException) as exc_info:
+        project.compile(
+            """
+            entity A: end
+            std::json_dumps(A())
+            """
+        )
+
+    exc: ExternalException = exc_info.value
+    assert re.match(
+        r"@__config__::A [a-f0-9]+ is not JSON serializable",
+        str(exc.__cause__),
     )
