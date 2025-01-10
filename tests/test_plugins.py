@@ -16,8 +16,12 @@
     Contact: code@inmanta.com
 """
 
+import re
+
 import pytest
 from pytest_inmanta.plugin import Project
+
+import inmanta.ast
 
 
 def test_select_attr(project):
@@ -200,4 +204,19 @@ def test_json(project: Project) -> None:
         s = std::json_dumps(d)
         s = '{"a": "a", "b": [{"a": "a"}], "int": 0, "float": 1.0, "bool": true}'
         """
+    )
+
+    # Entities can not be serialized
+    with pytest.raises(inmanta.ast.ExternalException) as exc_info:
+        project.compile(
+            """
+            entity A: end
+            std::json_dumps(A())
+            """
+        )
+
+    exc: inmanta.ast.ExternalException = exc_info.value
+    assert re.match(
+        r"@__config__::A [a-f0-9]+ is not JSON serializable",
+        str(exc.__cause__),
     )
