@@ -196,8 +196,8 @@ def test_json(project: Project) -> None:
     project.compile(
         """
         d = std::json_loads(s)
-        d = {"a": "a", "b": [{"a": "a"}]}
+        d = {"a": "a", "b": [{"a": "a"}], "int": 0, "float": 1.0, "bool": true}
         s = std::json_dumps(d)
-        s = '{"a": "a", "b": [{"a": "a"}]}'
+        s = '{"a": "a", "b": [{"a": "a"}], "int": 0, "float": 1.0, "bool": true}'
         """
     )
