@@ -1,5 +1,8 @@
 # Changelog
 
+## v8.2.1 - ?
+
+
 ## v8.2.0 - 2025-01-21
 
 - Added dataclasses support
