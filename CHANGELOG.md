@@ -1,7 +1,11 @@
 # Changelog
 
-## v8.1.1 - ?
+## v8.2.1 - ?
 
+
+## v8.2.0 - 2025-01-21
+
+- Added support for dataclasses, a special type of entity that has a Python counterpart.
 
 ## v8.1.0 - 2025-01-16
 
