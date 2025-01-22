@@ -2,8 +2,10 @@
 
 ## v5.2.8 - ?
 
+- Added support for dataclasses, a special type of entity that has a Python counterpart.
 
 ## v5.2.7 - 2024-10-07
+
 - Add ``receive_events`` attribute to ``std::Resource``
 
 ## v5.2.6 - 2024-10-04

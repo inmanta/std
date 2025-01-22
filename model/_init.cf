@@ -212,6 +212,25 @@ entity ManagedDevice:
     hoststring  name
 end
 
+entity Dataclass:
+    """ 
+        Super class for inmanta entities that have a python counterpart.
+
+        The python counterpart is expect to be 
+        - a frozen dataclass,
+        - with the same name 
+        - in the plugins package of this module
+        - in the corresponding submodule
+        - with the exact same fields 
+
+        The Inmanta entity is expect to
+        - have no relations
+        - have no indexes
+        - have only std::none as implementation
+
+    """
+end
+
 entity Host extends ManagedDevice:
     """
         A host models a server or computer in the managed infrastructure that
