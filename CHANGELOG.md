@@ -2,6 +2,7 @@
 
 ## v8.2.2 - ?
 
+- Format code using black 25.1.0
 
 ## v8.2.1 - 2025-01-23
 
