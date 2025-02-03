@@ -1,6 +1,6 @@
 # Changelog
 
-## v8.2.2 - ?
+## v8.2.2 - 2025-02-03
 
 - Format code using black 25.1.0
 
