@@ -1,6 +1,6 @@
 # Changelog
 
-## v8.2.3 - ?
+## v8.2.3 - 2025-02-06
 
 - Update README.md
 
