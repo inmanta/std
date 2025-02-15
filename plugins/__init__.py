@@ -41,7 +41,12 @@ from jinja2.runtime import Undefined, missing
 # don't bind to `resources` because this package has a submodule named resources that will bind to `resources` when imported
 import inmanta.resources
 from inmanta import util
-from inmanta.ast import NotFoundException, OptionalValueException, RuntimeException
+from inmanta.ast import (
+    NotFoundException,
+    OptionalValueException,
+    PluginException,
+    RuntimeException,
+)
 from inmanta.config import Config
 from inmanta.execute.proxy import DynamicProxy, UnknownException
 from inmanta.execute.util import NoneValue, Unknown
@@ -973,25 +978,84 @@ def server_port() -> "int":
 
 
 @plugin
-def get_env(name: "string", default_value: "string" = None) -> "string":
-    env = os.environ
-    if name in env:
-        return env[name]
-    elif default_value is not None:
-        return default_value
-    else:
-        return Unknown(source=name)
+def getenv(key: "string", default: "string?" = None) -> "string?":
+    """
+    Get an environment variable, return None if it doesn't exist.
+    The optional second argument can specify an alternate default.
+
+    Equivalent to python's os.getenv
+
+    :param key: The name of the environment variable to get
+    :param default: The default value to return if the environment variable
+        is not set.
+    """
+    return os.getenv(key, default)
 
 
 @plugin
-def get_env_int(name: "string", default_value: "int" = None) -> "int":
-    env = os.environ
-    if name in env:
-        return int(env[name])
-    elif default_value is not None:
-        return default_value
-    else:
-        return Unknown(source=name)
+def getenv_or_unknown(key: "string") -> "string":
+    """
+    Get an environment variable, return Unknown if it doesn't exist.
+    Also log a warning to show the missing environment variable.
+
+    :param key: The name of the environment variable to get
+    """
+    val = os.getenv(key)
+    if val is not None:
+        return val
+
+    logging.getLogger(__name__).warning(
+        "Environment variable %s doesn't exist, returning Unknown(source=%s) instead",
+        key,
+        repr(key),
+    )
+    return Unknown(source=key)
+
+
+@plugin
+def getenv_or_raise(key: "string") -> "string":
+    """
+    Get an environment variable, raise a LookupError if it doesn't exist.
+
+    :param key: The name of the environment variable to get
+    """
+    val = os.getenv(key)
+    if val is not None:
+        return val
+
+    raise PluginException(f"Environment variable {key} doesn't exist")
+
+
+@plugin
+def get_env(name: "string", default_value: "string?" = None) -> "string":
+    # This plugin will remain, but it is recommended to use getenv and getenv_or_unknown
+    # instead
+    val = os.getenv(name, default_value)
+    if val is not None:
+        return val
+
+    logging.getLogger(__name__).warning(
+        "Environment variable %s doesn't exist, returning Unknown(source=%s) instead",
+        name,
+        repr(name),
+    )
+    return Unknown(source=name)
+
+
+@plugin
+def get_env_int(name: "string", default_value: "int?" = None) -> "int":
+    # This plugin will remain, but it is recommended to use getenv and getenv_or_unknown
+    # instead
+    val: str | int | None = os.getenv(name, default_value)
+    if val is not None:
+        return int(val)
+
+    logging.getLogger(__name__).warning(
+        "Environment variable %s doesn't exist, returning Unknown(source=%s) instead",
+        name,
+        repr(name),
+    )
+    return Unknown(source=name)
 
 
 @plugin

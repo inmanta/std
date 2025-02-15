@@ -20,6 +20,7 @@
 
 ## v8.1.0 - 2025-01-16
 
+- Add getenv, getenv_or_unknown and getenv_or_raise plugins
 - Add json serialization and deserialization plugins
 
 ## v8.0.0 - 2024-12-12
