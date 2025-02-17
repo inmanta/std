@@ -1,4 +1,4 @@
-FROM rockylinux:8
+FROM rockylinux/rockylinux:8.4
 ENV container docker
 
 ARG PIP_INDEX_URL
@@ -41,5 +41,8 @@ RUN if [ -e "inmanta_plugins" ]; then \
 else \
     env/bin/pip install --only-binary asyncpg -r requirements.txt -r requirements.dev.txt -c requirements.freeze; \
 fi
+
+RUN yum -y install httpd; yum clean all; systemctl enable httpd.service
+EXPOSE 80
 
 CMD ["/usr/sbin/init"]
