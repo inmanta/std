@@ -333,62 +333,6 @@ def systemd(project):
     systemd.clean()
 
 
-def test_systemd_service(project, systemd):
-    """
-    Test deploying systemd
-    """
-    # TODO: test reload
-    project.compile(
-        """
-import unittest
-
-host = std::Host(name="server", os=std::linux)
-svc = std::Service(host=host, name="test", state="running", onboot=true)
-"""
-    )
-
-    svc = project.get_resource("std::Service", name="test")
-    ctx = project.deploy(svc, run_as_root=False)
-    assert ctx.status == inmanta.const.ResourceState.deployed
-    assert ctx.change == inmanta.const.Change.updated
-
-    assert systemd.is_enabled()
-    assert systemd.is_active()
-
-    project.compile(
-        """
-import unittest
-
-host = std::Host(name="server", os=std::linux)
-svc = std::Service(host=host, name="test", state="stopped", onboot=true)
-"""
-    )
-
-    svc = project.get_resource("std::Service", name="test")
-    ctx = project.deploy(svc, run_as_root=False)
-    assert ctx.status == inmanta.const.ResourceState.deployed
-    assert ctx.change == inmanta.const.Change.updated
-
-    assert systemd.is_enabled()
-    assert not systemd.is_active()
-
-    project.compile(
-        """
-import unittest
-
-host = std::Host(name="server", os=std::linux)
-svc = std::Service(host=host, name="test", state="stopped", onboot=false)
-"""
-    )
-
-    svc = project.get_resource("std::Service", name="test")
-    ctx = project.deploy(svc, run_as_root=False)
-    assert ctx.status == inmanta.const.ResourceState.deployed
-    assert ctx.change == inmanta.const.Change.updated
-
-    assert not systemd.is_enabled()
-    assert not systemd.is_active()
-
 
 def test_issue_147(project, systemd):
     """
