@@ -1,6 +1,6 @@
 # Changelog
 
-## v5.2.8 - ?
+## v5.2.8 - 2025-02-18
 
 - remove test
 
