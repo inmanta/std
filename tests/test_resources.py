@@ -333,7 +333,6 @@ def systemd(project):
     systemd.clean()
 
 
-
 def test_issue_147(project, systemd):
     """
     A reload of a service should not start the service if it's not running.
