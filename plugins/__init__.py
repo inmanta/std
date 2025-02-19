@@ -978,58 +978,13 @@ def server_port() -> "int":
 
 
 @plugin
-def getenv(key: "string", default: "string?" = None) -> "string?":
-    """
-    Get an environment variable, return None if it doesn't exist.
-    The optional second argument can specify an alternate default.
-
-    Equivalent to python's os.getenv
-
-    :param key: The name of the environment variable to get
-    :param default: The default value to return if the environment variable
-        is not set.
-    """
-    return os.getenv(key, default)
-
-
-@plugin
-def getenv_or_unknown(key: "string") -> "string":
+def get_env(name: "string", default_value: "string?" = None) -> "string":
     """
     Get an environment variable, return Unknown if it doesn't exist.
     Also log a warning to show the missing environment variable.
 
     :param key: The name of the environment variable to get
     """
-    val = os.getenv(key)
-    if val is not None:
-        return val
-
-    logging.getLogger(__name__).warning(
-        "Environment variable %s doesn't exist, returning Unknown(source=%s) instead",
-        key,
-        repr(key),
-    )
-    return Unknown(source=key)
-
-
-@plugin
-def getenv_or_raise(key: "string") -> "string":
-    """
-    Get an environment variable, raise a LookupError if it doesn't exist.
-
-    :param key: The name of the environment variable to get
-    """
-    val = os.getenv(key)
-    if val is not None:
-        return val
-
-    raise PluginException(f"Environment variable {key} doesn't exist")
-
-
-@plugin
-def get_env(name: "string", default_value: "string?" = None) -> "string":
-    # This plugin will remain, but it is recommended to use getenv and getenv_or_unknown
-    # instead
     val = os.getenv(name, default_value)
     if val is not None:
         return val
@@ -1042,9 +997,10 @@ def get_env(name: "string", default_value: "string?" = None) -> "string":
     return Unknown(source=name)
 
 
+@deprecated(replaced_by="int(std::get_env(...))")
 @plugin
 def get_env_int(name: "string", default_value: "int?" = None) -> "int":
-    # This plugin will remain, but it is recommended to use getenv and getenv_or_unknown
+    # This plugin will remain, but it is recommended to use getenv
     # instead
     val: str | int | None = os.getenv(name, default_value)
     if val is not None:
