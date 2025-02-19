@@ -21,7 +21,7 @@ import re
 import pytest
 from pytest_inmanta.plugin import Project
 
-from inmanta.ast import ExternalException
+import inmanta.ast
 
 
 def test_select_attr(project):
@@ -207,7 +207,7 @@ def test_json(project: Project) -> None:
     )
 
     # Entities can not be serialized
-    with pytest.raises(ExternalException) as exc_info:
+    with pytest.raises(inmanta.ast.ExternalException) as exc_info:
         project.compile(
             """
             entity A: end
@@ -215,7 +215,7 @@ def test_json(project: Project) -> None:
             """
         )
 
-    exc: ExternalException = exc_info.value
+    exc: inmanta.ast.ExternalException = exc_info.value
     assert re.match(
         r"@__config__::A [a-f0-9]+ is not JSON serializable",
         str(exc.__cause__),
