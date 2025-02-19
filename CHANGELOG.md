@@ -1,6 +1,24 @@
 # Changelog
 
-## v8.1.0 - ?
+## v8.2.4 - ?
+
+
+## v8.2.3 - 2025-02-06
+
+- Update README.md
+
+## v8.2.2 - 2025-02-03
+
+- Format code using black 25.1.0
+
+## v8.2.1 - 2025-01-23
+
+
+## v8.2.0 - 2025-01-21
+
+- Added support for dataclasses, a special type of entity that has a Python counterpart.
+
+## v8.1.0 - 2025-01-16
 
 - Add getenv, getenv_or_unknown and getenv_or_raise plugins
 - Add json serialization and deserialization plugins
