@@ -21,7 +21,7 @@ import re
 import pytest
 from pytest_inmanta.plugin import Project
 
-from inmanta.ast import ExplicitPluginException, ExternalException
+from inmanta.ast import ExternalException
 
 
 def test_select_attr(project):
