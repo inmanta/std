@@ -169,7 +169,7 @@ def test_len(project) -> None:
     """
     project.compile(
         """
-        unknown = int(std::getenv("UNKNOWN_ENV_INT"))
+        unknown = int(std::get_env("UNKNOWN_ENV_INT"))
 
         empty_list = []
         non_empty_list = [1, 2]
