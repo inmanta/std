@@ -1,7 +1,8 @@
 # Changelog
 
-## v8.2.4 - ?
+## v8.3.0 - ?
 
+- Added create_environment_reference plugin
 
 ## v8.2.3 - 2025-02-06
 
