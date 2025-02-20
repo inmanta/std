@@ -2,7 +2,8 @@
 
 ## v8.3.0 - ?
 
-- Added create_environment_reference plugin
+- Added create_environment_reference plugin to create reference to environment variables
+- Added the 'value' attribute to std::testing::NullResource
 
 ## v8.2.3 - 2025-02-06
 
