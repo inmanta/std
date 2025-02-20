@@ -41,12 +41,7 @@ from jinja2.runtime import Undefined, missing
 # don't bind to `resources` because this package has a submodule named resources that will bind to `resources` when imported
 import inmanta.resources
 from inmanta import util
-from inmanta.ast import (
-    NotFoundException,
-    OptionalValueException,
-    PluginException,
-    RuntimeException,
-)
+from inmanta.ast import NotFoundException, OptionalValueException, RuntimeException
 from inmanta.config import Config
 from inmanta.execute.proxy import DynamicProxy, UnknownException
 from inmanta.execute.util import NoneValue, Unknown
@@ -1324,7 +1319,7 @@ try:
             env_var_name = self.resolve_other(self.name)
             value = os.getenv(env_var_name)
             if value is None:
-                raise PluginException(f"Environment variable {env_var_name} is not set")
+                raise LookupError(f"Environment variable {env_var_name} is not set")
             return value
 
     @plugin
