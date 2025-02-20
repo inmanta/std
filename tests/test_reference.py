@@ -19,8 +19,6 @@ Contact: code@inmanta.com
 import pytest
 from pytest_inmanta.plugin import Project
 
-from inmanta.ast import PluginException
-
 
 def test_references_resource(project: Project, monkeypatch) -> None:
 
