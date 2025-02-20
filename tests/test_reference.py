@@ -24,7 +24,7 @@ from inmanta.ast import PluginException
 
 def test_references_resource(project: Project, monkeypatch) -> None:
 
-    with pytest.raises(PluginException):
+    with pytest.raises(LookupError):
         # Annoying little detail about pytest-inmanta:
         # When pytest-inmanta runs its compile run
         # it serialize and de-serializes all resource
