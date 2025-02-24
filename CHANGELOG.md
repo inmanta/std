@@ -1,7 +1,9 @@
 # Changelog
 
-## v8.2.4 - ?
+## v8.3.0 - ?
 
+- Log warning when environment variable is not found by get_env plugin
+- Deprecate get_env_int plugin in favor of int(get_env())
 
 ## v8.2.3 - 2025-02-06
 
