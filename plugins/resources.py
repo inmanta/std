@@ -32,7 +32,7 @@ LOGGER = logging.getLogger(__name__)
 
 @resource("std::testing::NullResource", agent="agentname", id_attribute="name")
 class Null(ManagedResource, PurgeableResource):
-    fields = ("name", "agentname", "fail")
+    fields = ("name", "agentname", "fail", "value")
 
 
 @resource("std::AgentConfig", agent="agent", id_attribute="agentname")
@@ -61,6 +61,7 @@ class NullProvider(CRUDHandler):
     def read_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:
         if resource.fail:
             raise Exception("This resource is set to fail")
+        ctx.debug("Observed value: %(value)s", value=resource.value)
         return
 
     def create_resource(self, ctx: HandlerContext, resource: PurgeableResource) -> None:

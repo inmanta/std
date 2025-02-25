@@ -41,6 +41,7 @@ from jinja2.runtime import Undefined, missing
 # don't bind to `resources` because this package has a submodule named resources that will bind to `resources` when imported
 import inmanta.resources
 from inmanta import util
+from inmanta.agent.handler import LoggerABC
 from inmanta.ast import NotFoundException, OptionalValueException, RuntimeException
 from inmanta.config import Config
 from inmanta.execute.proxy import DynamicProxy, UnknownException
@@ -1313,3 +1314,40 @@ def json_dumps(obj: "any") -> "string":
     :param obj: The inmanta object that should be serialized as json.
     """
     return json.dumps(obj, default=util.internal_json_encoder)
+
+
+try:
+    from inmanta.references import Reference, reference
+
+    @reference("std::Environment")
+    class EnvironmentReference(Reference[str]):
+        """A reference to fetch environment variables"""
+
+        def __init__(self, name: str | Reference[str]) -> None:
+            """
+            :param name: The name of the environment variable.
+            """
+            super().__init__()
+            self.name = name
+
+        def resolve(self, logger: LoggerABC) -> str:
+            """Resolve the reference"""
+            env_var_name = self.resolve_other(self.name, logger)
+            logger.debug("Resolving environment variable %(name)s", name=self.name)
+            value = os.getenv(env_var_name)
+            if value is None:
+                raise LookupError(f"Environment variable {env_var_name} is not set")
+            return value
+
+    @plugin
+    def create_environment_reference(name: str | Reference[str]) -> Reference[str]:
+        """Create an environment reference
+
+        :param name: The name of the variable to fetch from the environment
+        :return: A reference to what can be resolved to a string
+        """
+        return EnvironmentReference(name=name)
+
+except ImportError:
+    # Reference are not yet supported by this core version
+    pass

@@ -21,11 +21,13 @@ entity NullResource extends ManagedResource, PurgeableResource:
         A resource that does nothing, for use in tests and examples
 
         :attr name: the name of this resource
+        :attr value: a value this resource can cary, has no purpose
         :attr agentname: the name of the agent to deploy this resource on
         :attr fail: when true, this resource will always fail on both dryrun and deploy
     """
     string name = "null"
     string agentname = "internal"
+    string value = ""
     bool send_event = true
     bool fail = false
 end
