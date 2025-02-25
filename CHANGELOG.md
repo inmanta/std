@@ -4,6 +4,8 @@
 
 - Added create_environment_reference plugin to create reference to environment variables
 - Added the 'value' attribute to std::testing::NullResource
+- Log warning when environment variable is not found by get_env plugin
+- Deprecate get_env_int plugin in favor of int(get_env())
 
 ## v8.2.3 - 2025-02-06
 

@@ -165,11 +165,11 @@ def test_string_plugins(project):
 
 def test_len(project) -> None:
     """
-    Verify the behavior of the len plugin and constrast it with the count plugin.
+    Verify the behavior of the len plugin and contrast it with the count plugin.
     """
     project.compile(
         """
-        unknown = std::get_env_int("UNKNOWN_ENV_INT")
+        unknown = int(std::get_env("UNKNOWN_ENV_INT"))
 
         empty_list = []
         non_empty_list = [1, 2]
