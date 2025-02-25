@@ -34,7 +34,6 @@ from typing import Any, Optional, Tuple
 
 import jinja2
 import pydantic
-from inmanta.agent.handler import LoggerABC
 from jinja2 import Environment, FileSystemLoader, PrefixLoader, Template
 from jinja2.exceptions import UndefinedError
 from jinja2.runtime import Undefined, missing
@@ -42,6 +41,7 @@ from jinja2.runtime import Undefined, missing
 # don't bind to `resources` because this package has a submodule named resources that will bind to `resources` when imported
 import inmanta.resources
 from inmanta import util
+from inmanta.agent.handler import LoggerABC
 from inmanta.ast import NotFoundException, OptionalValueException, RuntimeException
 from inmanta.config import Config
 from inmanta.execute.proxy import DynamicProxy, UnknownException

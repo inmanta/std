@@ -16,9 +16,9 @@ limitations under the License.
 Contact: code@inmanta.com
 """
 
-import pytest
-from inmanta import const
 from pytest_inmanta.plugin import Project
+
+from inmanta import const
 
 
 def test_references_resource(project: Project, monkeypatch) -> None:
@@ -32,7 +32,11 @@ def test_references_resource(project: Project, monkeypatch) -> None:
         """
     )
 
-    project.deploy_resource_v2( "std::testing::NullResource", name="aaa", expected_status=const.ResourceState.failed)
+    project.deploy_resource_v2(
+        "std::testing::NullResource",
+        name="aaa",
+        expected_status=const.ResourceState.failed,
+    )
 
     monkeypatch.setenv("METATESTENV", "TESTENV")
     monkeypatch.setenv("TESTENV", "testvalue")
