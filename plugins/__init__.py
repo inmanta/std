@@ -34,6 +34,7 @@ from typing import Any, Optional, Tuple
 
 import jinja2
 import pydantic
+from inmanta.agent.handler import LoggerABC
 from jinja2 import Environment, FileSystemLoader, PrefixLoader, Template
 from jinja2.exceptions import UndefinedError
 from jinja2.runtime import Undefined, missing
@@ -1314,9 +1315,10 @@ try:
             super().__init__()
             self.name = name
 
-        def resolve(self) -> str:
+        def resolve(self, logger: LoggerABC) -> str:
             """Resolve the reference"""
-            env_var_name = self.resolve_other(self.name)
+            env_var_name = self.resolve_other(self.name, logger)
+            logger.debug("Resolving environment variable %(name)s", name=self.name)
             value = os.getenv(env_var_name)
             if value is None:
                 raise LookupError(f"Environment variable {env_var_name} is not set")
