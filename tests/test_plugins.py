@@ -220,3 +220,24 @@ def test_json(project: Project) -> None:
         r"@__config__::A [a-f0-9]+ is not JSON serializable",
         str(exc.__cause__),
     )
+
+
+def test_format(project: Project) -> None:
+    """
+    Test the usage of the format plugin
+    """
+    project.compile(
+        """
+        import unittest
+
+        # Basic example
+        s = std::format("a={a}", a="1")
+        s = std::format("a={a}", a=1)
+        s = std::format("a={}", 1)
+        s = "a=1"
+
+        # Dict key access and entity attribute access
+        s = std::format("a={d[a]}", d={"a": 1})
+        s = std::format("a={e.desired_value}", e=unittest::IgnoreResource(name="a", desired_value="1"))
+        """
+    )
