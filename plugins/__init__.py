@@ -1316,6 +1316,19 @@ def json_dumps(obj: "any") -> "string":
     return json.dumps(obj, default=util.internal_json_encoder)
 
 
+@plugin
+def format(__string: str, *args, **kwargs: object) -> str:
+    """
+    Format a string using python string formatter, and accepting statements which
+    native inmanta f-string doesn't support (such as accessing dict values)
+
+    :param __string: The string to apply formatting to
+    :param args: The positional arguments to feed into the `str.format` method
+    :param kwargs: The keyword arguments to feed into the `str.format` method
+    """
+    return __string.format(*args, **kwargs)
+
+
 try:
     from inmanta.references import Reference, reference
 
