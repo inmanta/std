@@ -1,5 +1,8 @@
 # Changelog
 
+## v8.3.1 - ?
+
+
 ## v8.3.0 - 2025-03-12
 
 - Add std::format plugin to enjoy advanced python string formatting in the inmanta DSL
