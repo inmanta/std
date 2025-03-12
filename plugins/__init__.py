@@ -1317,7 +1317,7 @@ def json_dumps(obj: "any") -> "string":
 
 
 @plugin
-def format(__string: str, *args: object, **kwargs: object) -> str:
+def format(__string: "string", *args: "any", **kwargs: "any") -> "string":
     """
     Format a string using python string formatter, and accepting statements which
     native inmanta f-string doesn't support (such as accessing dict values)
