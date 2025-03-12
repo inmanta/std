@@ -2,6 +2,7 @@
 
 ## v8.3.0 - ?
 
+- Add std::format plugin to enjoy advanced python string formatting in the inmanta DSL
 - Added create_environment_reference plugin to create reference to environment variables
 - Added the 'value' attribute to std::testing::NullResource
 - Log warning when environment variable is not found by get_env plugin
