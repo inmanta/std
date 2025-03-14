@@ -16,9 +16,17 @@ limitations under the License.
 Contact: code@inmanta.com
 """
 
+import pytest
 from pytest_inmanta.plugin import Project
 
 from inmanta import const
+
+try:
+    from inmanta.references import Reference, reference  # noqa: F401
+except ImportError:
+    pytestmark = pytest.skip(
+        "Reference are not yet supported by this core version", allow_module_level=True
+    )
 
 
 def test_references_resource(project: Project, monkeypatch) -> None:
