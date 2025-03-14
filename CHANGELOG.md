@@ -2,6 +2,7 @@
 
 ## v8.3.1 - ?
 
+- Skip the tests for the references when running against an old version of inmanta-core that doesn't support references yet.
 
 ## v8.3.0 - 2025-03-12
 
