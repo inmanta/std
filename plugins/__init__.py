@@ -777,8 +777,6 @@ def getfact(
     """
     Retrieve a fact of the given resource
     """
-    global fact_cache
-
     resource_id = inmanta.resources.to_id(resource)
     if resource_id is None:
         raise Exception("Facts can only be retreived from resources.")
