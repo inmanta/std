@@ -37,6 +37,9 @@ def test_references_resource(project: Project, monkeypatch) -> None:
             metavalue = std::create_environment_reference("METATESTENV")
             value = std::create_environment_reference(metavalue)
             std::testing::NullResource(agentname="test", name="aaa", value=value)
+
+            # Test that identical references are the same value for the compiler
+            value = std::create_environment_reference(metavalue)
         """
     )
 

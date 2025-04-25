@@ -1350,6 +1350,13 @@ try:
                 raise LookupError(f"Environment variable {env_var_name} is not set")
             return value
 
+        def __eq__(self, value: object) -> bool:
+            match value:
+                case EnvironmentReference():
+                    return self.name == value.name
+                case _:
+                    return False
+
     @plugin
     def create_environment_reference(name: str | Reference[str]) -> Reference[str]:
         """Create an environment reference

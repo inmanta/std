@@ -1,7 +1,8 @@
 # Changelog
 
-## v8.3.3 - ?
+## v8.4.0 - ?
 
+- Make sure that identical std::Environment references are seen as identical values by the compiler
 
 ## v8.3.2 - 2025-04-08
 
