@@ -80,7 +80,7 @@ class JinjaProxyWrapper[P: proxy.DynamicProxy](ABC):
         object.__setattr__(self, "proxy", dynamic_proxy)
 
     def _get_proxy(self) -> P:
-        return object.__getattr__(self, "proxy")
+        return object.__getattribute__(self, "proxy")
 
     @classmethod
     def wrap(cls, value: object) -> object:
@@ -115,7 +115,7 @@ class JinjaProxyWrapper[P: proxy.DynamicProxy](ABC):
         return self._get_proxy() < other
 
     def __str__(self) -> str:
-        return repr(self._get_proxy())
+        return str(self._get_proxy())
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._get_proxy!r})"
