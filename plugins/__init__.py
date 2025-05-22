@@ -79,7 +79,8 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
     Dynamic proxy built on top of inmanta-core's DynamicProxy to provide Jinja-specific capabilities.
     """
 
-    def __init__(self, instance: P) -> None:
+    def __init__(self, instance: P, *, parent_context: Optional[typing.Never] = None) -> None:
+        # TODO: mention why we don't pass parent_context
         super().__init__(instance._get_instance())
         object.__setattr__(self, "delegate", instance)
 
@@ -89,8 +90,10 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
         """
         return object.__getattribute__(self, "delegate")
 
+    # TODO: add tests with references, including in lists etc
+    # TODO: mention why we don't use context
     @classmethod
-    def return_value(cls, value: object) -> object:
+    def return_value(cls, value: object, *, context: Optional[typing.Never] = None) -> object:
         """
         Converts a value from the internal domain to the Jinja domain.
 
