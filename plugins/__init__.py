@@ -26,6 +26,7 @@ import os
 import random
 import re
 import time
+import typing
 from abc import ABC
 from collections import defaultdict
 from itertools import chain
@@ -74,59 +75,49 @@ def inmanta_reset_state() -> None:
 
 
 # TODO: reference validation
-class JinjaProxyWrapper[P: proxy.DynamicProxy](ABC):
-    def __init__(self, dynamic_proxy: P) -> None:
-        self.proxy: P
-        object.__setattr__(self, "proxy", dynamic_proxy)
+class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
+    def __init__(self, instance: P, *, parent_context: Optional[typing.Never] = None) -> None:
+        # TODO: mention why we don't pass parent_context
+        super().__init__(self, instance._get_instance())
+        object.__setattr__(self, "delegate", instance)
 
-    def _get_proxy(self) -> P:
-        return object.__getattribute__(self, "proxy")
+    def _get_delegate(self) -> P:
+        return object.__getattribute__(self, "delegate")
+
+    # TODO: is this method useful or should it be dropped?
+    # TODO: mention why we don't use context
+    @classmethod
+    def return_value(cls, value: object, *, context: Optional[typing.Never] = None) -> object:
+        return cls.wrap(super().return_value(value))
 
     @classmethod
     def wrap(cls, value: object) -> object:
-        return cls.wrap_proxy(value) if isinstance(value, proxy.DynamicProxy) else value
+        return (
+            cls.wrap_proxy(value)
+            if isinstance(value, proxy.DynamicProxy) and not isinstance(value, JinjaDynamicProxy)
+            else value
+        )
 
     @classmethod
-    def wrap_proxy(cls, value: proxy.DynamicProxy) -> "JinjaProxyWrapper":
+    def wrap_proxy(cls, value: proxy.DynamicProxy) -> "JinjaDynamicProxy":
         match value:
             case proxy.SequenceProxy():
-                return SequenceProxyWrapper(value)
+                return JinjaSequenceProxy(value)
             case proxy.DictProxy():
-                return DictProxyWrapper(value)
+                return JinjaDictProxy(value)
             case proxy.CallProxy():
-                return CallProxyWrapper(value)
+                return JinjaCallProxy(value)
             case proxy.DynamicProxy():
-                return DynamicProxyWrapper(value)
+                return JinjaDynamicProxy(value)
             case _:
                 # TODO
                 raise Exception("not possible")
 
-    def __hash__(self) -> int:
-        return hash(self._get_proxy())
-
-    def __eq__(self, other: object) -> bool:
-        if not hasattr(other, "_get_proxy"):
-            return NotImplemented
-        return self._get_proxy() == other._get_proxy()
-
-    def __lt__(self, other: object) -> bool:
-        if not hasattr(other, "_get_proxy"):
-            return NotImplemented
-        return self._get_proxy() < other
-
-    def __str__(self) -> str:
-        return str(self._get_proxy())
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._get_proxy!r})"
-
-
-class DynamicProxyWrapper(JinjaProxyWrapper[proxy.DynamicProxy]):
     def __getattr__(self, name: str) -> object:
-        instance = self._get_proxy()._get_instance()
+        instance = self._get_instance()
         if hasattr(instance, "get_attribute"):
             try:
-                return self.wrap(getattr(self._get_proxy(), name))
+                return self.wrap(getattr(self._get_delegate(), name))
             except (OptionalValueException, NotFoundException):
                 # TODO: create ticket. Should probably be StrictUndefined
                 return Undefined(
@@ -137,32 +128,32 @@ class DynamicProxyWrapper(JinjaProxyWrapper[proxy.DynamicProxy]):
         else:
             # TODO: refactor
             # A native python object
-            return self.wrap(proxy.DynamicProxy.return_value(getattr(instance, name)))
+            return JinjaDynamicProxy.return_value(getattr(instance, name))
 
 
-class GetItemWrapper[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](JinjaProxyWrapper[P], ABC):
+class GetItemWrapper[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](JinjaDynamicProxy[P], ABC):
     def __getitem__(self, key: K) -> object:
-        return self.wrap(self._get_proxy()[key])
+        return self.wrap(self._get_delegate()[key])
 
     def __iter__(self) -> object:
-        return (self.wrap(v) for v in self._get_proxy())
+        return (self.wrap(v) for v in self._get_delegate())
 
     def __len__(self) -> int:
-        return len(self._get_proxy())
+        return len(self._get_delegate())
 
 
-class SequenceProxyWrapper(GetItemWrapper[int, proxy.SequenceProxy]):
+class JinjaSequenceProxy(GetItemWrapper[int, proxy.SequenceProxy]):
     ...
 
 
-class DictProxyWrapper(GetItemWrapper[str, proxy.DictProxy]):
+class JinjaDictProxy(GetItemWrapper[str, proxy.DictProxy]):
     ...
 
 
-class CallProxyWrapper(JinjaProxyWrapper[proxy.CallProxy]):
+class JinjaCallProxy(JinjaDynamicProxy[proxy.CallProxy]):
     def __call__(self, *args: object, **kwargs: object):
         # inmanta-core's CallProxy does not call return_value => call it here
-        return self.wrap(proxy.DynamicProxy.return_value(self._get_proxy()(*args, **kwargs)))
+        return JinjaDynamicProxy.return_value(self._get_delegate()(*args, **kwargs))
 
 
 class ResolverContext(jinja2.runtime.Context):
@@ -170,7 +161,7 @@ class ResolverContext(jinja2.runtime.Context):
         resolver = self.parent["{{resolver"]
         try:
             raw = resolver.lookup(key)
-            return JinjaProxyWrapper.wrap(proxy.DynamicProxy.return_value(raw.get_value()))
+            return JinjaDynamicProxy.return_value(raw.get_value())
         except NotFoundException:
             return super(ResolverContext, self).resolve_or_missing(key)
         except OptionalValueException:
@@ -218,7 +209,7 @@ def _get_template_engine(ctx: Context) -> Environment:
         def curywrapper(func):
             def safewrapper(*args):
                 _raise_if_contains_undefined(args)
-                return JinjaProxyWrapper.wrap(proxy.DynamicProxy.return_value(func(*args)))
+                return JinjaDynamicProxy.return_value(func(*args))
 
             return safewrapper
 
