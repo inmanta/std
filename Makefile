@@ -19,9 +19,3 @@ format:
 .PHONY: pep8
 pep8:
 	$(flake8)
-
-
-# TODO: remove
-.PHONY: pep8
-ci-pep8:
-	true

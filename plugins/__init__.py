@@ -75,12 +75,19 @@ def inmanta_reset_state() -> None:
 
 
 class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
+    """
+    Dynamic proxy built on top of inmanta-core's DynamicProxy to provide Jinja-specific capabilities.
+    """
+
     def __init__(self, instance: P, *, parent_context: Optional[typing.Never] = None) -> None:
         # TODO: mention why we don't pass parent_context
         super().__init__(instance._get_instance())
         object.__setattr__(self, "delegate", instance)
 
     def _get_delegate(self) -> P:
+        """
+        Get the normal proxy object backing this one.
+        """
         return object.__getattribute__(self, "delegate")
 
     # TODO: add tests with references, including in lists etc
@@ -88,23 +95,34 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
     def _black_box(cls) -> bool:
         return True
 
-    # TODO: is this method useful or should it be dropped?
     # TODO: mention why we don't use context
     @classmethod
     def return_value(cls, value: object, *, context: Optional[typing.Never] = None) -> object:
+        """
+        Converts a value from the internal domain to the Jinja domain.
+
+        Core's DynamicProxy implementation will not call this method, even for subclasses of this one. It is meant purely as a
+        convenience method top-level conversion.
+        """
         return cls.wrap(super().return_value(value))
 
     @classmethod
     def wrap(cls, value: object) -> object:
+        """
+        Wrap a value in a jinja-compatible proxy, if required.
+        """
         return (
-            cls.wrap_proxy(value)
-            if isinstance(value, proxy.DynamicProxy) and not isinstance(value, JinjaDynamicProxy)
-            else value
+            cls._wrap_proxy(value) if isinstance(value, proxy.DynamicProxy) else value
         )
 
     @classmethod
-    def wrap_proxy(cls, value: proxy.DynamicProxy) -> "JinjaDynamicProxy":
+    def _wrap_proxy(cls, value: proxy.DynamicProxy) -> "JinjaDynamicProxy":
+        """
+        Wrap a normal proxy in a jinja-compatible one.
+        """
         match value:
+            case JinjaDynamicProxy():
+                return value
             case proxy.SequenceProxy():
                 return JinjaSequenceProxy(value)
             case proxy.DictProxy():
@@ -133,7 +151,13 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
             return JinjaDynamicProxy.return_value(getattr(instance, name))
 
 
-class GetItemWrapper[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](JinjaDynamicProxy[P], ABC):
+class JinjaGetItemproxy[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](
+    JinjaDynamicProxy[P], ABC
+):
+    """
+    Jinja-compatible proxy for __getitem__.
+    """
+
     def __getitem__(self, key: K) -> object:
         return self.wrap(self._get_delegate()[key])
 
@@ -144,15 +168,23 @@ class GetItemWrapper[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](Jin
         return len(self._get_delegate())
 
 
-class JinjaSequenceProxy(GetItemWrapper[int, proxy.SequenceProxy]):
-    ...
+class JinjaSequenceProxy(JinjaGetItemproxy[int, proxy.SequenceProxy]):
+    """
+    Jinja-compatible sequence proxy.
+    """
 
 
-class JinjaDictProxy(GetItemWrapper[str, proxy.DictProxy]):
-    ...
+class JinjaDictProxy(JinjaGetItemproxy[str, proxy.DictProxy]):
+    """
+    Jinja-compatible dict proxy.
+    """
 
 
 class JinjaCallProxy(JinjaDynamicProxy[proxy.CallProxy]):
+    """
+    Jinja-compatible callable proxy.
+    """
+
     def __call__(self, *args: object, **kwargs: object):
         # inmanta-core's CallProxy does not call return_value => call it here
         return JinjaDynamicProxy.return_value(self._get_delegate()(*args, **kwargs))
