@@ -78,7 +78,7 @@ def inmanta_reset_state() -> None:
 class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
     def __init__(self, instance: P, *, parent_context: Optional[typing.Never] = None) -> None:
         # TODO: mention why we don't pass parent_context
-        super().__init__(self, instance._get_instance())
+        super().__init__(instance._get_instance())
         object.__setattr__(self, "delegate", instance)
 
     def _get_delegate(self) -> P:
