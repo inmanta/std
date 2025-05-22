@@ -75,23 +75,16 @@ def inmanta_reset_state() -> None:
 
 
 class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
-    def __init__(self, instance: P, *, parent_context: Optional[typing.Never] = None) -> None:
-        # TODO: mention why we don't pass parent_context
+    def __init__(self, instance: P) -> None:
         super().__init__(instance._get_instance())
         object.__setattr__(self, "delegate", instance)
 
     def _get_delegate(self) -> P:
         return object.__getattribute__(self, "delegate")
 
-    # TODO: add tests with references, including in lists etc
-    @classmethod
-    def _black_box(cls) -> bool:
-        return True
-
     # TODO: is this method useful or should it be dropped?
-    # TODO: mention why we don't use context
     @classmethod
-    def return_value(cls, value: object, *, context: Optional[typing.Never] = None) -> object:
+    def return_value(cls, value: object) -> object:
         return cls.wrap(super().return_value(value))
 
     @classmethod
