@@ -91,10 +91,6 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
         return object.__getattribute__(self, "delegate")
 
     # TODO: add tests with references, including in lists etc
-    @classmethod
-    def _black_box(cls) -> bool:
-        return True
-
     # TODO: mention why we don't use context
     @classmethod
     def return_value(cls, value: object, *, context: Optional[typing.Never] = None) -> object:
