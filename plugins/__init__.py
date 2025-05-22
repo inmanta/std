@@ -94,7 +94,8 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
         """
         Converts a value from the internal domain to the Jinja domain.
 
-        Core's DynamicProxy will not call this method. It is meant purely as a convenience method top-level conversion.
+        Core's DynamicProxy implementation will not call this method, even for subclasses of this one. It is meant purely as a
+        convenience method top-level conversion.
         """
         return cls.wrap(super().return_value(value))
 
