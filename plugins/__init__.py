@@ -26,10 +26,8 @@ import os
 import random
 import re
 import time
-import typing
 from abc import ABC
 from collections import defaultdict
-from copy import copy
 from itertools import chain
 from operator import attrgetter
 from typing import Any, Optional, Tuple
@@ -47,15 +45,10 @@ from inmanta.agent.handler import LoggerABC
 from inmanta.ast import NotFoundException, OptionalValueException, RuntimeException
 from inmanta.config import Config
 from inmanta.execute import proxy
-from inmanta.execute.proxy import UnknownException
 from inmanta.execute.util import NoneValue, Unknown
 from inmanta.export import dependency_manager, unknown_parameters
 from inmanta.module import Project
 from inmanta.plugins import Context, deprecated, plugin
-
-# only if type checking because this is only defined in recent versions of inmanta-core
-if typing.TYPE_CHECKING:
-    from inmanta.execute.proxy import DynamicReturnValueContext
 
 
 @plugin
@@ -80,6 +73,7 @@ def inmanta_reset_state() -> None:
     fact_cache = {}
 
 
+# TODO: reference validation
 class JinjaProxyWrapper[P: proxy.DynamicProxy](ABC):
     def __init__(self, dynamic_proxy: P) -> None:
         self.proxy: P
@@ -89,11 +83,11 @@ class JinjaProxyWrapper[P: proxy.DynamicProxy](ABC):
         return object.__getattr__(self, "proxy")
 
     @classmethod
-    def wrap_proxy(cls, value: object) -> object:
+    def wrap(cls, value: object) -> object:
         return cls.wrap_proxy(value) if isinstance(value, proxy.DynamicProxy) else value
 
     @classmethod
-    def wrap_proxy(cls, value: proxy.DynamicProxy) -> "JinjaDynamicProxy":
+    def wrap_proxy(cls, value: proxy.DynamicProxy) -> "JinjaProxyWrapper":
         match value:
             case proxy.SequenceProxy():
                 return SequenceProxyWrapper(value)
@@ -141,11 +135,12 @@ class DynamicProxyWrapper(JinjaProxyWrapper[proxy.DynamicProxy]):
                     name,
                 )
         else:
+            # TODO: refactor
             # A native python object
-            return self.wrap(JinjaDynamicProxy.return_value(getattr(instance, attribute)))
+            return self.wrap(proxy.DynamicProxy.return_value(getattr(instance, name)))
 
 
-class GetItemWrapperABC[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](JinjaProxyWrapper[P]):
+class GetItemWrapper[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](JinjaProxyWrapper[P], ABC):
     def __getitem__(self, key: K) -> object:
         return self.wrap(self._get_proxy()[key])
 
@@ -156,11 +151,11 @@ class GetItemWrapperABC[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](
         return len(self._get_proxy())
 
 
-class SequenceProxyWrapper(GetItemWrapperABC[int, proxy.SequenceProxy]):
+class SequenceProxyWrapper(GetItemWrapper[int, proxy.SequenceProxy]):
     ...
 
 
-class DictProxyWrapper(GetItemWrapperABC[str, proxy.DictProxy]):
+class DictProxyWrapper(GetItemWrapper[str, proxy.DictProxy]):
     ...
 
 
@@ -223,7 +218,7 @@ def _get_template_engine(ctx: Context) -> Environment:
         def curywrapper(func):
             def safewrapper(*args):
                 _raise_if_contains_undefined(args)
-                return JinjaProxyWrapper.wrap(DynamicProxy.return_value(func(*args)))
+                return JinjaProxyWrapper.wrap(proxy.DynamicProxy.return_value(func(*args)))
 
             return safewrapper
 
