@@ -74,7 +74,6 @@ def inmanta_reset_state() -> None:
     fact_cache = {}
 
 
-# TODO: reference validation
 class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
     def __init__(self, instance: P, *, parent_context: Optional[typing.Never] = None) -> None:
         # TODO: mention why we don't pass parent_context
@@ -83,6 +82,11 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
 
     def _get_delegate(self) -> P:
         return object.__getattribute__(self, "delegate")
+
+    # TODO: add tests with references, including in lists etc
+    @classmethod
+    def _black_box(cls) -> bool:
+        return True
 
     # TODO: is this method useful or should it be dropped?
     # TODO: mention why we don't use context
@@ -109,9 +113,8 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
                 return JinjaCallProxy(value)
             case proxy.DynamicProxy():
                 return JinjaDynamicProxy(value)
-            case _:
-                # TODO
-                raise Exception("not possible")
+            case _never:
+                typing.assert_never(_never)
 
     def __getattr__(self, name: str) -> object:
         instance = self._get_instance()
@@ -126,8 +129,7 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
                     name,
                 )
         else:
-            # TODO: refactor
-            # A native python object
+            # A native python object. Not supported by core's DynamicProxy
             return JinjaDynamicProxy.return_value(getattr(instance, name))
 
 
