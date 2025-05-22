@@ -104,9 +104,7 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
         Wrap a value in a jinja-compatible proxy, if required.
         """
         return (
-            cls._wrap_proxy(value)
-            if isinstance(value, proxy.DynamicProxy)
-            else value
+            cls._wrap_proxy(value) if isinstance(value, proxy.DynamicProxy) else value
         )
 
     @classmethod
@@ -145,10 +143,13 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
             return JinjaDynamicProxy.return_value(getattr(instance, name))
 
 
-class JinjaGetItemproxy[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](JinjaDynamicProxy[P], ABC):
+class JinjaGetItemproxy[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](
+    JinjaDynamicProxy[P], ABC
+):
     """
     Jinja-compatible proxy for __getitem__.
     """
+
     def __getitem__(self, key: K) -> object:
         return self.wrap(self._get_delegate()[key])
 
