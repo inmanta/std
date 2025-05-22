@@ -26,6 +26,8 @@ import os
 import random
 import re
 import time
+import typing
+from abc import ABC
 from collections import defaultdict
 from copy import copy
 from itertools import chain
@@ -44,11 +46,16 @@ from inmanta import util
 from inmanta.agent.handler import LoggerABC
 from inmanta.ast import NotFoundException, OptionalValueException, RuntimeException
 from inmanta.config import Config
-from inmanta.execute.proxy import DynamicProxy, UnknownException
+from inmanta.execute import proxy
+from inmanta.execute.proxy import UnknownException
 from inmanta.execute.util import NoneValue, Unknown
 from inmanta.export import dependency_manager, unknown_parameters
 from inmanta.module import Project
 from inmanta.plugins import Context, deprecated, plugin
+
+# only if type checking because this is only defined in recent versions of inmanta-core
+if typing.TYPE_CHECKING:
+    from inmanta.execute.proxy import DynamicReturnValueContext
 
 
 @plugin
@@ -73,134 +80,94 @@ def inmanta_reset_state() -> None:
     fact_cache = {}
 
 
-class JinjaDynamicProxy(DynamicProxy):
-    def __init__(self, instance):
-        super(JinjaDynamicProxy, self).__init__(instance)
+class JinjaProxyWrapper[P: proxy.DynamicProxy](ABC):
+    def __init__(self, dynamic_proxy: P) -> None:
+        self.proxy: P
+        object.__setattr__(self, "proxy", dynamic_proxy)
+
+    def _get_proxy(self) -> P:
+        return object.__getattr__(self, "proxy")
 
     @classmethod
-    def return_value(cls, value):
-        if value is None:
-            return None
+    def wrap_proxy(cls, value: object) -> object:
+        return cls.wrap_proxy(value) if isinstance(value, proxy.DynamicProxy) else value
 
-        if isinstance(value, NoneValue):
-            return None
+    @classmethod
+    def wrap_proxy(cls, value: proxy.DynamicProxy) -> "JinjaDynamicProxy":
+        match value:
+            case proxy.SequenceProxy():
+                return SequenceProxyWrapper(value)
+            case proxy.DictProxy():
+                return DictProxyWrapper(value)
+            case proxy.CallProxy():
+                return CallProxyWrapper(value)
+            case proxy.DynamicProxy():
+                return DynamicProxyWrapper(value)
+            case _:
+                # TODO
+                raise Exception("not possible")
 
-        if isinstance(value, Unknown):
-            raise UnknownException(value)
+    def __hash__(self) -> int:
+        return hash(self._get_proxy())
 
-        if isinstance(value, (str, tuple, int, float, bool)):
-            return copy(value)
+    def __eq__(self, other: object) -> bool:
+        if not hasattr(other, "_get_proxy"):
+            return NotImplemented
+        return self._get_proxy() == other._get_proxy()
 
-        if isinstance(value, DynamicProxy):
-            return value
+    def __lt__(self, other: object) -> bool:
+        if not hasattr(other, "_get_proxy"):
+            return NotImplemented
+        return self._get_proxy() < other
 
-        if isinstance(value, dict):
-            return DictProxy(value)
+    def __str__(self) -> str:
+        return repr(self._get_proxy())
 
-        if hasattr(value, "__len__"):
-            return SequenceProxy(value)
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._get_proxy!r})"
 
-        if hasattr(value, "__call__"):
-            return CallProxy(value)
 
-        return cls(value)
-
-    def __getattr__(self, attribute):
-        instance = self._get_instance()
+class DynamicProxyWrapper(JinjaProxyWrapper[proxy.DynamicProxy]):
+    def __getattr__(self, name: str) -> object:
+        instance = self._get_proxy()._get_instance()
         if hasattr(instance, "get_attribute"):
             try:
-                value = instance.get_attribute(attribute).get_value()
-                return JinjaDynamicProxy.return_value(value)
+                return self.wrap(getattr(self._get_proxy(), name))
             except (OptionalValueException, NotFoundException):
+                # TODO: create ticket. Should probably be StrictUndefined
                 return Undefined(
-                    "variable %s not set on %s" % (attribute, instance),
+                    "variable %s not set on %s" % (name, instance),
                     instance,
-                    attribute,
+                    name,
                 )
         else:
-            # A native python object such as a dict
-            return JinjaDynamicProxy.return_value(getattr(instance, attribute))
+            # A native python object
+            return self.wrap(JinjaDynamicProxy.return_value(getattr(instance, attribute)))
 
 
-class DictProxy(JinjaDynamicProxy):
-    def __init__(self, mydict):
-        DynamicProxy.__init__(self, mydict)
+class GetItemWrapperABC[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](JinjaProxyWrapper[P]):
+    def __getitem__(self, key: K) -> object:
+        return self.wrap(self._get_proxy()[key])
 
-    def __getitem__(self, key):
-        instance = self._get_instance()
-        if not isinstance(key, str):
-            raise RuntimeException(
-                self,
-                "Expected string key, but got %s, %s is a dict"
-                % (key, self._get_instance()),
-            )
+    def __iter__(self) -> object:
+        return (self.wrap(v) for v in self._get_proxy())
 
-        return DynamicProxy.return_value(instance[key])
-
-    def __len__(self):
-        return len(self._get_instance())
-
-    def __iter__(self):
-        instance = self._get_instance()
-
-        return IteratorProxy(instance.__iter__())
+    def __len__(self) -> int:
+        return len(self._get_proxy())
 
 
-class SequenceProxy(JinjaDynamicProxy):
-    def __init__(self, iterator):
-        JinjaDynamicProxy.__init__(self, iterator)
-
-    def __getitem__(self, key):
-        instance = self._get_instance()
-        if isinstance(key, str):
-            raise RuntimeException(
-                self,
-                "can not get a attribute %s, %s is a list"
-                % (key, self._get_instance()),
-            )
-
-        return JinjaDynamicProxy.return_value(instance[key])
-
-    def __len__(self):
-        return len(self._get_instance())
-
-    def __iter__(self):
-        instance = self._get_instance()
-
-        return IteratorProxy(instance.__iter__())
-
-    def items(self):
-        return self._get_instance().items()
+class SequenceProxyWrapper(GetItemWrapperABC[int, proxy.SequenceProxy]):
+    ...
 
 
-class CallProxy(JinjaDynamicProxy):
-    """
-    Proxy a value that implements a __call__ function
-    """
-
-    def __init__(self, instance):
-        JinjaDynamicProxy.__init__(self, instance)
-
-    def __call__(self, *args, **kwargs):
-        instance = self._get_instance()
-
-        return JinjaDynamicProxy.return_value(instance(*args, **kwargs))
+class DictProxyWrapper(GetItemWrapperABC[str, proxy.DictProxy]):
+    ...
 
 
-class IteratorProxy(JinjaDynamicProxy):
-    """
-    Proxy an iterator call
-    """
-
-    def __init__(self, iterator):
-        JinjaDynamicProxy.__init__(self, iterator)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        i = self._get_instance()
-        return JinjaDynamicProxy.return_value(next(i))
+class CallProxyWrapper(JinjaProxyWrapper[proxy.CallProxy]):
+    def __call__(self, *args: object, **kwargs: object):
+        # inmanta-core's CallProxy does not call return_value => call it here
+        return self.wrap(proxy.DynamicProxy.return_value(self._get_proxy()(*args, **kwargs)))
 
 
 class ResolverContext(jinja2.runtime.Context):
@@ -208,7 +175,7 @@ class ResolverContext(jinja2.runtime.Context):
         resolver = self.parent["{{resolver"]
         try:
             raw = resolver.lookup(key)
-            return JinjaDynamicProxy.return_value(raw.get_value())
+            return JinjaProxyWrapper.wrap(proxy.DynamicProxy.return_value(raw.get_value()))
         except NotFoundException:
             return super(ResolverContext, self).resolve_or_missing(key)
         except OptionalValueException:
@@ -256,7 +223,7 @@ def _get_template_engine(ctx: Context) -> Environment:
         def curywrapper(func):
             def safewrapper(*args):
                 _raise_if_contains_undefined(args)
-                return JinjaDynamicProxy.return_value(func(*args))
+                return JinjaProxyWrapper.wrap(DynamicProxy.return_value(func(*args)))
 
             return safewrapper
 
@@ -1142,7 +1109,7 @@ def validate_type(
         return _validate_type_legacy(fq_type_name, value, validation_parameters)
     else:
         # Use validate_type implementation from inmanta-core
-        unwrapped_value = DynamicProxy.unwrap(value)
+        unwrapped_value = proxy.DynamicProxy.unwrap(value)
         if isinstance(unwrapped_value, NoneValue):
             unwrapped_value = None
         try:
