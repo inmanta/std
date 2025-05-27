@@ -16,11 +16,15 @@ limitations under the License.
 Contact: code@inmanta.com
 """
 
+import time
+import urllib
+
 import pytest
 from pytest_inmanta.plugin import Project
+from pytest_inmanta_lsm.remote_orchestrator import RemoteOrchestrator
 
 from inmanta import const
-from pytest_inmanta_lsm.remote_orchestrator import RemoteOrchestrator
+
 try:
     from inmanta.references import Reference, reference  # noqa: F401
 except ImportError:
@@ -65,7 +69,29 @@ def test_references_resource(project: Project, monkeypatch) -> None:
     assert result.assert_has_logline("Observed value: testvalue")
 
 
-def test_fact_references(project: Project, remote_orchestrator: RemoteOrchestrator) -> None:
+def test_fact_references(
+    project: Project, remote_orchestrator: RemoteOrchestrator
+) -> None:
+
+    def get_resource_status(name: str) -> str:
+        """
+        Get the status of a resouce in the remote orchestrator
+        """
+        resource_id = f"std::testing::NullResource[test,name={name}]"
+        resp = remote_orchestrator.session.get(
+            f"/api/v2/resource/{urllib.parse.quote(resource_id, safe="")}",
+            headers={"X-Inmanta-tid": str(remote_orchestrator.environment)},
+        )
+        resp.raise_for_status()
+        return resp.json()["data"]["status"]
+
+    def wait_for_resource(name: str) -> str:
+        """
+        Wait for the resource to have run
+        """
+        while get_resource_status(name) not in ["deployed", "failed", "skipped"]:
+            time.sleep(0.2)
+            pass
 
     project.compile(
         """
@@ -83,4 +109,34 @@ def test_fact_references(project: Project, remote_orchestrator: RemoteOrchestrat
         """,
         export=True,
     )
-    breakpoint()
+
+    version = project.version
+    assert version is not None
+
+    wait_for_resource("aaa")
+    assert get_resource_status("aaa") == "deployed"
+    wait_for_resource("bbb")
+    assert get_resource_status("bbb") == "failed"
+
+    # We set the fact on the "aaa" resource
+    remote_orchestrator.session.put(
+        "/api/v2/facts/my_fact",
+        headers={"X-Inmanta-tid": str(remote_orchestrator.environment)},
+        json={
+            "source": "fact",
+            "value": "string",
+            "resource_id": "std::testing::NullResource[test,name=aaa]",
+            "recompile": False,
+            "expires": False,
+        },
+    )
+
+    # We action a deploy (so no need of recompile)
+    remote_orchestrator.session.post(
+        "/api/v1/deploy",
+        headers={"X-Inmanta-tid": str(remote_orchestrator.environment)},
+    )
+
+    # Now the resource is deployed
+    wait_for_resource("bbb")
+    assert get_resource_status("bbb") == "deployed"
