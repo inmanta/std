@@ -82,8 +82,10 @@ def test_fact_references(
             f"/api/v2/resource/{urllib.parse.quote(resource_id, safe="")}",
             headers={"X-Inmanta-tid": str(remote_orchestrator.environment)},
         )
-        resp.raise_for_status()
-        return resp.json()["data"]["status"]
+        if resp.status_code == 200:
+            resp.raise_for_status()
+            return resp.json()["data"]["status"]
+        return "unavailable"
 
     def wait_for_resource(name: str) -> str:
         """
