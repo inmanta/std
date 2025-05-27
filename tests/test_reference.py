@@ -68,6 +68,7 @@ def test_references_resource(project: Project, monkeypatch) -> None:
     result = project.deploy_resource_v2("std::testing::NullResource", name="aaa")
     assert result.assert_has_logline("Observed value: testvalue")
 
+
 @pytest.mark.skip()
 def test_fact_references(
     project: Project, remote_orchestrator: RemoteOrchestrator
