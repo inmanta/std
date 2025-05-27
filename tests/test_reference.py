@@ -20,7 +20,7 @@ import pytest
 from pytest_inmanta.plugin import Project
 
 from inmanta import const
-
+from pytest_inmanta_lsm.remote_orchestrator import RemoteOrchestrator
 try:
     from inmanta.references import Reference, reference  # noqa: F401
 except ImportError:
@@ -63,3 +63,24 @@ def test_references_resource(project: Project, monkeypatch) -> None:
 
     result = project.deploy_resource_v2("std::testing::NullResource", name="aaa")
     assert result.assert_has_logline("Observed value: testvalue")
+
+
+def test_fact_references(project: Project, remote_orchestrator: RemoteOrchestrator) -> None:
+
+    project.compile(
+        """
+            import std::testing
+            resource_a = std::testing::NullResource(agentname="test", name="aaa", value="aaa")
+
+            resource_b = std::testing::NullResource(
+                agentname="test",
+                name="bbb",
+                value=std::create_fact_reference(
+                    resource=resource_a,
+                    fact_name="my_fact",
+                )
+            )
+        """,
+        export=True,
+    )
+    breakpoint()

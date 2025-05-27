@@ -26,6 +26,7 @@ import os
 import random
 import re
 import time
+import urllib
 from collections import defaultdict
 from copy import copy
 from itertools import chain
@@ -34,6 +35,7 @@ from typing import Any, Optional, Tuple
 
 import jinja2
 import pydantic
+import requests
 from jinja2 import Environment, FileSystemLoader, PrefixLoader, Template
 from jinja2.exceptions import UndefinedError
 from jinja2.runtime import Undefined, missing
@@ -1369,3 +1371,74 @@ try:
 except ImportError:
     # Reference are not yet supported by this core version
     pass
+
+
+@reference("std::FactReference")
+class FactReference(Reference[str]):
+
+    def __init__(self, resource_id: str, fact_name: str) -> None:
+        super().__init__()
+        self.resource_id = resource_id
+        self.fact_name = fact_name
+
+    def _get_url(self) -> str:
+        """
+        Load the configuration for the client
+        """
+
+        port = Config.get("config", "port", 8888)
+        host = Config.get("config", "host", "localhost")
+
+        assert isinstance(port, int), f"Unexpected type for port {type(port)}"
+        assert isinstance(host, str), f"Unexpected type for host {type(host)}"
+
+        if Config.getboolean("config", "ssl", False):
+            protocol = "https"
+        else:
+            protocol = "http"
+
+        return "%s://%s:%d" % (protocol, host, port)
+
+    def resolve(self, logger: LoggerABC) -> str:
+
+        logger.info(
+            "Resolving fact `%(fact_name)s` for resource `%(resource_id)s`",
+            fact_name=self.fact_name,
+            resource_id=self.resource_id,
+        )
+
+        env = Config.get("config", "environment", None)
+        if env is None:
+            raise Exception(
+                "The environment of this model should be configured in config>environment"
+            )
+
+        base_url = self._get_url()
+
+        resp = requests.get(
+            f"{base_url}/api/v2/resource/{urllib.parse.quote(self.resource_id, safe="")}/facts",
+            headers={"X-Inmanta-tid": str(env)},
+        )
+        resp.raise_for_status()
+
+        for fact in resp.json()["data"]:
+            if fact["name"] == self.fact_name:
+                return fact["value"]
+        raise LookupError(
+            f"Didn't found fact `{self.fact_name}` for resource `{self.resource_id}`"
+        )
+
+    def __str__(self) -> str:
+        return f"NetboxSecretReference[resource_id={self.resource_id},fact_name={self.fact_name}]"
+
+
+@plugin
+def create_fact_reference(resource: DynamicProxy, fact_name: str) -> FactReference:
+    resource_id = inmanta.resources.to_id(resource)
+    if resource_id is None:
+        raise Exception("Facts can only be retreived from resources.")
+
+    return FactReference(
+        resource_id=str(resource_id),
+        fact_name=fact_name,
+    )
