@@ -95,6 +95,7 @@ def test_fact_references(
 
     project.compile(
         """
+            import unittest
             import std::testing
             resource_a = std::testing::NullResource(agentname="test", name="aaa", value="aaa")
 
