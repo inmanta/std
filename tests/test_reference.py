@@ -69,7 +69,6 @@ def test_references_resource(project: Project, monkeypatch) -> None:
     assert result.assert_has_logline("Observed value: testvalue")
 
 
-@pytest.mark.skip()
 def test_fact_references(
     project: Project, remote_orchestrator: RemoteOrchestrator
 ) -> None:
