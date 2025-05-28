@@ -16,12 +16,8 @@ limitations under the License.
 Contact: code@inmanta.com
 """
 
-import time
-import urllib
-
 import pytest
 from pytest_inmanta.plugin import Project
-from pytest_inmanta_lsm.remote_orchestrator import RemoteOrchestrator
 
 from inmanta import const
 
@@ -69,40 +65,9 @@ def test_references_resource(project: Project, monkeypatch) -> None:
     assert result.assert_has_logline("Observed value: testvalue")
 
 
-def test_fact_references(
-    project: Project, remote_orchestrator: RemoteOrchestrator
-) -> None:
+def test_fact_references(project: Project) -> None:
 
-    def get_resource_status(name: str) -> str:
-        """
-        Get the status of a resouce in the remote orchestrator
-        """
-        resource_id = f"std::testing::NullResource[test,name={name}]"
-        resp = remote_orchestrator.session.get(
-            f"/api/v2/resource/{urllib.parse.quote(resource_id, safe="")}",
-            headers={"X-Inmanta-tid": str(remote_orchestrator.environment)},
-        )
-        if resp.status_code == 200:
-            resp.raise_for_status()
-            return resp.json()["data"]["status"]
-        return "unavailable"
-
-    def check_resource_status(name: str, expected: str) -> None:
-        """
-        Wait for the resource to have run
-        """
-        timeout = 30
-        start = time.time()
-        while (
-            time.time() - start < timeout
-            and (status := get_resource_status(name)) != expected
-        ):
-            time.sleep(0.2)
-            pass
-        assert status == expected
-
-    project.compile(
-        """
+    model = """
             import unittest
             import std::testing
             resource_a = std::testing::NullResource(agentname="test", name="aaa", value="aaa")
@@ -115,34 +80,28 @@ def test_fact_references(
                     fact_name="my_fact",
                 )
             )
-        """,
-        export=True,
+        """
+    project.compile(model)
+
+    project.deploy_resource_v2(
+        "std::testing::NullResource",
+        name="aaa",
+        expected_status=const.ResourceState.deployed,
     )
 
-    version = project.version
-    assert version is not None
-
-    check_resource_status("aaa", "deployed")
-    check_resource_status("bbb", "failed")
-
-    # We set the fact on the "aaa" resource
-    remote_orchestrator.session.put(
-        "/api/v2/facts/my_fact",
-        headers={"X-Inmanta-tid": str(remote_orchestrator.environment)},
-        json={
-            "source": "fact",
-            "value": "string",
-            "resource_id": "std::testing::NullResource[test,name=aaa]",
-            "recompile": False,
-            "expires": False,
-        },
+    project.deploy_resource_v2(
+        "std::testing::NullResource",
+        name="bbb",
+        expected_status=const.ResourceState.failed,
     )
 
-    # We action a deploy (so no need of recompile)
-    remote_orchestrator.session.post(
-        "/api/v1/deploy",
-        headers={"X-Inmanta-tid": str(remote_orchestrator.environment)},
-    )
+    a_resource = project.get_resource("std::testing::NullResource", name="aaa")
+    project.add_fact(a_resource.id, "my_fact", value="my_value")
+    project.compile(model)
 
-    # Now the resource is deployed
-    check_resource_status("bbb", "deployed")
+    result = project.deploy_resource_v2(
+        "std::testing::NullResource",
+        name="bbb",
+        expected_status=const.ResourceState.deployed,
+    )
+    assert result.assert_has_logline("Observed value: my_value")

@@ -1370,11 +1370,19 @@ try:
     @reference("std::FactReference")
     class FactReference(Reference[str]):
 
-        def __init__(self, environment: str, resource_id: str, fact_name: str) -> None:
+        def __init__(
+            self,
+            environment: str,
+            resource_id: str,
+            fact_name: str,
+            mocked_facts: dict | None,
+        ) -> None:
             super().__init__()
             self.environment = environment
             self.resource_id = resource_id
             self.fact_name = fact_name
+
+            self.mocked_facts = mocked_facts
 
         def resolve(self, logger: LoggerABC) -> str:
 
@@ -1383,6 +1391,16 @@ try:
                 fact_name=self.fact_name,
                 resource_id=self.resource_id,
             )
+
+            # Special case for unit testing and mocking
+            if self.mocked_facts is not None:
+                if self.resource_id in self.mocked_facts:
+                    return self.mocked_facts[self.resource_id][self.fact_name]
+                else:
+                    raise LookupError(
+                        f"Didn't found fact `{self.fact_name}` for resource `{self.resource_id}`"
+                    )
+            # End special case
 
             client = endpoints.SyncClient("agent")
             result = client.get_facts(tid=self.environment, rid=self.resource_id)
@@ -1406,10 +1424,24 @@ try:
         if resource_id is None:
             raise Exception("Facts can only be retreived from resources.")
 
+        mocked_facts = None
+
+        # Special case for unit testing and mocking
+        if (
+            hasattr(context.compiler, "refs")
+            and "facts" in context.compiler.refs
+            and len(context.compiler.refs["facts"]) > 0
+        ):
+            mocked_facts = {
+                str(rid): facts for rid, facts in context.compiler.refs["facts"].items()
+            }
+        # End special case
+
         return FactReference(
             environment=context.get_environment_id(),
             resource_id=str(resource_id),
             fact_name=fact_name,
+            mocked_facts=mocked_facts,
         )
 
 except ImportError:
