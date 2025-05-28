@@ -87,13 +87,19 @@ def test_fact_references(
             return resp.json()["data"]["status"]
         return "unavailable"
 
-    def wait_for_resource(name: str) -> str:
+    def check_resource_status(name: str, expected: str) -> None:
         """
         Wait for the resource to have run
         """
-        while get_resource_status(name) not in ["deployed", "failed", "skipped"]:
+        timeout = 30
+        start = time.time()
+        while (
+            time.time() - start < timeout
+            and (status := get_resource_status(name)) != expected
+        ):
             time.sleep(0.2)
             pass
+        assert status == expected
 
     project.compile(
         """
@@ -116,10 +122,8 @@ def test_fact_references(
     version = project.version
     assert version is not None
 
-    wait_for_resource("aaa")
-    assert get_resource_status("aaa") == "deployed"
-    wait_for_resource("bbb")
-    assert get_resource_status("bbb") == "failed"
+    check_resource_status("aaa", "deployed")
+    check_resource_status("bbb", "failed")
 
     # We set the fact on the "aaa" resource
     remote_orchestrator.session.put(
@@ -141,5 +145,4 @@ def test_fact_references(
     )
 
     # Now the resource is deployed
-    wait_for_resource("bbb")
-    assert get_resource_status("bbb") == "deployed"
+    check_resource_status("bbb", "deployed")
