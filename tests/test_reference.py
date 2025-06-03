@@ -108,16 +108,19 @@ def test_fact_references(project: Project) -> None:
         expected_status=const.ResourceState.deployed,
     )
 
+    # The aaa resource doesn't have a fact "my_fact" => fail
     project.deploy_resource_v2(
         "std::testing::NullResource",
         name="bbb",
         expected_status=const.ResourceState.failed,
     )
 
+    # We set the fact "my_fact" to the aaa resource
     a_resource = project.get_resource("std::testing::NullResource", name="aaa")
     project.add_fact(a_resource.id, "my_fact", value="my_value")
     project.compile(model)
 
+    # Now the reference can be resolved
     result = project.deploy_resource_v2(
         "std::testing::NullResource",
         name="bbb",
