@@ -1428,7 +1428,7 @@ try:
 
     @plugin
     def create_fact_reference(
-        context: Context, resource: DynamicProxy, fact_name: str
+        context: Context, resource: proxy.DynamicProxy, fact_name: str
     ) -> FactReference:
         resource_id = inmanta.resources.to_id(resource)
         if resource_id is None:
