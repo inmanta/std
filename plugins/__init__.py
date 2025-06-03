@@ -1394,7 +1394,7 @@ try:
         A reference to a fact of a resource
         The difference with `getfact` is that we doesn't need a recompile
             since the resolve is only done during the export of the resource
-        Also this only works with a remote orchestrator
+        This only works with a remote orchestrator or with pytest-inmanta using `project.add_fact`
         """
 
         def __init__(
