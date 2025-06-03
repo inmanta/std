@@ -133,7 +133,6 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
             try:
                 return self.wrap(getattr(self._get_delegate(), name))
             except (OptionalValueException, NotFoundException):
-                # TODO: create ticket. Should probably be StrictUndefined
                 return Undefined(
                     "variable %s not set on %s" % (name, instance),
                     instance,
