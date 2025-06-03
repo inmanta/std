@@ -65,6 +65,25 @@ def test_references_resource(project: Project, monkeypatch) -> None:
     assert result.assert_has_logline("Observed value: testvalue")
 
 
+def test_int_reference(project: Project, monkeypatch) -> None:
+
+    project.compile(
+        """
+            import std
+            import std::testing
+
+            str_value = std::create_environment_reference("ENV_VALUE")
+            value = std::create_int_reference(str_value)
+            std::testing::NullResource(agentname="test", name="abc", int_value=value)
+
+        """
+    )
+    monkeypatch.setenv("ENV_VALUE", "42")
+
+    result = project.deploy_resource_v2("std::testing::NullResource", name="abc")
+    assert result.assert_has_logline("Observed int value: 42")
+
+
 def test_fact_references(project: Project) -> None:
 
     model = """

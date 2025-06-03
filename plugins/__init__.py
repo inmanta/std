@@ -1331,6 +1331,27 @@ def format(__string: "string", *args: "any", **kwargs: "any") -> "string":
 try:
     from inmanta.references import Reference, reference
 
+    @reference("std::IntReference")
+    class IntReference(Reference[int]):
+        """A reference that convert a reference value to an int"""
+
+        def __init__(self, value: object | Reference[object]) -> None:
+            """
+            :param value: The reference or value to convert.
+            """
+            super().__init__()
+            self.value = value
+
+        def resolve(self, logger: LoggerABC) -> int:
+            """Resolve the reference"""
+            logger.debug("Converting reference value to int")
+            value = int(self.resolve_other(self.value, logger))
+            return value
+
+    @plugin
+    def create_int_reference(value: object | Reference[object]) -> Reference[object]:
+        return IntReference(value)
+
     @reference("std::Environment")
     class EnvironmentReference(Reference[str]):
         """A reference to fetch environment variables"""
