@@ -1333,7 +1333,7 @@ try:
 
     @reference("std::IntReference")
     class IntReference(Reference[int]):
-        """A reference that convert a reference value to an int"""
+        """A reference that converts a reference value to an int"""
 
         def __init__(self, value: object | Reference[object]) -> None:
             """
@@ -1392,9 +1392,9 @@ try:
     class FactReference(Reference[str]):
         """
         A reference to a fact of a resource
-        The difference with `getfact` is that we doesn't need a recompile
-            since the resolve is only done during the export of the resource
-        This only works with a remote orchestrator or with pytest-inmanta using `project.add_fact`
+        The difference with `getfact` is that we don't need a recompile
+            since the resolve is only done during the deploy of the resource
+        It only works with a remote orchestrator or with pytest-inmanta using `project.add_fact`
         """
 
         def __init__(
@@ -1437,7 +1437,7 @@ try:
                     return fact["value"]
 
             raise LookupError(
-                f"Didn't found fact `{self.fact_name}` for resource `{self.resource_id}`"
+                f"Didn't find fact `{self.fact_name}` for resource `{self.resource_id}`"
             )
 
         def __str__(self) -> str:
