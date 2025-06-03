@@ -1,7 +1,8 @@
 # Changelog
 
-## v8.4.1 - ?
+## v8.4.1 - 2025-06-03
 
+- Refactored Jinja template implementation. Behavior remains identical.
 
 ## v8.4.0 - 2025-05-02
 
