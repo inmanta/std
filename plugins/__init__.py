@@ -1392,7 +1392,7 @@ try:
     class FactReference(Reference[str]):
         """
         A reference to a fact of a resource
-        The difference with `getfact` is that we doesn't need a recompile
+        The difference with `getfact` is that we don't need a recompile
             since the resolve is only done during the export of the resource
         Also this only works with a remote orchestrator
         """
