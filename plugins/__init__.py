@@ -1437,7 +1437,7 @@ try:
                     return fact["value"]
 
             raise LookupError(
-                f"Didn't found fact `{self.fact_name}` for resource `{self.resource_id}`"
+                f"Didn't find fact `{self.fact_name}` for resource `{self.resource_id}`"
             )
 
         def __str__(self) -> str:
