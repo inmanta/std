@@ -1,8 +1,13 @@
 # Changelog
 
-## v8.4.1 - ?
+## v8.4.2 - ?
 
 - Add int and fact reference
+- Compatibility with Python 3.11, broken in 8.4.1.
+
+## v8.4.1 - 2025-06-03 (yanked: broke compatibility with Python 3.11)
+
+- Refactored Jinja template implementation. Behavior remains identical.
 
 ## v8.4.0 - 2025-05-02
 
