@@ -1333,7 +1333,7 @@ try:
 
     @reference("std::IntReference")
     class IntReference(Reference[int]):
-        """A reference that convert a reference value to an int"""
+        """A reference that converts a reference value to an int"""
 
         def __init__(self, value: object | Reference[object]) -> None:
             """
