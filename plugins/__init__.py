@@ -27,11 +27,10 @@ import random
 import re
 import time
 import typing
-from abc import ABC
 from collections import defaultdict
 from itertools import chain
 from operator import attrgetter
-from typing import Any, Optional, Tuple
+from typing import Any, Generic, Optional, Tuple, TypeVar
 
 import jinja2
 import pydantic
@@ -74,7 +73,10 @@ def inmanta_reset_state() -> None:
     fact_cache = {}
 
 
-class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
+P = TypeVar("P", bound=proxy.DynamicProxy)
+
+
+class JinjaDynamicProxy(proxy.DynamicProxy, Generic[P]):
     """
     Dynamic proxy built on top of inmanta-core's DynamicProxy to provide Jinja-specific capabilities.
     """
@@ -143,11 +145,13 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
             return JinjaDynamicProxy.return_value(getattr(instance, name))
 
 
-class JinjaGetItemproxy[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](
-    JinjaDynamicProxy[P], ABC
-):
+K = TypeVar("K", bound=int | str)
+IP = TypeVar("SP", bound=proxy.SequenceProxy | proxy.DictProxy)
+
+
+class JinjaGetItemproxy(JinjaDynamicProxy[IP], Generic[K, IP]):
     """
-    Jinja-compatible proxy for __getitem__.
+    Jinja-compatible proxy for __getitem__ (ABC).
     """
 
     def __getitem__(self, key: K) -> object:
