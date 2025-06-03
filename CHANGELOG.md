@@ -1,6 +1,6 @@
 # Changelog
 
-## v8.4.2 - ?
+## v8.4.2 - 2025-06-03
 
 - Compatibility with Python 3.11, broken in 8.4.1.
 
