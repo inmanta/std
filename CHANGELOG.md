@@ -2,6 +2,7 @@
 
 ## v8.4.1 - ?
 
+- Add int and fact reference
 
 ## v8.4.0 - 2025-05-02
 
