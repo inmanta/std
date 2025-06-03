@@ -79,6 +79,8 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
     Dynamic proxy built on top of inmanta-core's DynamicProxy to provide Jinja-specific capabilities.
     """
 
+    # TODO: double check what is required here to make sure references are rejected properly
+
     def __init__(self, instance: P, *, parent_context: Optional[typing.Never] = None) -> None:
         # TODO: mention why we don't pass parent_context
         super().__init__(instance._get_instance())
