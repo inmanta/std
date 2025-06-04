@@ -5,6 +5,7 @@
 
 ## v8.4.2 - 2025-06-03
 
+- Add int and fact reference
 - Compatibility with Python 3.11, broken in 8.4.1.
 
 ## v8.4.1 - 2025-06-03 (yanked: broke compatibility with Python 3.11)

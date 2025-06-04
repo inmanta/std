@@ -28,6 +28,7 @@ entity NullResource extends ManagedResource, PurgeableResource:
     string name = "null"
     string agentname = "internal"
     string value = ""
+    int int_value = 0
     bool send_event = true
     bool fail = false
 end

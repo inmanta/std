@@ -63,3 +63,67 @@ def test_references_resource(project: Project, monkeypatch) -> None:
 
     result = project.deploy_resource_v2("std::testing::NullResource", name="aaa")
     assert result.assert_has_logline("Observed value: testvalue")
+
+
+def test_int_reference(project: Project, monkeypatch) -> None:
+
+    project.compile(
+        """
+            import std
+            import std::testing
+
+            str_value = std::create_environment_reference("ENV_VALUE")
+            value = std::create_int_reference(str_value)
+            std::testing::NullResource(agentname="test", name="abc", int_value=value)
+
+        """
+    )
+    monkeypatch.setenv("ENV_VALUE", "42")
+
+    result = project.deploy_resource_v2("std::testing::NullResource", name="abc")
+    assert result.assert_has_logline("Observed int value: 42")
+
+
+def test_fact_references(project: Project) -> None:
+
+    model = """
+            import unittest
+            import std::testing
+            resource_a = std::testing::NullResource(agentname="test", name="aaa", value="aaa")
+
+            resource_b = std::testing::NullResource(
+                agentname="test",
+                name="bbb",
+                value=std::create_fact_reference(
+                    resource=resource_a,
+                    fact_name="my_fact",
+                )
+            )
+        """
+    project.compile(model)
+
+    project.deploy_resource_v2(
+        "std::testing::NullResource",
+        name="aaa",
+        expected_status=const.ResourceState.deployed,
+    )
+
+    # The aaa resource doesn't have a fact "my_fact" => fail
+    project.deploy_resource_v2(
+        "std::testing::NullResource",
+        name="bbb",
+        expected_status=const.ResourceState.failed,
+    )
+
+    # We set the fact "my_fact" to the aaa resource
+    a_resource = project.get_resource("std::testing::NullResource", name="aaa")
+    project.add_fact(a_resource.id, "my_fact", value="my_value")
+    project.compile(model)
+
+    # Now the reference can be resolved
+    result = project.deploy_resource_v2(
+        "std::testing::NullResource",
+        name="bbb",
+        expected_status=const.ResourceState.deployed,
+    )
+    assert result.assert_has_logline("Observed value: my_value")
