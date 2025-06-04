@@ -1377,7 +1377,7 @@ try:
         A reference to a fact of a resource
         The difference with `getfact` is that we don't need a recompile
             since the resolve is only done during the deploy of the resource
-        It only works with a remote orchestrator or with pytest-inmanta using `project.add_fact`
+        It only works with a remote orchestrator or if we set `mocked_facts`
         """
 
         def __init__(
@@ -1430,6 +1430,14 @@ try:
     def create_fact_reference(
         context: Context, resource: proxy.DynamicProxy, fact_name: str
     ) -> FactReference:
+        """Create a fact reference
+        :param resource: The resource that contains the fact
+        :param fact_name: The name of the fact
+        :return: A reference to what can be resolved to a string
+
+        if context.refs exists it means that some facts might be mocked,
+        so we pass them to the FactReference
+        """
         resource_id = inmanta.resources.to_id(resource)
         if resource_id is None:
             raise Exception("Facts can only be retreived from resources.")
