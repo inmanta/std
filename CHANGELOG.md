@@ -3,7 +3,6 @@
 ## v8.5.0 - ?
 
 - Add int and fact reference
-- Add int and fact reference
 
 ## v8.4.2 - 2025-06-03
 
