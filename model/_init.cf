@@ -169,8 +169,8 @@ entity Resource:
             reduce the amount of redundant deploys, thereby increasing performance (will not have any effect for
             inmanta-core<14).
     """
-    bool send_event=false
-    bool receive_events=true
+    bool send_event=true
+    bool receive_events=true  # defaults to true for backwards compatibility, to be changed in iso9
 end
 
 entity PurgeableResource extends Resource:
@@ -213,15 +213,15 @@ entity ManagedDevice:
 end
 
 entity Dataclass:
-    """ 
+    """
         Super class for inmanta entities that have a python counterpart.
 
-        The python counterpart is expect to be 
+        The python counterpart is expect to be
         - a frozen dataclass,
-        - with the same name 
+        - with the same name
         - in the plugins package of this module
         - in the corresponding submodule
-        - with the exact same fields 
+        - with the exact same fields
 
         The Inmanta entity is expect to
         - have no relations
