@@ -48,8 +48,14 @@ from inmanta.execute import proxy
 from inmanta.execute.util import NoneValue, Unknown
 from inmanta.export import dependency_manager, unknown_parameters
 from inmanta.module import Project
-from inmanta.plugins import Context, ModelType, deprecated, plugin
+from inmanta.plugins import Context, deprecated, plugin
 from inmanta.protocol import endpoints
+
+try:
+    from inmanta.plugins import ModelType
+except ImportError:
+    # backwards compatibility for iso7
+    ModelType = defaultdict(lambda: None)
 
 
 @plugin
