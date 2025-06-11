@@ -1312,6 +1312,7 @@ def format(__string: "string", *args: "any", **kwargs: "any") -> "string":
 
 
 try:
+    from inmanta.plugins import ModelType
     from inmanta.references import Reference, reference
 
     @reference("std::IntReference")
@@ -1428,7 +1429,9 @@ try:
 
     @plugin
     def create_fact_reference(
-        context: Context, resource: proxy.DynamicProxy, fact_name: str
+        context: Context,
+        resource: typing.Annotated[proxy.DynamicProxy, ModelType["std::Resource"]],
+        fact_name: str,
     ) -> FactReference:
         """Create a fact reference
         :param resource: The resource that contains the fact
