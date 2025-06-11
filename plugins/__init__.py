@@ -48,7 +48,7 @@ from inmanta.execute import proxy
 from inmanta.execute.util import NoneValue, Unknown
 from inmanta.export import dependency_manager, unknown_parameters
 from inmanta.module import Project
-from inmanta.plugins import Context, deprecated, plugin
+from inmanta.plugins import Context, ModelType, deprecated, plugin
 from inmanta.protocol import endpoints
 
 
@@ -1428,7 +1428,9 @@ try:
 
     @plugin
     def create_fact_reference(
-        context: Context, resource: proxy.DynamicProxy, fact_name: str
+        context: Context,
+        resource: typing.Annotated[proxy.DynamicProxy, ModelType["std::Resource"]],
+        fact_name: str,
     ) -> FactReference:
         """Create a fact reference
         :param resource: The resource that contains the fact
