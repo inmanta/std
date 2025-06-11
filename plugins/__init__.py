@@ -51,12 +51,6 @@ from inmanta.module import Project
 from inmanta.plugins import Context, deprecated, plugin
 from inmanta.protocol import endpoints
 
-try:
-    from inmanta.plugins import ModelType
-except ImportError:
-    # backwards compatibility for iso7
-    ModelType = defaultdict(lambda: None)
-
 
 @plugin
 def unique_file(
@@ -1318,6 +1312,7 @@ def format(__string: "string", *args: "any", **kwargs: "any") -> "string":
 
 
 try:
+    from inmanta.plugins import ModelType
     from inmanta.references import Reference, reference
 
     @reference("std::IntReference")
