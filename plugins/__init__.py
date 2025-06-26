@@ -28,7 +28,7 @@ import re
 import time
 import typing
 from collections import defaultdict
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from itertools import chain
 from operator import attrgetter
 from typing import Any, Optional, Tuple
@@ -59,6 +59,20 @@ except AttributeError:
     # older inmanta-core versions don't support this yet => mock it to return None
     def ProxyContext(**kwargs: object) -> None:
         return None
+
+class MockReference:
+    """
+    Reference backwards compatibility object for use in plugin type annotations. When annotated, acts as an alias for
+    `object`.
+    """
+
+    def __class_getitem__(self, key: str) -> type[object]:
+        return object
+
+try:
+    from inmanta.references import Reference
+except ImportError:
+    Reference = MockReference
 
 
 @plugin
@@ -117,8 +131,9 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
             # backwards compatibility with older inmanta-core
             return cls.wrap(super().return_value(value))
 
-        # context was introduced after references, so this is a safe import
-        from inmanta.references import Reference
+        # TODO: tests
+        # context was introduced after references
+        assert Reference is not MockReference
         # core's DynamicProxy takes care of references on-proxy. But we have to guard top-level references here because
         # they are never rejected at runtime on the plugin boundary (core's normal operating mode).
         if isinstance(value, Reference):
@@ -465,9 +480,9 @@ def password(context: Context, pw_id: "string") -> "string":
         raise Exception("Password %s does not exist in file %s" % (pw_id, pw_file))
 
 
-# TODO: | Reference
+# TODO: test
 @plugin("print")
-def printf(message: "any"):
+def printf(message: object | Reference[object]):
     """
     Print the given message to stdout
     """
@@ -510,7 +525,6 @@ def select(objects: "list", attr: "string") -> "list":
     return [getattr(item, attr) for item in objects]
 
 
-# TODO: | Reference
 @plugin
 def item(objects: "list", index: "int") -> "list":
     """
@@ -523,9 +537,8 @@ def item(objects: "list", index: "int") -> "list":
     return r
 
 
-# TODO: | Reference
 @plugin
-def key_sort(items: "list", key: "any") -> "list":
+def key_sort(items: Sequence[object | Reference[object]], key: "any") -> list[object | Reference[object]]:
     """
     Sort an array of object on key
     """
@@ -608,22 +621,21 @@ def inlineif(conditional: "bool", a: "any", b: "any") -> "any":
     return b
 
 
-# | Reference, also return type
+# TODO: test
 @plugin
-def at(objects: "list", index: "int") -> "any":
+def at(objects: Sequence[object | Reference[object]], index: "int") -> object | Reference[object]:
     """
     Get the item at index
     """
     return objects[int(index)]
 
 
-# | Reference on return type
+# TODO: test
 @plugin
-def attr(obj: "any", attr: "string") -> "any":
+def attr(obj: "any", attr: "string") -> object | Reference[object]:
     return getattr(obj, attr)
 
 
-# | Reference
 @plugin
 def isset(value: "any") -> "bool":
     """
@@ -632,7 +644,6 @@ def isset(value: "any") -> "bool":
     return value is not None
 
 
-# | Reference
 @plugin
 def objid(value: "any") -> "string":
     return str(
@@ -644,9 +655,8 @@ def objid(value: "any") -> "string":
     )
 
 
-# | Reference
 @plugin
-def count(item_list: "list") -> "int":
+def count(item_list: Sequence[object | Reference[object]]) -> "int":
     """
     Returns the number of elements in this list.
 
@@ -656,9 +666,8 @@ def count(item_list: "list") -> "int":
     return len(item_list)
 
 
-# | Reference
 @plugin("len")
-def list_len(item_list: "list") -> "int":
+def list_len(item_list: Sequence[object | Reference[object]]) -> "int":
     """
     Returns the number of elements in this list. Unlike `count`, this plugin is conservative when it comes to unknown values.
     If any unknown is present in the list, the result is also unknown.
@@ -683,7 +692,6 @@ def unique(item_list: "list") -> "bool":
     return True
 
 
-# | Reference
 @plugin
 def flatten(item_list: "list") -> "list":
     """
@@ -1094,14 +1102,13 @@ def contains(dct: "dict", key: "string") -> "bool":
     return key in dct
 
 
-# | Reference?
 @plugin("getattr", allow_unknown=True)
 def getattribute(
     entity: "std::Entity",
     attribute_name: "string",
-    default_value: "any" = None,
+    default_value: object | Reference[object] = None,
     no_unknown: "bool" = True,
-) -> "any":
+) -> object | Reference[object]:
     """
     Return the value of the given attribute. If the attribute does not exist, return the default value.
 
@@ -1135,9 +1142,8 @@ def list_files(ctx: Context, path: "string") -> "list":
     return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
 
-# TODO: | Reference?
 @plugin(allow_unknown=True)
-def is_unknown(value: "any") -> "bool":
+def is_unknown(value: object | Reference[object]) -> "bool":
     return isinstance(value, Unknown)
 
 
