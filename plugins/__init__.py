@@ -17,6 +17,7 @@ Contact: code@inmanta.com
 """
 
 import base64
+import builtins
 import hashlib
 import importlib
 import ipaddress
@@ -57,10 +58,10 @@ try:
     from inmanta.plugins import allow_reference_values
 except ImportError:
     # older inmanta-core versions don't support this yet => mock it to return None
-    def ProxyContext(**kwargs: object) -> None:
+    def ProxyContext(**kwargs: object) -> None:  # type: ignore
         return None
 
-    def allow_reference_values[T](instance: T) -> T:
+    def allow_reference_values[T](instance: T) -> T:  # type: ignore
         return instance
 
 
@@ -70,14 +71,14 @@ class MockReference:
     `object`.
     """
 
-    def __class_getitem__(self, key: str) -> type[object]:
+    def __class_getitem__(self, key: str) -> builtins.type[object]:
         return object
 
 
 try:
     from inmanta.references import Reference
 except ImportError:
-    Reference = MockReference
+    Reference = MockReference  # type: ignore
 
 
 @plugin
@@ -154,7 +155,7 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
         if hasattr(delegate, "_return_value"):
             return self.wrap(delegate._return_value(value, relative_path=relative_path))
         else:
-            return JinjaDynamicProxy.return_value(value)
+            return JinjaDynamicProxy.return_value(value, context=None)
 
     @classmethod
     def wrap(cls, value: object) -> object:
@@ -217,14 +218,14 @@ class JinjaIteratorProxy(JinjaDynamicProxy[proxy.IteratorProxy]):
         return self.wrap(next(self._get_delegate()))
 
 
-class JinjaGetItemProxy[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](
+class JinjaGetItemProxy[P: proxy.SequenceProxy | proxy.DictProxy](
     JinjaDynamicProxy[P]
 ):
     """
     Jinja-compatible proxy for __getitem__ (ABC).
     """
 
-    def __getitem__(self, key: K) -> object:
+    def __getitem__(self, key: object) -> object:
         return self.wrap(self._get_delegate()[key])
 
     def __iter__(self) -> object:
@@ -234,13 +235,13 @@ class JinjaGetItemProxy[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](
         return len(self._get_delegate())
 
 
-class JinjaSequenceProxy(JinjaGetItemProxy[int, proxy.SequenceProxy]):
+class JinjaSequenceProxy(JinjaGetItemProxy[proxy.SequenceProxy]):
     """
     Jinja-compatible sequence proxy.
     """
 
 
-class JinjaDictProxy(JinjaGetItemProxy[str, proxy.DictProxy]):
+class JinjaDictProxy(JinjaGetItemProxy[proxy.DictProxy]):
     """
     Jinja-compatible dict proxy.
     """
