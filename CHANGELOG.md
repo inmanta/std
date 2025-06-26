@@ -5,6 +5,8 @@
 - Add int and fact reference
 - Set ``send_event=true`` by default because it's required for most practical models, and the recently introduced
     ``receive_events`` is a more appropriate setting for most other cases.
+- Reject reference values during Jinja template evaluation
+- Allow reference values for some basic plugins
 
 ## v8.4.2 - 2025-06-03
 
