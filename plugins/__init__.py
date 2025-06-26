@@ -52,7 +52,6 @@ from inmanta.module import Project
 from inmanta.plugins import Context, PluginException, deprecated, plugin
 from inmanta.protocol import endpoints
 
-
 try:
     from inmanta.execute.proxy import ProxyContext
     from inmanta.plugins import allow_reference_values
@@ -64,6 +63,7 @@ except ImportError:
     def allow_reference_values[T](instance: T) -> T:
         return instance
 
+
 class MockReference:
     """
     Reference backwards compatibility object for use in plugin type annotations. When annotated, acts as an alias for
@@ -72,6 +72,7 @@ class MockReference:
 
     def __class_getitem__(self, key: str) -> type[object]:
         return object
+
 
 try:
     from inmanta.references import Reference
@@ -121,7 +122,9 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
         return object.__getattribute__(self, "__delegate")
 
     @classmethod
-    def return_value(cls, value: object, *, context: Optional["proxy.ProxyContext"]) -> object:
+    def return_value(
+        cls, value: object, *, context: Optional["proxy.ProxyContext"]
+    ) -> object:
         """
         Converts a value from the internal domain to the Jinja domain.
 
@@ -214,7 +217,9 @@ class JinjaIteratorProxy(JinjaDynamicProxy[proxy.IteratorProxy]):
         return self.wrap(next(self._get_delegate()))
 
 
-class JinjaGetItemProxy[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](JinjaDynamicProxy[P]):
+class JinjaGetItemProxy[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](
+    JinjaDynamicProxy[P]
+):
     """
     Jinja-compatible proxy for __getitem__ (ABC).
     """
@@ -248,7 +253,9 @@ class JinjaCallProxy(JinjaDynamicProxy[proxy.CallProxy]):
 
     def __call__(self, *args: object, **kwargs: object):
         # inmanta-core's CallProxy does not call return_value => call it here
-        return self._return_value(self._get_delegate()(*args, **kwargs), relative_path="(...)")
+        return self._return_value(
+            self._get_delegate()(*args, **kwargs), relative_path="(...)"
+        )
 
 
 class ResolverContext(jinja2.runtime.Context):
@@ -256,7 +263,9 @@ class ResolverContext(jinja2.runtime.Context):
         resolver = self.parent["{{resolver"]
         try:
             raw = resolver.lookup(key)
-            return JinjaDynamicProxy.return_value(raw.get_value(), context=ProxyContext(path=key, validated=False))
+            return JinjaDynamicProxy.return_value(
+                raw.get_value(), context=ProxyContext(path=key, validated=False)
+            )
         except NotFoundException:
             return super(ResolverContext, self).resolve_or_missing(key)
         except OptionalValueException:
@@ -304,7 +313,9 @@ def _get_template_engine(ctx: Context) -> Environment:
         def curywrapper(name: str, func):
             def safewrapper(*args):
                 _raise_if_contains_undefined(args)
-                return JinjaDynamicProxy.return_value(func(*args), context=ProxyContext(path=name, validated=False))
+                return JinjaDynamicProxy.return_value(
+                    func(*args), context=ProxyContext(path=name, validated=False)
+                )
 
             return safewrapper
 
@@ -624,7 +635,9 @@ def inlineif(conditional: "bool", a: "any", b: "any") -> "any":
 
 
 @plugin
-def at(objects: Sequence[object | Reference[object]], index: "int") -> object | Reference[object]:
+def at(
+    objects: Sequence[object | Reference[object]], index: "int"
+) -> object | Reference[object]:
     """
     Get the item at index
     """

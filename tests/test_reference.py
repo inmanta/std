@@ -17,14 +17,14 @@ Contact: code@inmanta.com
 """
 
 import contextlib
-import pytest
 import re
 from collections.abc import Iterator
-from pytest_inmanta.plugin import Project
 from typing import Optional
 
-from inmanta import const
-from inmanta import ast
+import pytest
+from pytest_inmanta.plugin import Project
+
+from inmanta import ast, const
 
 try:
     from inmanta.references import Reference, reference  # noqa: F401
@@ -36,7 +36,9 @@ except ImportError:
 
 # modified from inmanta-core/tests/test_references.py
 @contextlib.contextmanager
-def raises_wrapped(exc_tp: type[ast.RuntimeException], *, match: Optional[str] = None) -> Iterator[None]:
+def raises_wrapped(
+    exc_tp: type[ast.RuntimeException], *, match: Optional[str] = None
+) -> Iterator[None]:
     """
     Context manager wrapper around pytest.raises. Expects a WrappingRuntimeException to be raised, and asserts that it wraps
     the provided exception type and that its message matches the provided pattern.
@@ -186,7 +188,10 @@ def test_references_in_jinja(project: Project) -> None:
         "Hello {{ world }}",
     )
 
-    with pytest.raises(ast.ExplicitPluginException, match="Encountered reference in Jinja template for variable world"):
+    with pytest.raises(
+        ast.ExplicitPluginException,
+        match="Encountered reference in Jinja template for variable world",
+    ):
         project.compile(
             """\
             import unittest
@@ -202,7 +207,10 @@ def test_references_in_jinja(project: Project) -> None:
         "testtemplate.j2",
         "Hello {{ world.name }}",
     )
-    with raises_wrapped(ast.UnexpectedReference, match="Encountered unexpected reference .* Encountered at world.name"):
+    with raises_wrapped(
+        ast.UnexpectedReference,
+        match="Encountered unexpected reference .* Encountered at world.name",
+    ):
         project.compile(
             """\
             import unittest
@@ -223,7 +231,10 @@ def test_references_in_jinja(project: Project) -> None:
         "testtemplate.j2",
         "Hello {{ world[0].name }}",
     )
-    with raises_wrapped(ast.UnexpectedReference, match=r"Encountered unexpected reference .* Encountered at world\[0\].name"):
+    with raises_wrapped(
+        ast.UnexpectedReference,
+        match=r"Encountered unexpected reference .* Encountered at world\[0\].name",
+    ):
         project.compile(
             """\
             import unittest
