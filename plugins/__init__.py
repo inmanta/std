@@ -54,11 +54,15 @@ from inmanta.protocol import endpoints
 
 
 try:
-    ProxyContext = proxy.ProxyContext
-except AttributeError:
+    from inmanta.execute.proxy import ProxyContext
+    from inmanta.plugins import allow_reference_values
+except ImportError:
     # older inmanta-core versions don't support this yet => mock it to return None
     def ProxyContext(**kwargs: object) -> None:
         return None
+
+    def allow_reference_values[T](instance: T) -> T:
+        return instance
 
 class MockReference:
     """
@@ -131,7 +135,6 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
             # backwards compatibility with older inmanta-core
             return cls.wrap(super().return_value(value))
 
-        # TODO: tests
         # context was introduced after references
         assert Reference is not MockReference
         # core's DynamicProxy takes care of references on-proxy. But we have to guard top-level references here because
@@ -480,7 +483,6 @@ def password(context: Context, pw_id: "string") -> "string":
         raise Exception("Password %s does not exist in file %s" % (pw_id, pw_file))
 
 
-# TODO: test
 @plugin("print")
 def printf(message: object | Reference[object]):
     """
@@ -538,7 +540,7 @@ def item(objects: "list", index: "int") -> "list":
 
 
 @plugin
-def key_sort(items: Sequence[object | Reference[object]], key: "any") -> list[object | Reference[object]]:
+def key_sort(items: "list", key: "any") -> "list":
     """
     Sort an array of object on key
     """
@@ -621,7 +623,6 @@ def inlineif(conditional: "bool", a: "any", b: "any") -> "any":
     return b
 
 
-# TODO: test
 @plugin
 def at(objects: Sequence[object | Reference[object]], index: "int") -> object | Reference[object]:
     """
@@ -630,10 +631,9 @@ def at(objects: Sequence[object | Reference[object]], index: "int") -> object | 
     return objects[int(index)]
 
 
-# TODO: test
 @plugin
 def attr(obj: "any", attr: "string") -> object | Reference[object]:
-    return getattr(obj, attr)
+    return getattr(allow_reference_values(obj), attr)
 
 
 @plugin
@@ -1116,7 +1116,7 @@ def getattribute(
                       is unknown.
     """
     try:
-        value = getattr(entity, attribute_name)
+        value = getattr(allow_reference_values(entity), attribute_name)
         if isinstance(value, Unknown) and no_unknown:
             return default_value
         return value
