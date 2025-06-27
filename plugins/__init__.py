@@ -145,7 +145,7 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
         # they are never rejected at runtime on the plugin boundary (core's normal operating mode).
         if isinstance(value, Reference):
             raise PluginException(
-                f"Encountered reference in Jinja template for variable {context.path} (= `{value}`)"
+                f"Encountered reference in Jinja template for variable {context.path} (= `{value!r}`)"
             )
 
         return cls.wrap(super().return_value(value, context=context))
