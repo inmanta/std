@@ -640,9 +640,7 @@ def inlineif(conditional: "bool", a: "any", b: "any") -> "any":
 
 
 @plugin
-def at(
-    objects: Sequence[object | Reference], index: "int"
-) -> object | Reference:
+def at(objects: Sequence[object | Reference], index: "int") -> object | Reference:
     """
     Get the item at index
     """
