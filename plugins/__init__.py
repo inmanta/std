@@ -57,7 +57,7 @@ try:
     from inmanta.execute.proxy import ProxyContext
     from inmanta.plugins import allow_reference_values
 except ImportError:
-    # older inmanta-core versions don't support this yet => mock it to return None
+    # older inmanta-core versions (<16) don't support this yet => mock it to return None
     def ProxyContext(**kwargs: object) -> None:  # type: ignore
         return None
 
@@ -112,7 +112,7 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
         if hasattr(instance, "_get_context"):
             super().__init__(instance._get_instance(), context=instance._get_context())
         else:
-            # backwards compatibility for older inmanta-core versions
+            # backwards compatibility for older inmanta-core versions (<16)
             super().__init__(instance._get_instance())
         object.__setattr__(self, "__delegate", instance)
 
@@ -136,7 +136,7 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
             inmanta-core.
         """
         if context is None:
-            # backwards compatibility with older inmanta-core
+            # backwards compatibility with older inmanta-core (<16)
             return cls.wrap(super().return_value(value))
 
         # context was introduced after references
