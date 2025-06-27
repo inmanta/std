@@ -61,7 +61,7 @@ except ImportError:
     def ProxyContext(**kwargs: object) -> None:  # type: ignore
         return None
 
-    def allow_reference_values[T](instance: T) -> T:  # type: ignore
+    def allow_reference_values[T](instance: T) -> T:
         return instance
 
 
@@ -496,7 +496,7 @@ def password(context: Context, pw_id: "string") -> "string":
 
 
 @plugin("print")
-def printf(message: object | Reference[object]):
+def printf(message: object | Reference):
     """
     Print the given message to stdout
     """
@@ -637,8 +637,8 @@ def inlineif(conditional: "bool", a: "any", b: "any") -> "any":
 
 @plugin
 def at(
-    objects: Sequence[object | Reference[object]], index: "int"
-) -> object | Reference[object]:
+    objects: Sequence[object | Reference], index: "int"
+) -> object | Reference:
     """
     Get the item at index
     """
@@ -646,7 +646,7 @@ def at(
 
 
 @plugin
-def attr(obj: "any", attr: "string") -> object | Reference[object]:
+def attr(obj: "any", attr: "string") -> object | Reference:
     return getattr(allow_reference_values(obj), attr)
 
 
@@ -670,7 +670,7 @@ def objid(value: "any") -> "string":
 
 
 @plugin
-def count(item_list: Sequence[object | Reference[object]]) -> "int":
+def count(item_list: Sequence[object | Reference]) -> "int":
     """
     Returns the number of elements in this list.
 
@@ -681,7 +681,7 @@ def count(item_list: Sequence[object | Reference[object]]) -> "int":
 
 
 @plugin("len")
-def list_len(item_list: Sequence[object | Reference[object]]) -> "int":
+def list_len(item_list: Sequence[object | Reference]) -> "int":
     """
     Returns the number of elements in this list. Unlike `count`, this plugin is conservative when it comes to unknown values.
     If any unknown is present in the list, the result is also unknown.
@@ -1120,9 +1120,9 @@ def contains(dct: "dict", key: "string") -> "bool":
 def getattribute(
     entity: "std::Entity",
     attribute_name: "string",
-    default_value: object | Reference[object] = None,
+    default_value: object | Reference = None,
     no_unknown: "bool" = True,
-) -> object | Reference[object]:
+) -> object | Reference:
     """
     Return the value of the given attribute. If the attribute does not exist, return the default value.
 
@@ -1157,7 +1157,7 @@ def list_files(ctx: Context, path: "string") -> "list":
 
 
 @plugin(allow_unknown=True)
-def is_unknown(value: object | Reference[object]) -> "bool":
+def is_unknown(value: object | Reference) -> "bool":
     return isinstance(value, Unknown)
 
 
@@ -1398,7 +1398,7 @@ try:
     class IntReference(Reference[int]):
         """A reference that converts a reference value to an int"""
 
-        def __init__(self, value: object | Reference[object]) -> None:
+        def __init__(self, value: object | Reference) -> None:
             """
             :param value: The reference or value to convert.
             """
@@ -1412,7 +1412,7 @@ try:
             return value
 
     @plugin
-    def create_int_reference(value: object | Reference[object]) -> Reference[object]:
+    def create_int_reference(value: object | Reference) -> Reference[int]:
         return IntReference(value)
 
     @reference("std::Environment")
