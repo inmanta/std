@@ -17,6 +17,7 @@ Contact: code@inmanta.com
 """
 
 import base64
+import builtins
 import hashlib
 import importlib
 import ipaddress
@@ -28,9 +29,10 @@ import re
 import time
 import typing
 from collections import defaultdict
+from collections.abc import Iterator, Sequence
 from itertools import chain
 from operator import attrgetter
-from typing import Any, Generic, Optional, Tuple, TypeVar
+from typing import Any, Optional, Tuple
 
 import jinja2
 import pydantic
@@ -48,8 +50,35 @@ from inmanta.execute import proxy
 from inmanta.execute.util import NoneValue, Unknown
 from inmanta.export import dependency_manager, unknown_parameters
 from inmanta.module import Project
-from inmanta.plugins import Context, deprecated, plugin
+from inmanta.plugins import Context, PluginException, deprecated, plugin
 from inmanta.protocol import endpoints
+
+try:
+    from inmanta.execute.proxy import ProxyContext
+    from inmanta.plugins import allow_reference_values
+except ImportError:
+    # older inmanta-core versions (<16) don't support this yet => mock it to return None
+    def ProxyContext(**kwargs: object) -> None:  # type: ignore
+        return None
+
+    def allow_reference_values[T](instance: T) -> T:
+        return instance
+
+
+class MockReference:
+    """
+    Reference backwards compatibility object for use in plugin type annotations. When annotated, acts as an alias for
+    `object`.
+    """
+
+    def __class_getitem__(self, key: str) -> builtins.type[object]:
+        return object
+
+
+try:
+    from inmanta.references import Reference
+except ImportError:
+    Reference = MockReference  # type: ignore
 
 
 @plugin
@@ -74,33 +103,59 @@ def inmanta_reset_state() -> None:
     fact_cache = {}
 
 
-P = TypeVar("P", bound=proxy.DynamicProxy)
-
-
-class JinjaDynamicProxy(proxy.DynamicProxy, Generic[P]):
+class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
     """
     Dynamic proxy built on top of inmanta-core's DynamicProxy to provide Jinja-specific capabilities.
     """
 
     def __init__(self, instance: P) -> None:
-        super().__init__(instance._get_instance())
-        object.__setattr__(self, "delegate", instance)
+        if hasattr(instance, "_get_context"):
+            super().__init__(instance._get_instance(), context=instance._get_context())
+        else:
+            # backwards compatibility for older inmanta-core versions (<16)
+            super().__init__(instance._get_instance())
+        object.__setattr__(self, "__delegate", instance)
 
     def _get_delegate(self) -> P:
         """
         Get the normal proxy object backing this one.
         """
-        return object.__getattribute__(self, "delegate")
+        return object.__getattribute__(self, "__delegate")
 
     @classmethod
-    def return_value(cls, value: object) -> object:
+    def return_value(
+        cls, value: object, *, context: Optional["proxy.ProxyContext"]
+    ) -> object:
         """
         Converts a value from the internal domain to the Jinja domain.
 
         Core's DynamicProxy implementation will not call this method, even for subclasses of this one. It is meant purely as a
         convenience method top-level conversion.
+
+        :param context: The proxy context. Must only be None if proxy.ProxyContext does not exist on the current version of
+            inmanta-core.
         """
-        return cls.wrap(super().return_value(value))
+        if context is None:
+            # backwards compatibility with older inmanta-core (<16)
+            return cls.wrap(super().return_value(value))
+
+        # context was introduced after references
+        assert Reference is not MockReference  # type: ignore
+        # core's DynamicProxy takes care of references on-proxy. But we have to guard top-level references here because
+        # they are never rejected at runtime on the plugin boundary (core's normal operating mode).
+        if isinstance(value, Reference):
+            raise PluginException(
+                f"Encountered reference in Jinja template for variable {context.path} (= `{value!r}`)"
+            )
+
+        return cls.wrap(super().return_value(value, context=context))
+
+    def _return_value(self, value: object, *, relative_path: str) -> object:
+        delegate: proxy.DynamicProxy = self._get_delegate()
+        if hasattr(delegate, "_return_value"):
+            return self.wrap(delegate._return_value(value, relative_path=relative_path))
+        else:
+            return JinjaDynamicProxy.return_value(value, context=None)
 
     @classmethod
     def wrap(cls, value: object) -> object:
@@ -123,6 +178,8 @@ class JinjaDynamicProxy(proxy.DynamicProxy, Generic[P]):
                 return JinjaSequenceProxy(value)
             case proxy.DictProxy():
                 return JinjaDictProxy(value)
+            case proxy.IteratorProxy():
+                return JinjaIteratorProxy(value)
             case proxy.CallProxy():
                 return JinjaCallProxy(value)
             case proxy.DynamicProxy():
@@ -143,14 +200,27 @@ class JinjaDynamicProxy(proxy.DynamicProxy, Generic[P]):
                 )
         else:
             # A native python object. Not supported by core's DynamicProxy
-            return JinjaDynamicProxy.return_value(getattr(instance, name))
+            return self._return_value(getattr(instance, name), relative_path=f".{name}")
 
 
-K = TypeVar("K", bound=int | str)
-IP = TypeVar("SP", bound=proxy.SequenceProxy | proxy.DictProxy)
+class JinjaIteratorProxy(JinjaDynamicProxy[proxy.IteratorProxy]):
+    """
+    Jinja-compatible iterator proxy.
+    """
+
+    def _is_sequence(self) -> bool:
+        return self._get_delegate()._is_sequence()
+
+    def __iter__(self) -> Iterator[object]:
+        return self
+
+    def __next__(self) -> object:
+        return self.wrap(next(self._get_delegate()))
 
 
-class JinjaGetItemproxy(JinjaDynamicProxy[IP], Generic[K, IP]):
+class JinjaGetItemProxy[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](
+    JinjaDynamicProxy[P]
+):
     """
     Jinja-compatible proxy for __getitem__ (ABC).
     """
@@ -159,19 +229,19 @@ class JinjaGetItemproxy(JinjaDynamicProxy[IP], Generic[K, IP]):
         return self.wrap(self._get_delegate()[key])
 
     def __iter__(self) -> object:
-        return (self.wrap(v) for v in self._get_delegate())
+        return self.wrap(iter(self._get_delegate()))
 
     def __len__(self) -> int:
         return len(self._get_delegate())
 
 
-class JinjaSequenceProxy(JinjaGetItemproxy[int, proxy.SequenceProxy]):
+class JinjaSequenceProxy(JinjaGetItemProxy[int, proxy.SequenceProxy]):
     """
     Jinja-compatible sequence proxy.
     """
 
 
-class JinjaDictProxy(JinjaGetItemproxy[str, proxy.DictProxy]):
+class JinjaDictProxy(JinjaGetItemProxy[str, proxy.DictProxy]):
     """
     Jinja-compatible dict proxy.
     """
@@ -184,7 +254,9 @@ class JinjaCallProxy(JinjaDynamicProxy[proxy.CallProxy]):
 
     def __call__(self, *args: object, **kwargs: object):
         # inmanta-core's CallProxy does not call return_value => call it here
-        return JinjaDynamicProxy.return_value(self._get_delegate()(*args, **kwargs))
+        return self._return_value(
+            self._get_delegate()(*args, **kwargs), relative_path="(...)"
+        )
 
 
 class ResolverContext(jinja2.runtime.Context):
@@ -192,7 +264,9 @@ class ResolverContext(jinja2.runtime.Context):
         resolver = self.parent["{{resolver"]
         try:
             raw = resolver.lookup(key)
-            return JinjaDynamicProxy.return_value(raw.get_value())
+            return JinjaDynamicProxy.return_value(
+                raw.get_value(), context=ProxyContext(path=key, validated=False)
+            )
         except NotFoundException:
             return super(ResolverContext, self).resolve_or_missing(key)
         except OptionalValueException:
@@ -237,14 +311,17 @@ def _get_template_engine(ctx: Context) -> Environment:
     # register all plugins as filters
     for name, cls in ctx.get_compiler().get_plugins().items():
 
-        def curywrapper(func):
+        def curywrapper(name: str, func):
             def safewrapper(*args):
                 _raise_if_contains_undefined(args)
-                return JinjaDynamicProxy.return_value(func(*args))
+                return JinjaDynamicProxy.return_value(
+                    func(*args), context=ProxyContext(path=name, validated=False)
+                )
 
             return safewrapper
 
-        env.filters[name.replace("::", ".")] = curywrapper(cls)
+        jinja_name: str = name.replace("::", ".")
+        env.filters[jinja_name] = curywrapper(jinja_name, cls)
 
     engine_cache = env
     return env
@@ -419,11 +496,15 @@ def password(context: Context, pw_id: "string") -> "string":
 
 
 @plugin("print")
-def printf(message: "any"):
+def printf(message: object | Reference):
     """
     Print the given message to stdout
     """
-    print(message)
+    if Reference is not MockReference and isinstance(message, Reference):
+        # Reference raises an error on __str__ so it can't be used accidentally.
+        print(repr(message))
+    else:
+        print(message)
 
 
 @plugin
@@ -559,7 +640,7 @@ def inlineif(conditional: "bool", a: "any", b: "any") -> "any":
 
 
 @plugin
-def at(objects: "list", index: "int") -> "any":
+def at(objects: Sequence[object | Reference], index: "int") -> object | Reference:
     """
     Get the item at index
     """
@@ -567,8 +648,8 @@ def at(objects: "list", index: "int") -> "any":
 
 
 @plugin
-def attr(obj: "any", attr: "string") -> "any":
-    return getattr(obj, attr)
+def attr(obj: "any", attr: "string") -> object | Reference:
+    return getattr(allow_reference_values(obj), attr)
 
 
 @plugin
@@ -591,7 +672,7 @@ def objid(value: "any") -> "string":
 
 
 @plugin
-def count(item_list: "list") -> "int":
+def count(item_list: Sequence[object | Reference]) -> "int":
     """
     Returns the number of elements in this list.
 
@@ -602,7 +683,7 @@ def count(item_list: "list") -> "int":
 
 
 @plugin("len")
-def list_len(item_list: "list") -> "int":
+def list_len(item_list: Sequence[object | Reference]) -> "int":
     """
     Returns the number of elements in this list. Unlike `count`, this plugin is conservative when it comes to unknown values.
     If any unknown is present in the list, the result is also unknown.
@@ -1041,9 +1122,9 @@ def contains(dct: "dict", key: "string") -> "bool":
 def getattribute(
     entity: "std::Entity",
     attribute_name: "string",
-    default_value: "any" = None,
+    default_value: object | Reference = None,
     no_unknown: "bool" = True,
-) -> "any":
+) -> object | Reference:
     """
     Return the value of the given attribute. If the attribute does not exist, return the default value.
 
@@ -1051,7 +1132,7 @@ def getattribute(
                       is unknown.
     """
     try:
-        value = getattr(entity, attribute_name)
+        value = getattr(allow_reference_values(entity), attribute_name)
         if isinstance(value, Unknown) and no_unknown:
             return default_value
         return value
@@ -1078,7 +1159,7 @@ def list_files(ctx: Context, path: "string") -> "list":
 
 
 @plugin(allow_unknown=True)
-def is_unknown(value: "any") -> "bool":
+def is_unknown(value: object | Reference) -> "bool":
     return isinstance(value, Unknown)
 
 
@@ -1319,7 +1400,7 @@ try:
     class IntReference(Reference[int]):
         """A reference that converts a reference value to an int"""
 
-        def __init__(self, value: object | Reference[object]) -> None:
+        def __init__(self, value: object | Reference) -> None:
             """
             :param value: The reference or value to convert.
             """
@@ -1333,7 +1414,7 @@ try:
             return value
 
     @plugin
-    def create_int_reference(value: object | Reference[object]) -> Reference[object]:
+    def create_int_reference(value: object | Reference) -> Reference[int]:
         return IntReference(value)
 
     @reference("std::Environment")

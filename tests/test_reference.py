@@ -16,10 +16,15 @@ limitations under the License.
 Contact: code@inmanta.com
 """
 
+import contextlib
+import re
+from collections.abc import Iterator
+from typing import Optional
+
 import pytest
 from pytest_inmanta.plugin import Project
 
-from inmanta import const
+from inmanta import ast, const
 
 try:
     from inmanta.references import Reference, reference  # noqa: F401
@@ -27,6 +32,23 @@ except ImportError:
     pytestmark = pytest.skip(
         "Reference are not yet supported by this core version", allow_module_level=True
     )
+
+
+# modified from inmanta-core/tests/test_references.py
+@contextlib.contextmanager
+def raises_wrapped(
+    exc_tp: type[ast.RuntimeException], *, match: Optional[str] = None
+) -> Iterator[None]:
+    """
+    Context manager wrapper around pytest.raises. Expects a WrappingRuntimeException to be raised, and asserts that it wraps
+    the provided exception type and that its message matches the provided pattern.
+    """
+    with pytest.raises(ast.WrappingRuntimeException) as exc_info:
+        yield
+    assert isinstance(exc_info.value.__cause__, exc_tp)
+    if match is not None:
+        msg: str = exc_info.value.__cause__.format()
+        assert re.search(match, msg) is not None, msg
 
 
 def test_references_resource(project: Project, monkeypatch) -> None:
@@ -127,3 +149,103 @@ def test_fact_references(project: Project) -> None:
         expected_status=const.ResourceState.deployed,
     )
     assert result.assert_has_logline("Observed value: my_value")
+
+
+def test_references_in_plugins(project: Project) -> None:
+    """
+    Verify that plugins that allow references work as expected. Does not verify results since those should be tested by
+    specific implementation tests. Only verifies that no validation errors are raised.
+    """
+    project.compile(
+        """\
+        ref = std::create_environment_reference("HELLO")
+
+        entity A:
+            string s
+        end
+        implement A using std::none
+
+
+        std::print(ref)
+        std::at([ref], 0)
+        std::attr(A(s=ref), "s")
+        std::count([ref])
+        std::len([ref])
+        std::getattr(A(s=ref), "s")
+        std::getattr(A(s="Hello World!"), "doesnotexist", default_value=ref)
+        std::is_unknown(ref)
+        """
+    )
+
+
+def test_references_in_jinja(project: Project) -> None:
+    """
+    Verify behavior of Jinja template when it encounters reference values.
+    """
+    project.add_mock_file(
+        "templates",
+        "testtemplate.j2",
+        "Hello {{ world }}",
+    )
+
+    with pytest.raises(
+        ast.ExplicitPluginException,
+        match="Encountered reference in Jinja template for variable world",
+    ):
+        project.compile(
+            """\
+            import unittest
+
+            world = std::create_environment_reference("WORLD")
+
+            std::template("unittest/testtemplate.j2")
+            """
+        )
+
+    project.add_mock_file(
+        "templates",
+        "testtemplate.j2",
+        "Hello {{ world.name }}",
+    )
+    with raises_wrapped(
+        ast.UnexpectedReference,
+        match="Encountered unexpected reference .* Encountered at world.name",
+    ):
+        project.compile(
+            """\
+            import unittest
+
+            entity World:
+                string name
+            end
+            implement World using std::none
+
+            world = World(name=std::create_environment_reference("WORLD"))
+
+            std::template("unittest/testtemplate.j2")
+            """
+        )
+
+    project.add_mock_file(
+        "templates",
+        "testtemplate.j2",
+        "Hello {{ world[0].name }}",
+    )
+    with raises_wrapped(
+        ast.UnexpectedReference,
+        match=r"Encountered unexpected reference .* Encountered at world\[0\].name",
+    ):
+        project.compile(
+            """\
+            import unittest
+
+            entity World:
+                string name
+            end
+            implement World using std::none
+
+            world = [World(name=std::create_environment_reference("WORLD"))]
+
+            std::template("unittest/testtemplate.j2")
+            """
+        )
