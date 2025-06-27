@@ -140,7 +140,7 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
             return cls.wrap(super().return_value(value))
 
         # context was introduced after references
-        assert Reference is not MockReference
+        assert Reference is not MockReference  # type: ignore
         # core's DynamicProxy takes care of references on-proxy. But we have to guard top-level references here because
         # they are never rejected at runtime on the plugin boundary (core's normal operating mode).
         if isinstance(value, Reference):
@@ -218,14 +218,14 @@ class JinjaIteratorProxy(JinjaDynamicProxy[proxy.IteratorProxy]):
         return self.wrap(next(self._get_delegate()))
 
 
-class JinjaGetItemProxy[P: proxy.SequenceProxy | proxy.DictProxy](
+class JinjaGetItemProxy[K: int | str, P: proxy.SequenceProxy | proxy.DictProxy](
     JinjaDynamicProxy[P]
 ):
     """
     Jinja-compatible proxy for __getitem__ (ABC).
     """
 
-    def __getitem__(self, key: object) -> object:
+    def __getitem__(self, key: K) -> object:
         return self.wrap(self._get_delegate()[key])
 
     def __iter__(self) -> object:
@@ -235,13 +235,13 @@ class JinjaGetItemProxy[P: proxy.SequenceProxy | proxy.DictProxy](
         return len(self._get_delegate())
 
 
-class JinjaSequenceProxy(JinjaGetItemProxy[proxy.SequenceProxy]):
+class JinjaSequenceProxy(JinjaGetItemProxy[int, proxy.SequenceProxy]):
     """
     Jinja-compatible sequence proxy.
     """
 
 
-class JinjaDictProxy(JinjaGetItemProxy[proxy.DictProxy]):
+class JinjaDictProxy(JinjaGetItemProxy[str, proxy.DictProxy]):
     """
     Jinja-compatible dict proxy.
     """
