@@ -53,10 +53,15 @@ from inmanta.module import Project
 from inmanta.plugins import Context, PluginException, deprecated, plugin
 from inmanta.protocol import endpoints
 
+supports_proxy_context: bool
 try:
     from inmanta.execute.proxy import ProxyContext
     from inmanta.plugins import allow_reference_values
+
+    supports_proxy_context = True
 except ImportError:
+    supports_proxy_context = False
+
     # older inmanta-core versions (<16) don't support this yet => mock it to return None
     def ProxyContext(**kwargs: object) -> None:  # type: ignore
         return None
@@ -124,7 +129,10 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
 
     @classmethod
     def return_value(
-        cls, value: object, *, context: Optional["proxy.ProxyContext"]
+        cls,
+        value: object,
+        *,
+        context: Optional["proxy.ProxyContext"] = None,
     ) -> object:
         """
         Converts a value from the internal domain to the Jinja domain.
@@ -132,12 +140,18 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
         Core's DynamicProxy implementation will not call this method, even for subclasses of this one. It is meant purely as a
         convenience method top-level conversion.
 
-        :param context: The proxy context. Must only be None if proxy.ProxyContext does not exist on the current version of
-            inmanta-core.
+        :param context: The proxy context. Allowed to be None for backwards compatibility, in which case error reporting will
+            be less accurate.
         """
-        if context is None:
+        if not supports_proxy_context:
             # backwards compatibility with older inmanta-core (<16)
             return cls.wrap(super().return_value(value))
+
+        context = (
+            context
+            if context is not None
+            else proxy.ProxyContext(path=object.__repr__(value), validated=False)
+        )
 
         # context was introduced after references
         assert Reference is not MockReference  # type: ignore
