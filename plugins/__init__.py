@@ -514,11 +514,7 @@ def printf(message: object | Reference):
     """
     Print the given message to stdout
     """
-    if Reference is not MockReference and isinstance(message, Reference):
-        # Reference raises an error on __str__ so it can't be used accidentally.
-        print(repr(message))
-    else:
-        print(message)
+    print(message)
 
 
 @plugin
