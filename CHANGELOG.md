@@ -1,6 +1,6 @@
 # Changelog
 
-## v8.5.0 - ?
+## v8.5.0 - 2025-07-02
 
 - Add int and fact reference
 - Set ``send_event=true`` by default because it's required for most practical models, and the recently introduced
