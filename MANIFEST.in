@@ -1,0 +1,5 @@
+include inmanta_plugins/std/setup.cfg
+include inmanta_plugins/std/py.typed
+recursive-include inmanta_plugins/std/model *.cf
+graft inmanta_plugins/std/files
+graft inmanta_plugins/std/templates

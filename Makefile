@@ -1,6 +1,6 @@
-flake8 = flake8 plugins tests
-black = black plugins tests
-isort = isort plugins tests
+flake8 = flake8 inmanta_plugins tests
+black = black inmanta_plugins tests
+isort = isort inmanta_plugins tests
 
 
 .PHONY: install
