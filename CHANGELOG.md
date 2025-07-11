@@ -1,7 +1,8 @@
 # Changelog
 
-## v8.5.1 - ?
+## v8.5.1 - 2025-07-11
 
+- Migrated to native v2 format. Set minimal Python version to 3.12
 
 ## v8.5.0 - 2025-07-02
 
