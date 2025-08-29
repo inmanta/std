@@ -1,7 +1,8 @@
 # Changelog
 
-## v8.5.2 - ?
+## v8.6.0 - ?
 
+- Added py.typed file
 
 ## v8.5.1 - 2025-07-11
 
