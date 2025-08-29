@@ -1,5 +1,8 @@
 # Changelog
 
+## v8.6.2 - ?
+
+
 ## v8.6.1 - 2025-08-29
 
 - Removed py.typed file
