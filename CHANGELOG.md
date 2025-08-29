@@ -1,6 +1,6 @@
 # Changelog
 
-## v8.6.0 - ?
+## v8.6.0 - 2025-08-29
 
 - Added py.typed file
 
