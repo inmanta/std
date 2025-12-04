@@ -2,6 +2,7 @@
 
 ## v8.6.3 - ?
 
+- Add the requirements files to the source distribution package
 
 ## v8.6.2 - 2025-11-03
 
