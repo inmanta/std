@@ -1,7 +1,11 @@
 # Changelog
 
-## v8.6.4 - ?
+## v8.6.5 - ?
 
+
+## v8.6.4 - 2025-12-08
+
+- Remove dev dependency wheel
 
 ## v8.6.3 - 2025-12-05
 
