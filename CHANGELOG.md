@@ -2,6 +2,7 @@
 
 ## v8.6.4 - ?
 
+- Remove dev dependency wheel
 
 ## v8.6.3 - 2025-12-05
 
