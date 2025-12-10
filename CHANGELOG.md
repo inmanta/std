@@ -2,6 +2,7 @@
 
 ## v8.6.5 - ?
 
+- Added .ci for the tests that verify the compatibility between the module and different version of the Inmanta orchestrator.
 
 ## v8.6.4 - 2025-12-08
 
