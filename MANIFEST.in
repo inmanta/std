@@ -5,3 +5,4 @@ include requirements.dev.txt
 recursive-include inmanta_plugins/std/model *.cf
 graft inmanta_plugins/std/files
 graft inmanta_plugins/std/templates
+graft tests
