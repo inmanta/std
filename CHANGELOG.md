@@ -1,5 +1,8 @@
 # Changelog
 
+## v8.6.6 - ?
+
+
 ## v8.6.5 - 2025-12-12
 
 - Added .ci file for the tests that verify the compatibility between the module and different versions of the Inmanta orchestrator.
