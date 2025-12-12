@@ -1,0 +1,2 @@
+pipeline_template: ci/modules/Jenkins-product-compatibility-tests
+module_name: std
