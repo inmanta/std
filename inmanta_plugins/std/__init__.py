@@ -206,7 +206,7 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
         if hasattr(instance, "get_attribute"):
             try:
                 return self.wrap(getattr(self._get_delegate(), name))
-            except (OptionalValueException, NotFoundException):
+            except OptionalValueException:
                 return Undefined(
                     "variable %s not set on %s" % (name, instance),
                     instance,
