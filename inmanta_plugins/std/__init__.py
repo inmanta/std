@@ -204,14 +204,16 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
     def __getattr__(self, name: str) -> object:
         instance = self._get_instance()
         if hasattr(instance, "get_attribute"):
+            delegate = self._get_delegate()
             try:
-                return self.wrap(getattr(self._get_delegate(), name))
-            except OptionalValueException:
+                attr = getattr(delegate, name)
+            except (AttributeError, OptionalValueException):
                 return Undefined(
                     "variable %s not set on %s" % (name, instance),
                     instance,
                     name,
                 )
+            return self.wrap(attr)
         else:
             # A native python object. Not supported by core's DynamicProxy
             return self._return_value(getattr(instance, name), relative_path=f".{name}")
@@ -278,11 +280,12 @@ class ResolverContext(jinja2.runtime.Context):
         resolver = self.parent["{{resolver"]
         try:
             raw = resolver.lookup(key)
+        except NotFoundException:
+            return super(ResolverContext, self).resolve_or_missing(key)
+        try:
             return JinjaDynamicProxy.return_value(
                 raw.get_value(), context=ProxyContext(path=key, validated=False)
             )
-        except NotFoundException:
-            return super(ResolverContext, self).resolve_or_missing(key)
         except OptionalValueException:
             return missing
 
@@ -1141,13 +1144,15 @@ def getattribute(
     :attr no_unknown: When this argument is set to true, this method will return the default value when the attribute
                       is unknown.
     """
+    with_references = allow_reference_values(entity)
     try:
-        value = getattr(allow_reference_values(entity), attribute_name)
+        value = getattr(with_references, attribute_name)
+    except (NotFoundException, KeyError):
+        return default_value
+    else:
         if isinstance(value, Unknown) and no_unknown:
             return default_value
         return value
-    except (NotFoundException, KeyError):
-        return default_value
 
 
 @deprecated(replaced_by="the `not` unary operator")
