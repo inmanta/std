@@ -1147,7 +1147,7 @@ def getattribute(
     with_references = allow_reference_values(entity)
     try:
         value = getattr(with_references, attribute_name)
-    except (AttributeError, KeyError):
+    except LookupError:
         return default_value
     else:
         if isinstance(value, Unknown) and no_unknown:
