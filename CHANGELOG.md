@@ -2,6 +2,7 @@
 
 ## v8.6.6 - ?
 
+- Fixed compatibility with ``inmanta-core>=18`` (iso9)
 
 ## v8.6.5 - 2025-12-12
 
