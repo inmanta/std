@@ -168,9 +168,12 @@ entity Resource:
             produces an event. Set this to false for resources that do not rely on events (most practical resources) to
             reduce the amount of redundant deploys, thereby increasing performance (will not have any effect for
             inmanta-core<14).
+        :attr report_only: This resource should only report compliance, not enforce any state. Will not have any effect for
+            inmanta-core<18 (inmanta-service-orchestrator<9).
     """
     bool send_event=true
     bool receive_events=true  # defaults to true for backwards compatibility, to be changed in iso9
+    bool report_only=false
 end
 
 entity PurgeableResource extends Resource:

@@ -1,8 +1,9 @@
 # Changelog
 
-## v8.6.6 - ?
+## v8.7.0 - ?
 
 - Fixed compatibility with ``inmanta-core>=18`` (iso9)
+- Added ``report_only`` resource attribute (iso9)
 
 ## v8.6.5 - 2025-12-12
 
