@@ -163,6 +163,23 @@ def test_string_plugins(project):
     )
 
 
+def test_dict_keys_plugin(project):
+    project.compile(
+        """
+        my_d = {
+            "B": "F",
+            "A": "O",
+            "R": "O"
+        }
+        for i in std::dict_keys(my_d):
+            std::print(i)
+        end
+        """
+    )
+
+    assert project.get_stdout() == "B\nA\nR\n"
+
+
 def test_len(project) -> None:
     """
     Verify the behavior of the len plugin and contrast it with the count plugin.
