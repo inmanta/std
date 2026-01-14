@@ -1,6 +1,6 @@
 # Changelog
 
-## v8.7.0 - ?
+## v8.7.0 - 2026-01-14
 
 - Add dict_keys plugin to iterate over dictionary keys.
 - Fixed compatibility with ``inmanta-core>=18`` (iso9)
