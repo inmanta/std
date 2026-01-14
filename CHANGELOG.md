@@ -1,5 +1,8 @@
 # Changelog
 
+## v8.7.1 - ?
+
+
 ## v8.7.0 - 2026-01-14
 
 - Add dict_keys plugin to iterate over dictionary keys.
