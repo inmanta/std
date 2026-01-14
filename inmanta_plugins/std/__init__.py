@@ -643,13 +643,13 @@ def sequence(i: "int", start: "int" = 0) -> "list":
 
 
 @plugin
-def dict_keys(data: Mapping[str, object]) -> list[str]:
+def dict_keys(dct: Mapping[str, object]) -> list[str]:
     """
     Create a list with all the keys of a dict.
 
-    :param data: The dict to get all the keys of.
+    :param dct: The dict to get all the keys of.
     """
-    return list(data.keys())
+    return list(dct.keys())
 
 
 @plugin
