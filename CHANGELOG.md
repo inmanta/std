@@ -2,6 +2,7 @@
 
 ## v8.7.0 - ?
 
+- Add dict_keys plugin to iterate over dictionary keys.
 - Fixed compatibility with ``inmanta-core>=18`` (iso9)
 - Added ``report_only`` resource attribute (iso9)
 

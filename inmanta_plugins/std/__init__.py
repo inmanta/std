@@ -29,7 +29,7 @@ import re
 import time
 import typing
 from collections import defaultdict
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from itertools import chain
 from operator import attrgetter
 from typing import Any, Optional, Tuple
@@ -640,6 +640,16 @@ def sequence(i: "int", start: "int" = 0) -> "list":
     :return: A list containing the sequence of ints.
     """
     return list(range(start, int(i) + start))
+
+
+@plugin
+def dict_keys(dct: Mapping[str, object]) -> list[str]:
+    """
+    Create a list with all the keys of a dict.
+
+    :param dct: The dict to get all the keys of.
+    """
+    return list(dct.keys())
 
 
 @plugin
