@@ -20,15 +20,13 @@ import inmanta.const
 
 
 def test_null_resource(project):
-    project.compile(
-        """
+    project.compile("""
             import std::testing
             std::testing::NullResource()
             std::testing::NullResource(agentname="testx", name="aaa")
             std::testing::NullResource(agentname="testx", name="bbb", fail=true)
             std::testing::NullResource(agentname="p", name="p", purged=true)
-        """
-    )
+        """)
     project.deploy_resource("std::testing::NullResource", name="null")
     project.deploy_resource("std::testing::NullResource", name="aaa")
     project.deploy_resource(

@@ -20,8 +20,7 @@ from inmanta.module import Project
 
 
 def test_agent_config(project: Project):
-    project.compile(
-        """
+    project.compile("""
         import std
 
         host = std::Host(
@@ -29,13 +28,11 @@ def test_agent_config(project: Project):
             ip="127.0.0.1",
             os=std::linux,
         )
-    """
-    )
+    """)
     agent_config = project.get_resource("std::AgentConfig")
     assert not agent_config
 
-    project.compile(
-        """
+    project.compile("""
         import std
 
         host = std::Host(
@@ -44,15 +41,13 @@ def test_agent_config(project: Project):
             os=std::linux,
             remote_agent=true,
         )
-    """
-    )
+    """)
 
     agent_config = project.get_resource("std::AgentConfig")
     assert agent_config
     assert agent_config.uri == "ssh://root@127.0.0.1:22?python=python"
 
-    project.compile(
-        """
+    project.compile("""
         import std
 
         host = std::Host(
@@ -61,8 +56,7 @@ def test_agent_config(project: Project):
             os=std::OS(name="testos", family=std::unix, python_cmd="test"),
             remote_agent=true,
         )
-    """
-    )
+    """)
 
     agent_config = project.get_resource("std::AgentConfig")
     assert agent_config
