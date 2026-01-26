@@ -25,8 +25,7 @@ import inmanta.ast
 
 
 def test_select_attr(project):
-    project.compile(
-        """
+    project.compile("""
     entity Container:
         string field
     end
@@ -52,64 +51,51 @@ def test_select_attr(project):
 
     Out(fields = std::select(c.containers,"field"))
 
-    """
-    )
+    """)
 
     assert sorted(project.get_instances("__config__::Out")[0].fields) == ["A", "B", "C"]
 
 
 def test_hostname(project):
-    project.compile(
-        """
+    project.compile("""
         r = std::hostname("test.something.com")
         r = "test"
-        """
-    )
+        """)
 
 
 def test_prefixlen(project):
-    project.compile(
-        """
+    project.compile("""
         r = std::prefixlen("192.168.1.100/24")
         r = 24
-        """
-    )
+        """)
 
 
 def test_network_to_prefixlen(project):
-    project.compile(
-        """
+    project.compile("""
         r = std::prefixlen("192.168.1.0/24")
         r = 24
-        """
-    )
+        """)
 
 
 def test_netmask(project):
-    project.compile(
-        """
+    project.compile("""
         r = std::netmask("192.168.1.100/24")
         r = "255.255.255.0"
-        """
-    )
+        """)
 
 
 def test_network_address(project):
-    project.compile(
-        """
+    project.compile("""
         r = std::network_address("192.168.2.10/24")
         r = "192.168.2.0"
-        """
-    )
+        """)
 
 
 def test_prefixlength_to_netmask(project):
-    project.compile(
-        """
+    project.compile("""
         r = std::prefixlength_to_netmask(20)
         r = "255.255.240.0"
-        """
-    )
+        """)
 
 
 @pytest.mark.parametrize(
@@ -123,12 +109,10 @@ def test_prefixlength_to_netmask(project):
     ],
 )
 def test_ipindex(project, cidr, idx, result):
-    project.compile(
-        f"""
+    project.compile(f"""
         r = std::ipindex("{cidr}", {idx})
         r = "{result}"
-        """
-    )
+        """)
 
 
 @pytest.mark.parametrize(
@@ -140,17 +124,14 @@ def test_ipindex(project, cidr, idx, result):
     ],
 )
 def test_add_to_ip(project, cidr, idx, result):
-    project.compile(
-        f"""
+    project.compile(f"""
         r = std::add_to_ip("{cidr}", {idx})
         r = "{result}"
-        """
-    )
+        """)
 
 
 def test_string_plugins(project):
-    project.compile(
-        """
+    project.compile("""
         l = std::lower("aAbB")
         l = "aabb"
 
@@ -159,13 +140,11 @@ def test_string_plugins(project):
 
         c = std::capitalize("aAbB c")
         c = "Aabb c"
-        """
-    )
+        """)
 
 
 def test_dict_keys_plugin(project):
-    project.compile(
-        """
+    project.compile("""
         my_d = {
             "B": "F",
             "A": "O",
@@ -174,8 +153,7 @@ def test_dict_keys_plugin(project):
         for i in std::dict_keys(my_d):
             std::print(i)
         end
-        """
-    )
+        """)
 
     assert project.get_stdout() == "B\nA\nR\n"
 
@@ -214,23 +192,19 @@ def test_json(project: Project) -> None:
     """
     Test the usage of the json plugins
     """
-    project.compile(
-        """
+    project.compile("""
         d = std::json_loads(s)
         d = {"a": "a", "b": [{"a": "a"}], "int": 0, "float": 1.0, "bool": true}
         s = std::json_dumps(d)
         s = '{"a": "a", "b": [{"a": "a"}], "int": 0, "float": 1.0, "bool": true}'
-        """
-    )
+        """)
 
     # Entities can not be serialized
     with pytest.raises(inmanta.ast.ExternalException) as exc_info:
-        project.compile(
-            """
+        project.compile("""
             entity A: end
             std::json_dumps(A())
-            """
-        )
+            """)
 
     exc: inmanta.ast.ExternalException = exc_info.value
     assert re.match(
@@ -243,8 +217,7 @@ def test_format(project: Project) -> None:
     """
     Test the usage of the format plugin
     """
-    project.compile(
-        """
+    project.compile("""
         import unittest
 
         # Basic example
@@ -256,5 +229,4 @@ def test_format(project: Project) -> None:
         # Dict key access and entity attribute access
         s = std::format("a={d[a]}", d={"a": 1})
         s = std::format("a={e.desired_value}", e=unittest::IgnoreResource(name="a", desired_value="1"))
-        """
-    )
+        """)

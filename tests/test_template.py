@@ -39,8 +39,7 @@ def test_is_defined(project):
         "",
     )
 
-    project.compile(
-        """
+    project.compile("""
 import std
 import unittest
 
@@ -61,8 +60,7 @@ implement Test1 using std::none when self.prev is defined
 Test1(name="t1",other=Test1(name="t11"))
 Test1(name="t2")
 Test1(name="t3",other=Test1(name="t31",other=Test1(name="t32")))
-    """
-    )
+    """)
 
     assert "t3 : t31  sub: t32" in project.get_stdout()
     assert "t1 : t11" in project.get_stdout()
@@ -75,44 +73,36 @@ def test_template(project: pytest_inmanta.plugin.Project) -> None:
     """
     # Check that a local variable can be accessed in the template
     project.add_mock_file("templates", "test.tmpl", "{{ value }}")
-    project.compile(
-        """import unittest
+    project.compile("""import unittest
 value = "1234"
 std::print(std::template("unittest/test.tmpl"))
-    """
-    )
+    """)
 
     assert project.get_stdout() == "1234\n"
 
     # Check that an value can be passed directly to the plugin
-    project.compile(
-        """import unittest
+    project.compile("""import unittest
 std::print(std::template("unittest/test.tmpl", value="1234"))
-    """
-    )
+    """)
 
     assert project.get_stdout() == "1234\n"
 
     # Check precedence when the value is provided by both the
     # local variable and the plugin parameter
-    project.compile(
-        """import unittest
+    project.compile("""import unittest
 value = "1234"
 std::print(std::template("unittest/test.tmpl", value="5678"))
-    """
-    )
+    """)
 
     assert project.get_stdout() == "5678\n"
 
     # Check that when we provide the wrong value, the value from the
     # model is not fetched instead
     with pytest.raises(ast.WrappingRuntimeException) as exc:
-        project.compile(
-            """import unittest
+        project.compile("""import unittest
 value = "1234"
 std::print(std::template("unittest/test.tmpl", wrong_value="5678"))
-        """
-        )
+        """)
 
     assert isinstance(exc.value.get_causes()[0], ast.NotFoundException), str(
         exc.value.get_causes()
@@ -130,8 +120,7 @@ def test_plugin_with_list(project):
 {% endfor %}""",
     )
 
-    project.compile(
-        """
+    project.compile("""
 import std
 import unittest
 
@@ -158,8 +147,7 @@ c1 = Collection()
 t1 = Item(name="t1", collection=c1)
 t2 = Item(name="t2", collection=c1)
 t3 = Item(name="t3", collection=c1)
-    """
-    )
+    """)
 
 
 @pytest.fixture()
@@ -197,11 +185,9 @@ def test_template_current_dir(project, cleanup_test_module):
     with open(os.path.join(template_dir, "testtemplate.tmpl"), "w") as template_file:
         template_file.write("""{{name}}""")
 
-    project.compile(
-        """
+    project.compile("""
 import testmod
-        """
-    )
+        """)
 
     assert project.get_stdout() == "t1\n"
 
@@ -220,11 +206,9 @@ def test_files_current_dir(project, cleanup_test_module):
     files_dir = os.path.join(project._test_project_dir, "libs", "testmod", "files")
     with open(os.path.join(files_dir, "testfile1"), "w") as template_file:
         template_file.write("test test test")
-    project.compile(
-        """
+    project.compile("""
         import testmod
-        """
-    )
+        """)
 
     out = project.get_stdout().splitlines()
     assert ["testfile1"] == out
@@ -242,13 +226,11 @@ def test_97_template_dict_null(project):
         """,
     )
 
-    project.compile(
-        """
+    project.compile("""
 import unittest
 value = {"test": null}
 std::print(std::template("unittest/test.j2"))
-        """
-    )
+        """)
 
     assert "None\n" in project.get_stdout()
 
@@ -279,14 +261,12 @@ key-value-pairs 3
     )
 
     mydict: Dict[str, int] = {"x": 42, "y": 43, "z": 44}
-    project.compile(
-        f"""
+    project.compile(f"""
 import unittest
 
 mydict = {mydict}
 std::print(std::template("unittest/test.j2"))
-        """
-    )
+        """)
 
     expected_out: str = """
 key-value pairs 1:
@@ -313,14 +293,12 @@ def test_218_template_dict_len(project):
     project.add_mock_file("templates", "test.j2", "{{ mydict | length }}")
 
     mydict: Dict[str, int] = {"x": 42, "y": 43, "z": 44}
-    project.compile(
-        f"""
+    project.compile(f"""
 import unittest
 
 mydict = {mydict}
 std::print(std::template("unittest/test.j2"))
-        """
-    )
+        """)
 
     assert project.get_stdout().strip() == str(len(mydict))
 
@@ -329,13 +307,11 @@ def test_pass_undefined_to_plugin(project):
     project.add_mock_file("templates", "test.j2", "{{ myvar | std.get_env }}")
 
     with pytest.raises(ast.WrappingRuntimeException) as exc_info:
-        project.compile(
-            """
+        project.compile("""
     import unittest
 
     std::print(std::template("unittest/test.j2"))
-            """
-        )
+            """)
     exception_causes = exc_info.value.get_causes()
     assert len(exception_causes) == 1
     assert isinstance(exception_causes[0], ast.NotFoundException)
@@ -349,24 +325,20 @@ def test_if_defined_with_plugin_call(project):
         "{% else %} myvar is not defined {% endif %}",
     )
 
-    project.compile(
-        """
+    project.compile("""
     import unittest
 
     std::print(std::template("unittest/test.j2"))
-            """
-    )
+            """)
     assert "myvar is not defined" in project.get_stdout()
 
 
 def test_plugin_in_template_without_args(project):
     project.add_mock_file("templates", "test.j2", "{{ none | std.timestamp }}")
 
-    project.compile(
-        """
+    project.compile("""
     import unittest
 
     std::print(std::template("unittest/test.j2"))
-            """
-    )
+            """)
     assert project.get_stdout().strip()

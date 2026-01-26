@@ -38,11 +38,9 @@ def log_does_not_contain(caplog, loggerpart, level, msg):
 )
 def test_no_warnings(project, caplog, plugin_call, config_option):
     with caplog.at_level(logging.DEBUG):
-        project.compile(
-            f"""
+        project.compile(f"""
             std::print({plugin_call})
-        """
-        )
+        """)
     assert log_does_not_contain(
         caplog,
         "inmanta.config",

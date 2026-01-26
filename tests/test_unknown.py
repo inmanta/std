@@ -20,23 +20,19 @@ import pytest
 
 
 def test_is_unknown_should_be_false(project):
-    project.compile(
-        """
+    project.compile("""
     value = "value"
     std::print(std::is_unknown(value))
-    """
-    )
+    """)
 
     assert project.get_stdout() == "False\n"
 
 
 def test_is_unknown_should_be_true(project):
-    project.compile(
-        """
+    project.compile("""
     unknown_env_int = std::get_env_int("UNKNOWN_ENV_INT")
     std::print(std::is_unknown(unknown_env_int))
-    """
-    )
+    """)
 
     assert project.get_stdout() == "True\n"
 
@@ -46,8 +42,6 @@ def test_unknown_environment(project):
     Ensure that an exception is raised when the std::environment() plugin is called when no environment is configured.
     """
     with pytest.raises(Exception):
-        project.compile(
-            """
+        project.compile("""
         env_name = std::environment()
-        """
-        )
+        """)

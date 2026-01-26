@@ -30,8 +30,7 @@ std::AgentConfig(
     autostart = false,
     agentname = "%s",
 )
-            """
-            % ("some_agent_name" if valid else "internal"),
+            """ % ("some_agent_name" if valid else "internal"),
         )
 
     if valid:

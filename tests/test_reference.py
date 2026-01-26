@@ -53,8 +53,7 @@ def raises_wrapped(
 
 def test_references_resource(project: Project, monkeypatch) -> None:
 
-    project.compile(
-        """
+    project.compile("""
             import std::testing
             metavalue = std::create_environment_reference("METATESTENV")
             value = std::create_environment_reference(metavalue)
@@ -62,8 +61,7 @@ def test_references_resource(project: Project, monkeypatch) -> None:
 
             # Test that identical references are the same value for the compiler
             value = std::create_environment_reference(metavalue)
-        """
-    )
+        """)
 
     project.deploy_resource_v2(
         "std::testing::NullResource",
@@ -74,14 +72,12 @@ def test_references_resource(project: Project, monkeypatch) -> None:
     monkeypatch.setenv("METATESTENV", "TESTENV")
     monkeypatch.setenv("TESTENV", "testvalue")
 
-    project.compile(
-        """
+    project.compile("""
             import std::testing
             metavalue = std::create_environment_reference("METATESTENV")
             value = std::create_environment_reference(metavalue)
             std::testing::NullResource(agentname="test", name="aaa", value=value)
-        """
-    )
+        """)
 
     result = project.deploy_resource_v2("std::testing::NullResource", name="aaa")
     assert result.assert_has_logline("Observed value: testvalue")
@@ -89,8 +85,7 @@ def test_references_resource(project: Project, monkeypatch) -> None:
 
 def test_int_reference(project: Project, monkeypatch) -> None:
 
-    project.compile(
-        """
+    project.compile("""
             import std
             import std::testing
 
@@ -98,8 +93,7 @@ def test_int_reference(project: Project, monkeypatch) -> None:
             value = std::create_int_reference(str_value)
             std::testing::NullResource(agentname="test", name="abc", int_value=value)
 
-        """
-    )
+        """)
     monkeypatch.setenv("ENV_VALUE", "42")
 
     result = project.deploy_resource_v2("std::testing::NullResource", name="abc")
@@ -156,8 +150,7 @@ def test_references_in_plugins(project: Project) -> None:
     Verify that plugins that allow references work as expected. Does not verify results since those should be tested by
     specific implementation tests. Only verifies that no validation errors are raised.
     """
-    project.compile(
-        """\
+    project.compile("""\
         ref = std::create_environment_reference("HELLO")
 
         entity A:
@@ -174,8 +167,7 @@ def test_references_in_plugins(project: Project) -> None:
         std::getattr(A(s=ref), "s")
         std::getattr(A(s="Hello World!"), "doesnotexist", default_value=ref)
         std::is_unknown(ref)
-        """
-    )
+        """)
 
 
 def test_references_in_jinja(project: Project) -> None:
@@ -192,15 +184,13 @@ def test_references_in_jinja(project: Project) -> None:
         ast.ExplicitPluginException,
         match="Encountered reference in Jinja template for variable world",
     ):
-        project.compile(
-            """\
+        project.compile("""\
             import unittest
 
             world = std::create_environment_reference("WORLD")
 
             std::template("unittest/testtemplate.j2")
-            """
-        )
+            """)
 
     project.add_mock_file(
         "templates",
@@ -211,8 +201,7 @@ def test_references_in_jinja(project: Project) -> None:
         ast.UnexpectedReference,
         match="Encountered unexpected reference .* Encountered at world.name",
     ):
-        project.compile(
-            """\
+        project.compile("""\
             import unittest
 
             entity World:
@@ -223,8 +212,7 @@ def test_references_in_jinja(project: Project) -> None:
             world = World(name=std::create_environment_reference("WORLD"))
 
             std::template("unittest/testtemplate.j2")
-            """
-        )
+            """)
 
     project.add_mock_file(
         "templates",
@@ -235,8 +223,7 @@ def test_references_in_jinja(project: Project) -> None:
         ast.UnexpectedReference,
         match=r"Encountered unexpected reference .* Encountered at world\[0\].name",
     ):
-        project.compile(
-            """\
+        project.compile("""\
             import unittest
 
             entity World:
@@ -247,5 +234,4 @@ def test_references_in_jinja(project: Project) -> None:
             world = [World(name=std::create_environment_reference("WORLD"))]
 
             std::template("unittest/testtemplate.j2")
-            """
-        )
+            """)
