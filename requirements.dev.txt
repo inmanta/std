@@ -1,2 +1,2 @@
 inmanta-dev-dependencies[module]==1.76.0; python_version <= '3.6'
-inmanta-dev-dependencies[module]==2.190.0; python_version > '3.6'
+inmanta-dev-dependencies[module]==2.191.0; python_version > '3.6'
