@@ -1,5 +1,3 @@
-# explicitly use >=,< rather than ~= to force dependabot to widen constraints even though this is conventionally a lock file
-Jinja2>=3.1.6,<4
-email_validator>=2.3.0,<3
-pydantic>=2.13.3,<3
-inmanta-core>=18.0.1
+Jinja2==3.1.6
+email_validator==2.3.0
+pydantic==2.13.3
