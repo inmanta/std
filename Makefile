@@ -5,8 +5,8 @@ isort = isort inmanta_plugins tests
 
 .PHONY: install
 install:
-	pip install -U --upgrade-strategy=eager pip setuptools wheel
-	pip install -U --upgrade-strategy=eager -e . -c requirements.txt -r requirements.dev.txt
+	uv pip install -U pip setuptools
+	uv pip install -U -e . -c requirements.txt -r requirements.dev.txt
 
 
 .PHONY: format
