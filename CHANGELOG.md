@@ -2,6 +2,12 @@
 
 ## v8.7.5 - ?
 
+- Removed the `std::AgentConfig` handler and stopped exporting `std::AgentConfig` resources. The orchestrator dropped the
+  autostarted_agent_map setting in inmanta-core 15 (ISO8), so the handler already made no changes and only logged that fact
+  on every deploy. This also removes std's only import of `inmanta.data`, which pulled the whole database layer, including
+  sqlalchemy, into every compile and export.
+- Raised the minimum supported inmanta-core to 15.0, matching the oldest ISO8 release.
+
 
 ## v8.7.4 - 2026-07-24
 

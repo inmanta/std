@@ -19,7 +19,11 @@ Contact: code@inmanta.com
 from inmanta.module import Project
 
 
-def test_agent_config(project: Project):
+def test_agent_config_is_never_exported(project: Project):
+    """
+    std::AgentConfig no longer configures anything on the orchestrator, so no resource is ever exported for it,
+    not even for a host with remote_agent set.
+    """
     project.compile("""
         import std
 
@@ -29,8 +33,7 @@ def test_agent_config(project: Project):
             os=std::linux,
         )
     """)
-    agent_config = project.get_resource("std::AgentConfig")
-    assert not agent_config
+    assert not project.get_resource("std::AgentConfig")
 
     project.compile("""
         import std
@@ -42,10 +45,26 @@ def test_agent_config(project: Project):
             remote_agent=true,
         )
     """)
+    assert not project.get_resource("std::AgentConfig")
 
-    agent_config = project.get_resource("std::AgentConfig")
-    assert agent_config
-    assert agent_config.uri == "ssh://root@127.0.0.1:22?python=python"
+
+def test_agent_config_uri(project: Project):
+    """
+    The entity is kept for generating agent configuration files, so its uri is still derived from the host.
+    """
+    project.compile("""
+        import std
+
+        host = std::Host(
+            name="test",
+            ip="127.0.0.1",
+            os=std::linux,
+            remote_agent=true,
+        )
+    """)
+    instances = project.get_instances("std::AgentConfig")
+    assert len(instances) == 1
+    assert instances[0].uri == "ssh://root@127.0.0.1:22?python=python"
 
     project.compile("""
         import std
@@ -57,7 +76,6 @@ def test_agent_config(project: Project):
             remote_agent=true,
         )
     """)
-
-    agent_config = project.get_resource("std::AgentConfig")
-    assert agent_config
-    assert agent_config.uri == "ssh://root@127.0.0.1:22?python=test"
+    instances = project.get_instances("std::AgentConfig")
+    assert len(instances) == 1
+    assert instances[0].uri == "ssh://root@127.0.0.1:22?python=test"
