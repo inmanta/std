@@ -339,11 +339,13 @@ typedef config_agent as string matching self != "internal"
 
 entity AgentConfig extends PurgeableResource:
     """
-        Control agent settings. Currently these settings are only applied to autostarted agents
+        Control agent settings.
 
-        :attr autostart: When this flag is set to true, the resource will be exported and set the agent map
-                          on the orchestrator. When false, this instance is ignored but can be used to generate
-                          agent configuration files.
+        Deprecated: the orchestrator dropped the autostarted_agent_map setting in inmanta-core 15 (ISO8), so this
+        entity no longer configures anything and is never exported as a resource. It is kept because its uri is
+        still useful for generating agent configuration files.
+
+        :attr autostart: No longer has any effect. This instance is never exported, whatever this flag is set to.
         :attr agentname: The name of the agent to which this config applies.
         :attr agent: If a resource is exported, agent manages the resource.
         :attr uri: The uri that indicates how the agent should execute. Currently the following uri are supported:
