@@ -2,6 +2,10 @@
 
 ## v8.7.5 - ?
 
+- Improved the performance of `std::template` for templates that read many values which are not set yet. Such a template used
+  to be re-rendered once per unset value, because the render aborted at the first one it encountered. It is now rendered once
+  in a discovery pass which collects every unset value it reads, so the compiler can wait for all of them at once and a single
+  extra render suffices. Requires inmanta-core 15.1 or later; on older versions the previous behaviour is kept.
 - Removed the `std::AgentConfig` handler and stopped exporting `std::AgentConfig` resources. The orchestrator dropped the
   autostarted_agent_map setting in inmanta-core 15 (ISO8), so the handler already made no changes and only logged that fact
   on every deploy. This also removes std's only import of `inmanta.data`, which pulled the whole database layer, including

@@ -20,9 +20,11 @@ import os
 import shutil
 from typing import Dict
 
+import jinja2
 import pytest
 import pytest_inmanta.plugin
 
+import inmanta_plugins.std
 from inmanta import ast
 
 
@@ -331,6 +333,113 @@ def test_if_defined_with_plugin_call(project):
     std::print(std::template("unittest/test.j2"))
             """)
     assert "myvar is not defined" in project.get_stdout()
+
+
+def test_one_pass_unset_discovery(project, monkeypatch):
+    """
+    A template that reads several model values which are not frozen yet is
+    rendered once in "discovery" mode: all the unset values are collected in a
+    single pass and waited for at once, instead of rescheduling the whole render
+    once per miss.
+    """
+    project.add_mock_file(
+        "templates",
+        "multi.j2",
+        "{% for item in config.a %}{{ item.name }}{% endfor %}-"
+        "{% for item in config.b %}{{ item.name }}{% endfor %}-"
+        "{% for item in config.c %}{{ item.name }}{% endfor %}",
+    )
+
+    # Count the renders of our template, and record how many misses the collector
+    # held at each collection during a discovery pass.
+    render_count = 0
+    original_render = jinja2.Template.render
+
+    def counting_render(self, *args, **kwargs):
+        nonlocal render_count
+        if self.name == "multi.j2":
+            render_count += 1
+        return original_render(self, *args, **kwargs)
+
+    pass_sizes: list[int] = []
+    original_collect = inmanta_plugins.std.collect_or_raise
+
+    def spy_collect(exc):
+        result = original_collect(exc)
+        collector = inmanta_plugins.std.unset_collector.get()
+        if collector is not None:
+            pass_sizes.append(len(collector))
+        return result
+
+    monkeypatch.setattr(jinja2.Template, "render", counting_render)
+    monkeypatch.setattr(inmanta_plugins.std, "collect_or_raise", spy_collect)
+
+    # The three relations are only populated further down the model, so they are
+    # all unfrozen when the template plugin is first evaluated.
+    project.compile("""
+import std
+import unittest
+
+entity Config:
+end
+
+entity Item:
+    string name
+end
+
+Config.a [0:] -- Item.config_a [0:1]
+Config.b [0:] -- Item.config_b [0:1]
+Config.c [0:] -- Item.config_c [0:1]
+
+implement Config using std::none
+implement Item using std::none
+
+config = Config()
+std::print(std::template("unittest/multi.j2"))
+
+Item(name="A", config_a=config)
+Item(name="B", config_b=config)
+Item(name="C", config_c=config)
+    """)
+
+    # The template was rendered correctly, with all the deferred values.
+    assert project.get_stdout().strip() == "A-B-C"
+
+    # A single discovery pass collected all three misses at once: the per-miss
+    # behaviour could never hold more than one miss in a single render.
+    assert max(pass_sizes) == 3
+    # One discovery render that collected the batch, then one clean render.
+    assert render_count == 2
+
+
+def test_unset_value_reaching_plugin_filter(project):
+    """
+    An unset value collected during a discovery render is replaced by an
+    undefined, which cascades into an error when it reaches a plugin filter.  That
+    error must not surface: the batch of collected values is waited for instead,
+    and the next render sees the real value.
+    """
+    project.add_mock_file("templates", "filter.j2", "{{ config.value | std.upper }}")
+
+    project.compile("""
+import std
+import unittest
+
+entity Config:
+    string value
+end
+
+implementation compute for Config:
+    self.value = "hello"
+end
+
+implement Config using compute
+
+config = Config()
+std::print(std::template("unittest/filter.j2"))
+    """)
+
+    assert project.get_stdout().strip() == "HELLO"
 
 
 def test_plugin_in_template_without_args(project):
