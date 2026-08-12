@@ -335,6 +335,10 @@ def test_if_defined_with_plugin_call(project):
     assert "myvar is not defined" in project.get_stdout()
 
 
+@pytest.mark.skipif(
+    not inmanta_plugins.std.supports_batched_unset,
+    reason="inmanta-core<15.1 can not be told to wait for multiple values at once",
+)
 def test_one_pass_unset_discovery(project, monkeypatch):
     """
     A template that reads several model values which are not frozen yet is
