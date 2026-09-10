@@ -18,6 +18,7 @@ Contact: code@inmanta.com
 
 import base64
 import builtins
+import contextvars
 import hashlib
 import importlib
 import ipaddress
@@ -44,7 +45,12 @@ from jinja2.runtime import Undefined, missing
 import inmanta.resources
 from inmanta import util
 from inmanta.agent.handler import LoggerABC
-from inmanta.ast import NotFoundException, OptionalValueException, RuntimeException
+from inmanta.ast import (
+    NotFoundException,
+    OptionalValueException,
+    RuntimeException,
+    UnsetException,
+)
 from inmanta.config import Config
 from inmanta.execute import proxy
 from inmanta.execute.util import NoneValue, Unknown
@@ -68,6 +74,25 @@ except ImportError:
 
     def allow_reference_values[T](instance: T) -> T:
         return instance
+
+
+supports_batched_unset: bool
+try:
+    from inmanta.ast import MultiUnsetException
+
+    supports_batched_unset = True
+except ImportError:
+    # older inmanta-core versions (<15.1) can not be told to wait for multiple
+    # values at once => keep rescheduling on the first unset value we encounter
+    supports_batched_unset = False
+
+# Exceptions that signal the compiler that a value is not available yet, and that
+# it should reschedule us once it is.
+unset_exceptions: tuple[builtins.type[Exception], ...] = (
+    (UnsetException, MultiUnsetException)
+    if supports_batched_unset
+    else (UnsetException,)
+)
 
 
 class MockReference:
@@ -106,6 +131,53 @@ def inmanta_reset_state() -> None:
     tcache = {}
     engine_cache = None
     fact_cache = {}
+
+
+# --- One-pass dependency discovery -------------------------------------------
+#
+# Rendering a template reads many model values.  When the first one that is not
+# frozen yet raises UnsetException, the whole render aborts and the compiler
+# reschedules and fully re-runs the template.  A template that reads K still
+# unset values is therefore rendered up to K+1 times.
+#
+# Instead we render once in "discovery" mode: every unset value encountered is
+# collected and replaced by a chaining-undefined, so that the render keeps going
+# and reaches the other (independent) unset values.  If anything was collected,
+# the render output is discarded and a single MultiUnsetException is raised for
+# the whole batch, so the compiler waits for all of them at once and re-invokes
+# us.  Only a pass that observes zero misses used real values throughout, so
+# only its output is ever returned, which keeps the result identical to
+# rescheduling on every single miss.
+unset_collector: contextvars.ContextVar[Optional[set[object]]] = contextvars.ContextVar(
+    "std_template_unset_collector", default=None
+)
+
+
+def collect_or_raise(exc: UnsetException) -> object:
+    """
+    During a discovery render, record the unset value and return a
+    chaining-undefined so that rendering can continue.  Outside of a discovery
+    render (no active collector) propagate the exception, preserving the original
+    per-miss rescheduling behaviour.
+    """
+    collector = unset_collector.get()
+    variable = exc.get_result_variable()
+    if collector is None or variable is None:
+        raise exc
+
+    collector.add(variable)
+    return jinja2.ChainableUndefined(hint=exc.msg)
+
+
+def batched_unset(template_path: str, collector: set[object]) -> "MultiUnsetException":
+    """
+    Build the exception that makes the compiler wait for all the values collected
+    during a discovery render at once.
+    """
+    return MultiUnsetException(
+        f"Template {template_path} accessed values that were not set yet",
+        list(collector),
+    )
 
 
 class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
@@ -213,6 +285,8 @@ class JinjaDynamicProxy[P: proxy.DynamicProxy](proxy.DynamicProxy):
                     instance,
                     name,
                 )
+            except UnsetException as e:
+                return collect_or_raise(e)
             return self.wrap(attr)
         else:
             # A native python object. Not supported by core's DynamicProxy
@@ -288,6 +362,8 @@ class ResolverContext(jinja2.runtime.Context):
             )
         except OptionalValueException:
             return missing
+        except UnsetException as e:
+            return collect_or_raise(e)
 
 
 class EmptyResolver:
@@ -395,10 +471,35 @@ def template(ctx: Context, path: "string", **kwargs: "any") -> "string":
         variables = dict(kwargs)
         variables["{{resolver"] = EmptyResolver()
 
+    # Render once in discovery mode: collect every unset model value instead of
+    # aborting at the first one (see collect_or_raise).  If any were missing, wait
+    # for the whole batch at once rather than rescheduling per miss.
+    collector: set[object] = set()
+    token = unset_collector.set(collector) if supports_batched_unset else None
     try:
-        return template.render(variables)
-    except UndefinedError as e:
-        raise NotFoundException(ctx.owner, None, e.message)
+        rendered = template.render(variables)
+    except unset_exceptions:
+        # Raised by a nested template or plugin: propagate unchanged.
+        raise
+    except Exception as e:
+        # A collected unset value can cascade into a downstream error during the
+        # discovery render (e.g. a chaining-undefined reaching a plugin filter).
+        # If we collected any misses, that error is presumed to be a consequence
+        # of them: wait for the batch and retry.  A genuine error surfaces
+        # unchanged on the final pass, where nothing is collected.
+        if collector:
+            raise batched_unset(template_path, collector) from None
+        if isinstance(e, UndefinedError):
+            raise NotFoundException(ctx.owner, None, e.message)
+        raise
+    finally:
+        if token is not None:
+            unset_collector.reset(token)
+
+    if collector:
+        raise batched_unset(template_path, collector)
+
+    return rendered
 
 
 @dependency_manager
