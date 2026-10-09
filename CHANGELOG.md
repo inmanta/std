@@ -1,5 +1,8 @@
 # Changelog
 
+## v8.7.6 - ?
+
+
 ## v8.7.5 - 2026-10-09
 
 - Removed the `std::AgentConfig` handler and stopped exporting `std::AgentConfig` resources. The orchestrator dropped the
