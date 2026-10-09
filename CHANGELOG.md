@@ -1,6 +1,6 @@
 # Changelog
 
-## v8.7.5 - ?
+## v8.7.5 - 2026-10-09
 
 - Removed the `std::AgentConfig` handler and stopped exporting `std::AgentConfig` resources. The orchestrator dropped the
   autostarted_agent_map setting in inmanta-core 15 (ISO8), so the handler already made no changes and only logged that fact
