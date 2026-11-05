@@ -1,6 +1,8 @@
 # Changelog
 
-## v8.7.6 - ?
+## v8.8.0 - ?
+
+- Add `std::ShieldReference`, so a handler can resolve a reference only when it needs its value.
 
 
 ## v8.7.5 - 2026-10-09
