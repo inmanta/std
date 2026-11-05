@@ -18,6 +18,7 @@ Contact: code@inmanta.com
 
 import base64
 import builtins
+import dataclasses
 import hashlib
 import importlib
 import ipaddress
@@ -28,6 +29,7 @@ import random
 import re
 import time
 import typing
+import uuid
 from collections import defaultdict
 from collections.abc import Iterator, Mapping, Sequence
 from itertools import chain
@@ -1570,6 +1572,85 @@ try:
             fact_name=fact_name,
             mocked_facts=mocked_facts,
         )
+
+    from inmanta.references import ReferenceArgument, RefValue, SerializedReferenceLike
+
+    @dataclasses.dataclass(frozen=True, kw_only=True)
+    class Shielded[T: RefValue]:
+        """
+        A reference that the handler resolves when it needs its value, see ShieldReference.
+
+        :attr reference_id: The id of the shielded reference, stable across resources.
+        :attr resource: The resource the shielded reference is defined in.
+        """
+
+        reference_id: uuid.UUID
+        resource: inmanta.resources.Resource = dataclasses.field(
+            repr=False, compare=False
+        )
+
+        def unshield(self, logger: LoggerABC) -> T:
+            """
+            Resolve the shielded reference.  The value is cached on the resource.
+            """
+            return typing.cast(
+                T, self.resource.get_reference_value(self.reference_id, logger)
+            )
+
+    @reference("std::ShieldReference")
+    class ShieldReference[T: RefValue](Reference[Shielded[T]]):
+        """
+        Keep a reference out of the resolution done before the handler runs.  The resource
+        field holds a Shielded value, the handler calls unshield when it needs the value.
+        Only use it on resource fields whose handler unshields them.
+        """
+
+        def __init__(self, ref: Reference[T]) -> None:
+            """
+            :param ref: The reference to shield.
+            """
+            super().__init__()
+            self.ref = ref
+            self._shielded: Shielded[T] | None = None
+
+        @classmethod
+        def deserialize(
+            cls,
+            ref: SerializedReferenceLike,
+            resource: inmanta.resources.Resource,
+            logger: LoggerABC,
+        ) -> "ShieldReference[T]":
+            # Unlike the base class, don't resolve the shielded reference, only keep its id
+            match ref.args:
+                case [ReferenceArgument(id=inner_id)]:
+                    pass
+                case _:
+                    raise ValueError(
+                        f"Invalid arguments for {cls.__name__}: {ref.args}"
+                    )
+            shield = cls.__new__(cls)
+            Reference.__init__(shield)
+            shield._shielded = Shielded(reference_id=inner_id, resource=resource)
+            return shield
+
+        def resolve(self, logger: LoggerABC) -> Shielded[T]:
+            if self._shielded is None:
+                raise RuntimeError(
+                    "A ShieldReference can only be resolved by the agent"
+                )
+            return self._shielded
+
+    def shield[T: RefValue](value: T | Reference[T]) -> T | ShieldReference[T]:
+        """
+        Shield the value if it is a reference, for use in the getters of resources.
+        """
+        return ShieldReference(value) if isinstance(value, Reference) else value
+
+    def unshield[T: RefValue](value: T | Shielded[T], logger: LoggerABC) -> T:
+        """
+        Get the value of a resource field that may be shielded, for use in handlers.
+        """
+        return value.unshield(logger) if isinstance(value, Shielded) else value
 
 except ImportError:
     # Reference are not yet supported by this core version
