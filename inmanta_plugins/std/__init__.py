@@ -1456,7 +1456,7 @@ try:
         def resolve(self, logger: LoggerABC) -> str:
             """Resolve the reference"""
             env_var_name = self.resolve_other(self.name, logger)
-            logger.debug("Resolving environment variable %(name)s", name=self.name)
+            logger.debug("Resolving environment variable %(name)s", name=env_var_name)
             value = os.getenv(env_var_name)
             if value is None:
                 raise LookupError(f"Environment variable {env_var_name} is not set")

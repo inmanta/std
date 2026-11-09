@@ -17,6 +17,7 @@ Contact: code@inmanta.com
 """
 
 import contextlib
+import logging
 import re
 from collections.abc import Iterator
 from typing import Optional
@@ -25,6 +26,7 @@ import pytest
 from pytest_inmanta.plugin import Project
 
 from inmanta import ast, const
+from inmanta.agent.handler import PythonLogger
 
 try:
     from inmanta.references import Reference, reference  # noqa: F401
@@ -81,6 +83,21 @@ def test_references_resource(project: Project, monkeypatch) -> None:
 
     result = project.deploy_resource_v2("std::testing::NullResource", name="aaa")
     assert result.assert_has_logline("Observed value: testvalue")
+
+
+def test_environment_reference_logs_resolved_name(
+    project: Project, monkeypatch, caplog
+) -> None:
+    """When the name of the variable is a reference, the log message holds the name it resolves to"""
+    project.compile("import std")
+    from inmanta_plugins.std import EnvironmentReference
+
+    monkeypatch.setenv("METATESTENV", "TESTENV")
+    monkeypatch.setenv("TESTENV", "testvalue")
+    ref = EnvironmentReference(name=EnvironmentReference(name="METATESTENV"))
+    with caplog.at_level(logging.DEBUG):
+        assert ref.resolve(PythonLogger(logging.getLogger("test"))) == "testvalue"
+    assert "Resolving environment variable TESTENV" in caplog.text
 
 
 def test_int_reference(project: Project, monkeypatch) -> None:

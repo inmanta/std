@@ -2,6 +2,8 @@
 
 ## v8.7.6 - ?
 
+- `std::create_environment_reference` logs the resolved name of the variable, not the reference, when the name is a
+  reference.
 
 ## v8.7.5 - 2026-10-09
 
