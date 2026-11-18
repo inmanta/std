@@ -542,9 +542,22 @@ def equals(arg1: "any", arg2: "any", desc: "string" = None):
 def assert_function(expression: "bool", message: "string" = ""):
     """
     Raise assertion error if expression is false
+
+    Like python's assert, only use this for invariants that should never fail. To report an
+    invalid input to the end user, use std::validate instead.
     """
     if not expression:
         raise AssertionError("Assertion error: " + message)
+
+
+@plugin
+def validate(condition: bool, error: str) -> None:
+    """
+    Raise a PluginException with the given error message if the input condition is False.
+    Alternative to std::assert which raises a PluginException instead of an AssertionError.
+    """
+    if not condition:
+        raise PluginException(error)
 
 
 @deprecated(replaced_by="using a list comprehension")

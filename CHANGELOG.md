@@ -1,7 +1,8 @@
 # Changelog
 
-## v8.7.6 - ?
+## v8.8.0 - ?
 
+- Added the `std::validate` plugin, like `std::assert` but raising a `PluginException`, for a cleaner error message in the compile report.
 - `std::create_environment_reference` logs the resolved name of the variable, not the reference, when the name is a
   reference.
 

@@ -22,6 +22,7 @@ import pytest
 from pytest_inmanta.plugin import Project
 
 import inmanta.ast
+import inmanta.plugins
 
 
 def test_select_attr(project):
@@ -230,3 +231,13 @@ def test_format(project: Project) -> None:
         s = std::format("a={d[a]}", d={"a": 1})
         s = std::format("a={e.desired_value}", e=unittest::IgnoreResource(name="a", desired_value="1"))
         """)
+
+
+def test_validate(project: Project) -> None:
+    project.compile("std::validate(true, 'not raised')")
+
+    with pytest.raises(inmanta.ast.ExternalException) as exc_info:
+        project.compile("std::validate(condition=1 == 2, error='one is not two')")
+
+    assert isinstance(exc_info.value.__cause__, inmanta.plugins.PluginException)
+    assert exc_info.value.__cause__.message == "one is not two"
