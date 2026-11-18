@@ -547,6 +547,16 @@ def assert_function(expression: "bool", message: "string" = ""):
         raise AssertionError("Assertion error: " + message)
 
 
+@plugin
+def validate(condition: bool, error: str) -> None:
+    """
+    Raise a PluginException with the given error message if the input condition is False.
+    Alternative to std::assert which raises a PluginException instead of an AssertionError.
+    """
+    if not condition:
+        raise PluginException(error)
+
+
 @deprecated(replaced_by="using a list comprehension")
 @plugin
 def select(objects: "list", attr: "string") -> "list":
